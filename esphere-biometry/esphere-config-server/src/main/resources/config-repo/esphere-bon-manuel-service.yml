@@ -1,0 +1,6 @@
+server:
+  port: 8086
+
+spring:
+  flyway:
+    table: flyway_history_bon_manuel

@@ -1,0 +1,43 @@
+server:
+  port: ${SERVER_PORT:8088}
+
+spring:
+  application:
+    name: esphere-notification-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+  jpa:
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: flyway_history_notification
+    validate-on-migrate: false
+  mail:
+    host: ${MAIL_HOST:secure.emailsrvr.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:info@zenitheinsurance.com}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: ${MAIL_HOST:secure.emailsrvr.com}
+          from: ${MAIL_FROM:info@zenitheinsurance.com}
+          timeout: 10000
+          connectiontimeout: 10000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

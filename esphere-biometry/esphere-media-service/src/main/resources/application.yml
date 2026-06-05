@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:8087}
+
+spring:
+  application:
+    name: esphere-media-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jpa:
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: flyway_history_media
+    validate-on-migrate: false
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:100MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:105MB}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+media:
+  storage:
+    base-path: ${MEDIA_STORAGE_PATH:C:/biometry-media}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

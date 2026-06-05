@@ -1,0 +1,5 @@
+-- ═══════════════════════════════════════════════════════════════════
+-- V0 - BASELINE Auth Service
+-- Tables existantes : utilisateur, employe, profil, permission, menu
+-- Flyway démarre ici sans toucher aux données existantes.
+-- ═══════════════════════════════════════════════════════════════════

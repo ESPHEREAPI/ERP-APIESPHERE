@@ -1,0 +1,32 @@
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${CONFIG_GIT_URI:https://github.com/ESPHEREAPI/ERP-APIESPHERE.git}
+          default-label: main
+          search-paths: '{application}'
+          clone-on-start: true
+          force-pull: true
+          timeout: 10
+    compatibility-verifier:
+      enabled: false
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:109.228.49.89}
+    prefer-ip-address: true
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:8761/eureka/
+
+logging:
+  file:
+    name: ${LOG_PATH:C:/esphere/logs}/config-server.log
+  level:
+    root: WARN
+    org.springframework.cloud.config: INFO
+    com.esphere: INFO

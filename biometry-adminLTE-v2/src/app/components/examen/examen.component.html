@@ -1,0 +1,386 @@
+<!-- EN-TÊTE -->
+<div class="row" style="margin-bottom:10px;">
+  <div class="col-sm-12 text-right">
+    <button class="btn btn-default btn-sm" style="margin-right:5px;">
+      <i class="fa fa-file-excel-o"></i> Export Détaillé
+    </button>
+    <button class="btn btn-default btn-sm" style="margin-right:5px;">
+      <i class="fa fa-file-text-o"></i> Export simple
+    </button>
+  </div>
+</div>
+
+<!-- FILTRES -->
+<div class="box box-default">
+  <div class="box-header with-border" style="padding:8px 15px;">
+    <h3 class="box-title" style="font-size:13px;">
+      <i class="fa fa-filter text-muted"></i> Filtres
+    </h3>
+    <div class="box-tools pull-right">
+      <button class="btn btn-default btn-xs"
+              (click)="reinitialiserFiltres()">
+        <i class="fa fa-times"></i> Réinitialiser
+      </button>
+    </div>
+  </div>
+  <div class="box-body" style="padding-bottom:10px;">
+
+    <!-- Ligne 1 -->
+    <div class="row">
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-hospital-o"></i>
+          </span>
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtrePrestataire"
+                 placeholder="Prestataire"
+                 (keyup)="onFiltreTexteChange()">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-user"></i>
+          </span>
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreAdherent"
+                 placeholder="Assuré principal"
+                 (keyup)="onFiltreTexteChange()">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-users"></i>
+          </span>
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreAyantDroit"
+                 placeholder="Ayant droit"
+                 (keyup)="onFiltreTexteChange()">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-building-o"></i>
+          </span>
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreSouscripteur"
+                 placeholder="Souscripteur"
+                 (keyup)="onFiltreTexteChange()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Ligne 2 -->
+    <div class="row" style="margin-top:8px;">
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-calendar"></i>
+          </span>
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateMin"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-addon"
+                style="padding:0 6px;font-size:11px;color:#888;">
+            Enreg. min
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-calendar"></i>
+          </span>
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateMax"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-addon"
+                style="padding:0 6px;font-size:11px;color:#888;">
+            Enreg. max
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateEncMin"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-addon"
+                style="padding:0 6px;font-size:11px;color:#888;">
+            Enc. min
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">
+            <i class="fa fa-calendar-check-o"></i>
+          </span>
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateEncMax"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-addon"
+                style="padding:0 6px;font-size:11px;color:#888;">
+            Enc. max
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ligne 3 -->
+    <div class="row" style="margin-top:8px;">
+      <div class="col-md-6">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+          <span style="font-size:12px; color:#777; margin-right:4px;">
+            <i class="fa fa-filter"></i> État :
+          </span>
+          <button type="button" class="btn btn-xs"
+                  [class.btn-primary]="filtreEtat === ''"
+                  [class.btn-default]="filtreEtat !== ''"
+                  (click)="filtreEtat = ''; appliquerFiltres()">
+            Tous
+          </button>
+          <button type="button" class="btn btn-xs"
+                  [class.btn-warning]="filtreEtat === 'attente_validation'"
+                  [class.btn-default]="filtreEtat !== 'attente_validation'"
+                  (click)="filtreEtat = 'attente_validation'; appliquerFiltres()">
+            <i class="fa fa-clock-o"></i> En attente
+          </button>
+          <button type="button" class="btn btn-xs"
+                  [class.btn-info]="filtreEtat === 'partiel'"
+                  [class.btn-default]="filtreEtat !== 'partiel'"
+                  (click)="filtreEtat = 'partiel'; appliquerFiltres()">
+            <i class="fa fa-adjust"></i> Partiel
+          </button>
+          <button type="button" class="btn btn-xs"
+                  [class.btn-success]="filtreEtat === 'valide'"
+                  [class.btn-default]="filtreEtat !== 'valide'"
+                  (click)="filtreEtat = 'valide'; appliquerFiltres()">
+            <i class="fa fa-check"></i> Validé
+          </button>
+          <button type="button" class="btn btn-xs"
+                  [class.btn-primary]="filtreEtat === 'encaisse'"
+                  [class.btn-default]="filtreEtat !== 'encaisse'"
+                  (click)="filtreEtat = 'encaisse'; appliquerFiltres()">
+            <i class="fa fa-dollar"></i> Encaissé
+          </button>
+        </div>
+      </div>
+      <div class="col-md-6 text-right">
+        <button class="btn btn-primary btn-sm"
+                (click)="appliquerFiltres()">
+          <i class="fa fa-search"></i> Rechercher
+        </button>
+        &nbsp;
+        <button class="btn btn-default btn-sm"
+                (click)="reinitialiserFiltres()">
+          <i class="fa fa-times"></i> Réinitialiser
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LISTE -->
+<div class="box box-primary">
+  <div class="box-header with-border">
+    <h3 class="box-title">
+      <i class="fa fa-flask"></i>
+      Liste des examens
+      <span *ngIf="filtreEtat" class="label"
+            style="margin-left:8px; font-size:11px;"
+            [class.label-warning]="filtreEtat === 'attente_validation'"
+            [class.label-info]="filtreEtat === 'partiel'"
+            [class.label-success]="filtreEtat === 'valide'"
+            [class.label-primary]="filtreEtat === 'encaisse'">
+        <i [class]="getEtatIcon(filtreEtat)"></i>
+        {{ getEtatLabel(filtreEtat) }}
+      </span>
+    </h3>
+    <div class="box-tools pull-right">
+      <button class="btn btn-default btn-sm">
+        <i class="fa fa-print"></i> Exporter
+      </button>
+    </div>
+  </div>
+
+  <div class="box-body">
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="col-sm-4">
+        <label>
+          Afficher
+          <select class="form-control input-sm"
+                  style="width:auto;display:inline-block;margin:0 5px;"
+                  [(ngModel)]="pageSize"
+                  (change)="onPageSizeChange()">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+          entrées
+        </label>
+      </div>
+      <div class="col-sm-8 text-right" style="padding-top:6px;">
+        <span class="text-muted small" *ngIf="!isLoading">{{ pageInfo }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="text-center" style="padding:40px;">
+      <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+      <p class="text-muted" style="margin-top:8px;">Chargement...</p>
+    </div>
+
+    <div *ngIf="!isLoading" style="overflow-x:auto; overflow-y:visible;">
+      <table class="table table-bordered table-hover table-condensed"
+             style="font-size:12px; margin-bottom:0;">
+        <thead>
+          <tr style="background:#3c8dbc; color:#fff;">
+            <th style="color:#fff;">Prestataire</th>
+            <th style="color:#fff;">Souscripteur</th>
+            <th style="color:#fff;">Assuré principal</th>
+            <th style="color:#fff;">Ayant droit</th>
+            <th style="color:#fff;">Nature affection</th>
+            <th style="color:#fff;">Date</th>
+            <th class="text-center" style="color:#fff;">Lignes</th>
+            <th style="color:#fff;">État</th>
+            <th class="text-center"
+                style="width:130px; color:#fff;">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of prestations; trackBy: trackById"
+              [class.consultation-attente]="
+                p.etatGlobal === 'attente_validation'">
+
+            <td>{{ p.nomPrestataire || p.prestataireId }}</td>
+            <td>{{ p.souscripteur || '-' }}</td>
+            <td>{{ getNomAdherent(p) }}</td>
+            <td>{{ getNomAyantDroit(p) }}</td>
+            <td>{{ p.natureAffection || '-' }}</td>
+            <td style="white-space:nowrap;">{{ formatDate(p.date) }}</td>
+
+            <td class="text-center">
+              <span class="label"
+                    [class.label-warning]="p.nbreLignesEnAttente > 0"
+                    [class.label-success]="p.nbreLignesEnAttente === 0"
+                    style="font-size:11px; padding:3px 8px;
+                           border-radius:10px;">
+                {{ p.nbreLignesEnAttente }} / {{ p.nbreLignes }}
+              </span>
+            </td>
+
+            <td style="white-space:nowrap;">
+              <span [ngClass]="getEtatClass(p.etatGlobal)">
+                <i [class]="getEtatIcon(p.etatGlobal)"></i>
+                {{ getEtatLabel(p.etatGlobal) }}
+              </span>
+            </td>
+
+            <td class="text-center"
+                style="white-space:nowrap; position:relative; overflow:visible;">
+              <div class="btn-group" style="position:relative;">
+                <button type="button" class="btn btn-xs"
+                        [class.btn-primary]="!isGrise(p.etatGlobal)"
+                        [class.btn-default]="isGrise(p.etatGlobal)"
+                        [disabled]="isGrise(p.etatGlobal)"
+                        (click)="ouvrirDetail(p, $event)">
+                  Sélectionner
+                </button>
+                <button type="button"
+                        class="btn btn-xs dropdown-toggle"
+                        [class.btn-primary]="!isGrise(p.etatGlobal)"
+                        [class.btn-default]="isGrise(p.etatGlobal)"
+                        [disabled]="isGrise(p.etatGlobal)"
+                        (click)="toggleDropdown(p.id, $event)"
+                        style="padding-left:6px; padding-right:6px;">
+                  <span class="caret"></span>
+                </button>
+                <ul *ngIf="!isGrise(p.etatGlobal)
+                           && dropdownOuvertId === p.id"
+                    style="position:absolute; top:100%; right:0;
+                           z-index:99999; display:block;
+                           min-width:150px; padding:5px 0; margin:2px 0 0;
+                           list-style:none; background:#fff;
+                           border:1px solid rgba(0,0,0,.15);
+                           border-radius:4px;
+                           box-shadow:0 6px 12px rgba(0,0,0,.175);">
+                  <li>
+                    <a href="javascript:void(0)"
+                       style="display:block; padding:6px 16px;
+                              color:#333; cursor:pointer;
+                              text-decoration:none;"
+                       (mouseover)="survolItem($event, true)"
+                       (mouseout)="survolItem($event, false)"
+                       (click)="ouvrirDetail(p, $event)">
+                      <i class="fa fa-list-alt text-info"
+                         style="margin-right:7px;"></i>
+                      Détails
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="prestations.length === 0">
+            <td colspan="9" class="text-center text-muted"
+                style="padding:30px;">
+              <i class="fa fa-inbox fa-2x"></i><br><br>
+              Aucun résultat
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row"
+         *ngIf="!isLoading && totalPages > 1"
+         style="margin-top:10px;">
+      <div class="col-sm-12">
+        <ul class="pagination pagination-sm no-margin pull-right">
+          <li [class.disabled]="currentPage === 0">
+            <a (click)="changerPage(0)" style="cursor:pointer;">
+              <i class="fa fa-angle-double-left"></i>
+            </a>
+          </li>
+          <li [class.disabled]="currentPage === 0">
+            <a (click)="changerPage(currentPage - 1)"
+               style="cursor:pointer;">
+              <i class="fa fa-angle-left"></i>
+            </a>
+          </li>
+          <li *ngFor="let p of getPagesArray()"
+              [class.active]="currentPage + 1 === p">
+            <a (click)="changerPage(p - 1)"
+               style="cursor:pointer;">{{ p }}</a>
+          </li>
+          <li [class.disabled]="currentPage + 1 === totalPages">
+            <a (click)="changerPage(currentPage + 1)"
+               style="cursor:pointer;">
+              <i class="fa fa-angle-right"></i>
+            </a>
+          </li>
+          <li [class.disabled]="currentPage + 1 === totalPages">
+            <a (click)="changerPage(totalPages - 1)"
+               style="cursor:pointer;">
+              <i class="fa fa-angle-double-right"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>

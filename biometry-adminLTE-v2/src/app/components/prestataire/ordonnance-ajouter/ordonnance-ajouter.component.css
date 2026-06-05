@@ -1,0 +1,107 @@
+/* ordonnance-ajouter.component.css */
+
+/* Cellule médicament — overflow visible pour le dropdown */
+.med-cell {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Input readonly stylisé */
+.med-input {
+  cursor: pointer !important;
+  background: #fff !important;
+  color: #333;
+  font-size: 12px;
+}
+.med-input.has-value {
+  font-weight: 600;
+  color: #222;
+}
+
+/* Dropdown — fixed pour ne PAS décaler le tableau */
+.med-dropdown {
+  position: fixed;
+  z-index: 99999;
+  background: #fff;
+  border: 1px solid #d2d6de;
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.15);
+  min-width: 320px;
+  overflow: hidden;
+}
+
+/* Zone recherche */
+.med-search {
+  padding: 8px;
+  border-bottom: 1px solid #f4f4f4;
+  background: #fafafa;
+}
+
+/* Compteur */
+.med-count {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #999;
+  background: #f9f9f9;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+/* Liste */
+.med-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* Item */
+.med-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f9f9f9;
+  font-size: 12px;
+  transition: background .1s;
+}
+.med-item:hover {
+  background: #f0f8ff;
+}
+.med-item.active {
+  background: #e8f5e9;
+}
+
+.med-item-nom {
+  flex: 1;
+  color: #333;
+}
+.med-item-prix {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+.med-check {
+  margin-left: 6px;
+  font-size: 11px;
+}
+
+/* Spinner */
+.med-loading {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+}
+
+/* Vide */
+.med-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  list-style: none;
+}
+.med-empty .fa {
+  margin-right: 6px;
+  color: #e0a800;
+}

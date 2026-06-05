@@ -1,0 +1,395 @@
+<div class="box box-primary">
+  <div class="box-header with-border">
+    <h3 class="box-title">
+      <i class="fa fa-stethoscope text-primary"></i>
+      {{ 'consultation' | translate }}
+    </h3>
+  </div>
+
+  <div class="box-body">
+
+    <!-- Succès -->
+    <div *ngIf="success"
+         class="alert alert-success text-center"
+         style="font-size:14px;">
+      <i class="fa fa-check-circle fa-2x"></i><br><br>
+      <strong>
+        {{ 'consultation_enregistree' | translate }}
+      </strong><br>
+      <small>{{ 'redirection_cours' | translate }}</small>
+    </div>
+
+    <div *ngIf="!success">
+
+      <div *ngIf="isLoading" class="text-center"
+           style="padding:40px;">
+        <i class="fa fa-spinner fa-spin fa-2x
+                  text-muted"></i>
+        <p class="text-muted" style="margin-top:8px;">
+          {{ 'chargement' | translate }}
+        </p>
+      </div>
+
+      <div *ngIf="!isLoading">
+
+        <!-- Infos assuré -->
+        <div class="row" style="margin-bottom:15px;">
+          <div class="col-md-6 col-md-offset-3">
+            <table class="table table-bordered
+                          table-condensed"
+                   style="font-size:13px;">
+              <tbody>
+                <tr>
+                  <td class="bg-gray-light" width="40%">
+                    <strong>
+                      {{ 'assure_principal' | translate }} :
+                    </strong>
+                  </td>
+                  <td>{{ nomAssure || '-' }}</td>
+                </tr>
+                <tr *ngIf="nomAyantDroit">
+                  <td class="bg-gray-light">
+                    <strong>
+                      <i class="fa fa-user text-info"></i>
+                      {{ 'ayant_droit_concerne' | translate }} :
+                    </strong>
+                  </td>
+                  <td>
+                    <span class="text-info">
+                      <strong>{{ nomAyantDroit }}</strong>
+                    </span>
+                    <span *ngIf="lienParente"
+                          class="text-muted"
+                          style="margin-left:8px;
+                                 font-size:11px;">
+                      ({{ lienParente }})
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="groupe">
+                  <td class="bg-gray-light">
+                    <strong>{{ 'groupe' | translate }} :</strong>
+                  </td>
+                  <td>{{ groupe }}</td>
+                </tr>
+                <tr>
+                  <td class="bg-gray-light">
+                    <strong>
+                      {{ 'souscripteur' | translate }} :
+                    </strong>
+                  </td>
+                  <td>{{ souscripteur || '-' }}</td>
+                </tr>
+                <tr>
+                  <td class="bg-gray-light">
+                    <strong>
+                      {{ 'code_visite' | translate }} :
+                    </strong>
+                  </td>
+                  <td><code>{{ codeVisite }}</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Consommation -->
+        <div *ngIf="isLoadingConso"
+             class="text-center" style="padding:10px;">
+          <i class="fa fa-spinner fa-spin text-muted"></i>
+          <span class="text-muted"
+                style="margin-left:6px; font-size:12px;">
+            {{ 'chargement_consommation' | translate }}
+          </span>
+        </div>
+
+        <div *ngIf="!isLoadingConso && consommation"
+             style="margin-bottom:20px;">
+          <div *ngIf="consommation.niveauAlerte==='CRITIQUE'"
+               class="alert alert-danger"
+               style="padding:8px 12px; font-size:12px;">
+            <i class="fa fa-exclamation-triangle"></i>
+            <strong>
+              {{ 'plafond_depasse' | translate }}
+            </strong>
+            {{ consommation.messageAlerte }}
+          </div>
+          <div *ngIf="consommation.niveauAlerte==='ATTENTION'"
+               class="alert alert-warning"
+               style="padding:8px 12px; font-size:12px;">
+            <i class="fa fa-warning"></i>
+            {{ consommation.messageAlerte }}
+          </div>
+          <div *ngIf="consommation.niveauAlerte==='NORMAL'"
+               class="alert alert-success"
+               style="padding:8px 12px; font-size:12px;">
+            <i class="fa fa-check-circle"></i>
+            {{ consommation.messageAlerte }}
+          </div>
+
+          <div style="font-size:11px; margin-bottom:2px;">
+            {{ 'solde_disponible' | translate }} :
+            <strong [ngClass]="getSoldeClass(
+              consommation.soldeApresEncaisse)">
+              {{ formatMontant(
+                 consommation.soldeApresEncaisse) }} FCFA
+            </strong>
+          </div>
+          <div class="progress progress-xs">
+            <div [ngClass]="'progress-bar '
+                  + getBarreClass(
+                    consommation.pourcentageEncaisse)"
+                 [style.width.%]="min100(
+                   consommation.pourcentageEncaisse)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Formulaire -->
+        <div class="row">
+          <div class="col-md-6 col-md-offset-3">
+
+            <div *ngIf="erreur"
+                 class="alert alert-danger"
+                 style="font-size:13px;">
+              <i class="fa fa-times-circle"></i>
+              {{ erreur }}
+            </div>
+
+            <!-- Payante / Gratuite -->
+            <div class="form-group">
+              <label>
+                {{ 'payante' | translate }} ?
+                <span class="text-danger">*</span>
+              </label>
+              <div>
+                <label class="radio-inline">
+                  <input type="radio"
+                         [(ngModel)]="payante"
+                         [value]="true">
+                  <i class="fa fa-check-circle
+                            text-success"></i>
+                  {{ 'payante' | translate }}
+                </label>
+                &nbsp;&nbsp;
+                <label class="radio-inline">
+                  <input type="radio"
+                         [(ngModel)]="payante"
+                         [value]="false">
+                  <i class="fa fa-circle-o text-muted"></i>
+                  {{ 'gratuite' | translate }}
+                </label>
+              </div>
+            </div>
+
+            <!-- Type -->
+            <div class="form-group">
+              <label>
+                {{ 'type_consultation_label' | translate }}
+                <span class="text-danger">*</span>
+              </label>
+              <select class="form-control"
+                      [(ngModel)]="typeConsultation">
+                <option value="">
+                  {{ 'selectionner' | translate }}
+                </option>
+                <option *ngFor="let t of typesConsultation"
+                        [value]="t.code">
+                  {{ t.libelle }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Montant -->
+            <div class="form-group" *ngIf="payante">
+              <label>
+                {{ 'montant_label' | translate }}
+                <span class="text-danger">*</span>
+              </label>
+              <input type="number"
+                     class="form-control"
+                     [(ngModel)]="montant"
+                     placeholder="0"
+                     min="0">
+            </div>
+
+            <!-- Récapitulatif -->
+            <div *ngIf="payante && montant && montant > 0"
+                 class="callout callout-info"
+                 style="font-size:12px;">
+              <p style="margin:0;">
+                <strong>
+                  {{ 'montant_total_label' | translate }} :
+                </strong>
+                {{ formatMontant(montant) }} FCFA
+                &nbsp;|&nbsp;
+                <strong>
+                  {{ 'part_zenithe_label' | translate }} :
+                </strong>
+                <span class="text-primary">
+                  {{ formatMontant(partZenithe) }} FCFA
+                </span>
+                &nbsp;|&nbsp;
+                <strong>
+                  {{ 'part_assure_label' | translate }} :
+                </strong>
+                <span class="text-warning">
+                  {{ formatMontant(partAssure) }} FCFA
+                </span>
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Boutons -->
+        <div class="row" style="margin-top:20px;">
+          <div class="col-sm-12">
+            <button type="button"
+                    class="btn btn-default"
+                    (click)="retour()">
+              <i class="fa fa-arrow-left"></i>
+              {{ 'retour' | translate }}
+            </button>
+            <button type="button"
+                    class="btn btn-primary pull-right"
+                    [disabled]="isSubmitting
+                                || !formulaireValide"
+                    (click)="ouvrirConfirmation()">
+              <i class="fa fa-save"
+                 *ngIf="!isSubmitting"></i>
+              <i class="fa fa-spinner fa-spin"
+                 *ngIf="isSubmitting"></i>
+              {{ 'enregistrer_btn' | translate }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DIALOG CONFIRMATION ═══ -->
+  <div *ngIf="dialogConfirmOuvert"
+       (click)="fermerConfirmation()"
+       style="position:fixed;inset:0;z-index:10000;
+              background:rgba(0,0,0,.5);
+              display:flex;align-items:center;
+              justify-content:center;">
+
+    <div (click)="$event.stopPropagation()"
+         style="background:#fff;border-radius:6px;
+                width:420px;
+                box-shadow:0 10px 30px rgba(0,0,0,.3);
+                overflow:hidden;">
+
+      <!-- Header -->
+      <div style="background:#3c8dbc;color:#fff;
+                  padding:14px 18px;display:flex;
+                  justify-content:space-between;
+                  align-items:center;">
+        <strong>
+          <i class="fa fa-check-circle"></i>&nbsp;
+          {{ 'confirmation_titre' | translate }}
+        </strong>
+        <button type="button"
+                (click)="fermerConfirmation()"
+                style="background:none;border:none;
+                       color:#fff;font-size:22px;
+                       cursor:pointer;line-height:1;">
+          ×
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:20px;">
+        <p style="margin-bottom:15px; font-size:13px;">
+          {{ 'confirmation_consultation' | translate }}
+        </p>
+
+        <table class="table table-bordered
+                      table-condensed"
+               style="font-size:13px;">
+          <tbody>
+            <tr>
+              <td class="bg-gray-light" width="55%">
+                <strong>
+                  {{ 'type_consultation_label' | translate }}
+                </strong>
+              </td>
+              <td>{{ typeConsultation }}</td>
+            </tr>
+            <tr *ngIf="payante">
+              <td class="bg-gray-light">
+                <strong>
+                  {{ 'montant_total_label' | translate }}
+                </strong>
+              </td>
+              <td>
+                <strong>
+                  {{ formatMontant(montant || 0) }} FCFA
+                </strong>
+              </td>
+            </tr>
+            <tr *ngIf="payante">
+              <td class="bg-gray-light">
+                <strong>
+                  {{ 'part_zenithe_label' | translate }}
+                </strong>
+              </td>
+              <td class="text-primary">
+                <strong>
+                  {{ formatMontant(partZenithe) }} FCFA
+                </strong>
+              </td>
+            </tr>
+            <tr *ngIf="payante">
+              <td class="bg-gray-light">
+                <strong>
+                  {{ 'part_assure_label' | translate }}
+                </strong>
+              </td>
+              <td class="text-warning">
+                <strong>
+                  {{ formatMontant(partAssure) }} FCFA
+                </strong>
+              </td>
+            </tr>
+            <tr *ngIf="!payante">
+              <td class="bg-gray-light">
+                <strong>Nature</strong>
+              </td>
+              <td>
+                <span class="label label-success">
+                  {{ 'gratuite' | translate }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:12px 18px;
+                  border-top:1px solid #eee;
+                  display:flex;
+                  justify-content:flex-end;gap:8px;">
+        <button type="button"
+                class="btn btn-default"
+                (click)="fermerConfirmation()">
+          {{ 'annuler_btn' | translate }}
+        </button>
+        <button type="button"
+                class="btn btn-primary"
+                [disabled]="isSubmitting"
+                (click)="soumettre()">
+          <i class="fa fa-check"></i>
+          {{ 'confirmer' | translate }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+  <!-- ═══ FIN DIALOG ═══ -->
+
+</div>

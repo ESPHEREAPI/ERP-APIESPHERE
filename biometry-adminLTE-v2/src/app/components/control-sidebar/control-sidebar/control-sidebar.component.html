@@ -1,0 +1,197 @@
+<!-- src/app/components/control-sidebar/control-sidebar.component.html -->
+
+<aside class="control-sidebar control-sidebar-dark">
+  <!-- Create the tabs -->
+  <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+    <li [class.active]="activeTab === 'home'">
+      <a (click)="setActiveTab('home')" data-toggle="tab">
+        <i class="fa fa-home"></i>
+      </a>
+    </li>
+    <li [class.active]="activeTab === 'settings'">
+      <a (click)="setActiveTab('settings')" data-toggle="tab">
+        <i class="fa fa-gears"></i>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Tab panes -->
+  <div class="tab-content">
+    <!-- Home tab content -->
+    <div [class.active]="activeTab === 'home'" class="tab-pane" id="control-sidebar-home-tab">
+      <h3 class="control-sidebar-heading">Activité récente</h3>
+      <ul class="control-sidebar-menu">
+        <li>
+          <a href="javascript:void(0)">
+            <i class="menu-icon fa fa-birthday-cake bg-red"></i>
+            <div class="menu-info">
+              <h4 class="control-sidebar-subheading">Anniversaire de Langdon</h4>
+              <p>Sera 23 le 24 avril</p>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="javascript:void(0)">
+            <i class="menu-icon fa fa-user bg-yellow"></i>
+            <div class="menu-info">
+              <h4 class="control-sidebar-subheading">Frodo a mis à jour son profil</h4>
+              <p>Nouveau numéro de téléphone +1(800)555-1234</p>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="javascript:void(0)">
+            <i class="menu-icon fa fa-envelope-o bg-light-blue"></i>
+            <div class="menu-info">
+              <h4 class="control-sidebar-subheading">Nora a rejoint la liste de diffusion</h4>
+              <p>noraexample.com</p>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="javascript:void(0)">
+            <i class="menu-icon fa fa-file-code-o bg-green"></i>
+            <div class="menu-info">
+              <h4 class="control-sidebar-subheading">Code de Cron Job 254 exécuté</h4>
+              <p>Il y a 5 secondes</p>
+            </div>
+          </a>
+        </li>
+      </ul>
+
+      <h3 class="control-sidebar-heading">Progression des tâches</h3>
+      <ul class="control-sidebar-menu">
+        <li>
+          <a href="javascript:void(0)">
+            <h4 class="control-sidebar-subheading">
+              Tâches de conception personnalisées
+              <span class="label label-danger pull-right">70%</span>
+            </h4>
+            <div class="progress progress-xxs">
+              <div class="progress-bar progress-bar-danger" style="width: 70%"></div>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="javascript:void(0)">
+            <h4 class="control-sidebar-subheading">
+              Créer un bon thème d'interface utilisateur
+              <span class="label label-success pull-right">30%</span>
+            </h4>
+            <div class="progress progress-xxs">
+              <div class="progress-bar progress-bar-success" style="width: 30%"></div>
+            </div>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Settings tab content -->
+    <div [class.active]="activeTab === 'settings'" class="tab-pane" id="control-sidebar-settings-tab">
+      <form method="post">
+        <h3 class="control-sidebar-heading">Paramètres généraux</h3>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">
+            Rapport et visibilité
+            <input type="checkbox" class="pull-right" checked>
+          </label>
+          <p>Masquer l'application des utilisateurs généraux</p>
+        </div>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">
+            Autoriser la redirection
+            <input type="checkbox" class="pull-right" checked>
+          </label>
+          <p>Autoriser les utilisateurs à terminer</p>
+        </div>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">
+            Ajouter une autorisation frontend
+            <input type="checkbox" class="pull-right">
+          </label>
+          <p>Ajouter une autorisation A/B</p>
+        </div>
+
+        <h3 class="control-sidebar-heading">Paramètres de chat</h3>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">
+            Afficher moi en ligne
+            <input type="checkbox" class="pull-right" checked>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">
+            Désactiver les notifications
+            <input type="checkbox" class="pull-right">
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">
+            Supprimer l'historique du chat
+            <a href="javascript:void(0)" class="text-red pull-right">
+              <i class="fa fa-trash-o"></i>
+            </a>
+          </label>
+        </div>
+
+        <h3 class="control-sidebar-heading">Personnalisation du thème</h3>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">Layout fixe</label>
+          <input type="checkbox" 
+                 [(ngModel)]="settings.fixedLayout"
+                 (change)="toggleFixedLayout()"
+                 name="fixedLayout">
+        </div>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">Boxed Layout</label>
+          <input type="checkbox" 
+                 [(ngModel)]="settings.boxedLayout"
+                 (change)="toggleBoxedLayout()"
+                 name="boxedLayout">
+        </div>
+
+        <div class="form-group">
+          <label class="control-sidebar-subheading">Sidebar Fixed</label>
+          <input type="checkbox" 
+                 [(ngModel)]="settings.sidebar.fixed"
+                 (change)="toggleSidebarFixed()"
+                 name="sidebarFixed">
+        </div>
+
+        <h3 class="control-sidebar-heading">Skins</h3>
+        <ul class="list-unstyled clearfix">
+          <li *ngFor="let skin of availableSkins" style="float:left; width: 33.33333%; padding: 5px;">
+            <a href="javascript:void(0)" 
+               (click)="changeSkin(skin.name)"
+               [attr.data-skin]="skin.name"
+               style="display: block; box-shadow: 0 0 3px rgba(0,0,0,0.4)"
+               [class]="'clearfix full-opacity-hover ' + (settings.skin === skin.name ? 'active' : '')">
+              <div>
+                <span style="display:block; width: 20%; float: left; height: 7px;" 
+                      [class]="'bg-' + skin.name"></span>
+                <span [class]="'bg-' + skin.name + '-light'" 
+                      style="display:block; width: 80%; float: left; height: 7px;"></span>
+              </div>
+              <div>
+                <span style="display:block; width: 20%; float: left; height: 20px; background: #222d32;"></span>
+                <span style="display:block; width: 80%; float: left; height: 20px; background: #f4f5f7;"></span>
+              </div>
+            </a>
+            <p class="text-center no-margin">{{ skin.label }}</p>
+          </li>
+        </ul>
+      </form>
+    </div>
+  </div>
+</aside>
+
+<!-- Add the sidebar's background. This div must be placed immediately after the control sidebar -->
+<div class="control-sidebar-bg"></div>

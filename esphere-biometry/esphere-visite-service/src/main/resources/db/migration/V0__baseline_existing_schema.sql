@@ -1,0 +1,10 @@
+-- ═══════════════════════════════════════════════════════════════════
+-- V0 - BASELINE : Tables existantes en production
+-- Ce script NE crée PAS les tables - elles existent déjà.
+-- Il documente l'état initial de la base avant toute migration.
+-- Flyway l'utilise comme point de départ (baseline).
+-- ═══════════════════════════════════════════════════════════════════
+-- Ce fichier est intentionnellement vide.
+-- Les tables existantes sont gérées par baseline-on-migrate: true
+-- dans la configuration Spring Boot.
+-- ═══════════════════════════════════════════════════════════════════

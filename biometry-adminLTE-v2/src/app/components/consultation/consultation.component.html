@@ -1,0 +1,1106 @@
+<!-- Box filtres -->
+<div class="box box-default">
+  <div class="box-body">
+
+    <div class="row">
+      <!-- Filtre prestataire → SERVEUR -->
+      <div class="col-md-3">
+       <select class="form-control input-sm"
+        [(ngModel)]="filtrePrestataire"
+        (change)="appliquerFiltresServeur()">
+  <option value="">{{ 'tous_prestataires' | translate }}</option>
+  <option *ngFor="let p of prestataires" [value]="p.id">{{ p.nom }}</option>
+</select>
+      </div>
+
+      <!-- Filtre type → CLIENT -->
+      <div class="col-md-2">
+        <select class="form-control input-sm"
+                [(ngModel)]="filtreType"
+                (change)="appliquerFiltresServeur()">
+          <option value="">{{ 'tous_types' | translate }}</option>
+          <option *ngFor="let t of types" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+
+      <!-- Filtre état → SERVEUR -->
+      <div class="col-md-2">
+        <select class="form-control input-sm"
+                [(ngModel)]="filtreEtat"
+                (change)="appliquerFiltresServeur()">
+          <option value="">{{ 'tous_etats' | translate }}</option>
+          <option value="attente_validation">{{ 'attente_validation_label' | translate }}</option>
+          <option value="valide">{{ 'valide_label' | translate }}</option>
+          <option value="rejete">{{ 'rejete_label' | translate }}</option>
+          <option value="encaisse">{{ 'encaisse_label' | translate }}</option>
+        </select>
+      </div>
+
+      <!-- Filtre date min → SERVEUR -->
+      <div class="col-md-2">
+        <div class="input-group input-group-sm">
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateMin"
+                 (change)="appliquerFiltresServeur()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltresServeur()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <!-- Filtre date max → SERVEUR -->
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateMax"
+                 (change)="appliquerFiltresServeur()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltresServeur()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+
+      <!-- Filtre souscripteur → CLIENT -->
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreSouscripteur"
+                 placeholder="{{ 'souscripteur' | translate }}"
+                 (keyup)="onFiltreTexteChange()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltresServeur()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <!-- Filtre adhérent → CLIENT -->
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreAdherent"
+                 placeholder="{{ 'nom_adherent' | translate }}"
+                 (keyup)="onFiltreTexteChange()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltresServeur()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <!-- Filtre ayant droit → CLIENT -->
+      <div class="col-md-4">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreAyantDroit"
+                 placeholder="{{ 'nom_ayant_droit' | translate }}"
+                 (keyup)="appliquerFiltresClient()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltresClient()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Box liste -->
+<div class="box box-primary">
+
+  <div class="box-header with-border">
+    <h3 class="box-title">{{ 'liste_consultations' | translate }}</h3>
+    <div class="box-tools pull-right">
+      <button class="btn btn-default btn-sm">
+        <i class="fa fa-print"></i> {{ 'exporter' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="box-body">
+
+    <div class="row" style="margin-bottom:10px;">
+      <div class="col-sm-4">
+        <label>
+          {{ 'nbre_lignes' | translate }}
+          <select class="form-control input-sm"
+                  style="width:auto;display:inline-block;margin:0 5px;"
+                  [(ngModel)]="pageSize"
+                  (change)="onPageSizeChange()">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </label>
+      </div>
+      <div class="col-sm-8 text-right" style="padding-top:6px;">
+        <span class="text-muted small" *ngIf="!isLoading">{{ pageInfo }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="text-center" style="padding:40px;">
+      <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+      <p class="text-muted" style="margin-top:8px;">{{ 'chargement' | translate }}</p>
+    </div>
+
+    <div *ngIf="!isLoading" style="overflow-x:auto; overflow-y:visible;">
+      <table class="table table-bordered table-hover table-condensed"
+             style="font-size:12px; margin-bottom:0;">
+        <thead>
+          <tr>
+            <th>{{ 'prestataire' | translate }}</th>
+            <th>{{ 'type_consultation' | translate }}</th>
+            <th>{{ 'malade' | translate }}</th>
+            <th>{{ 'date' | translate }}</th>
+            <th class="text-center">{{ 'taux_couverture' | translate }}</th>
+            <th class="text-right">{{ 'montant_declare' | translate }}</th>
+            <th class="text-right">{{ 'montant_valide' | translate }}</th>
+            <th class="text-right">{{ 'part_zenithe' | translate }}</th>
+            <th class="text-right">{{ 'part_assure' | translate }}</th>
+            <th>{{ 'etat' | translate }}</th>
+            <th class="text-center" style="width:130px;">
+              {{ 'actions' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of pagedConsultations; trackBy: trackById"
+              [class.consultation-attente]="isEnAttente(c.etatConsultation)">
+
+            <td>{{ c.prestataireNom }}</td>
+            <td>{{ c.typeConsultation }}</td>
+            <td>{{ c.nomAdherent || c.codeAdherent }}</td>
+            <td style="white-space:nowrap;">{{ formatDate(c.date) }}</td>
+            <td class="text-center">{{ c.taux || '-' }}</td>
+            <td class="text-right">{{ formatMontant(c.montant) }}</td>
+            <td class="text-right">{{ formatMontant(c.montantValide || 0) }}</td>
+            <td class="text-right">{{ formatMontant(c.partZenithe || 0) }}</td>
+            <td class="text-right">{{ formatMontant(c.partAssure || 0) }}</td>
+
+            <td style="white-space:nowrap;">
+              <span [ngClass]="getEtatClass(c.etatConsultation)">
+                <i [class]="getEtatIcon(c.etatConsultation)"></i>
+                {{ getEtatLabel(c.etatConsultation) }}
+              </span>
+            </td>
+
+            <!-- COLONNE ACTIONS -->
+      <!-- COLONNE ACTIONS -->
+<td class="text-center"
+    style="white-space:nowrap; position:relative;
+           overflow:visible;">
+  <div style="position:relative; display:inline-block;">
+
+    <!-- ── ENCAISSÉ ─────────────────────────────── -->
+
+    <!-- Prestataire + encaissé → Imprimer bon -->
+    <button type="button"
+            class="btn btn-xs btn-success"
+            *ngIf="isPrestataire
+                   && c.etatConsultation === 'encaisse'"
+            (click)="imprimerBon(c, $event)">
+      <i class="fa fa-print"></i>
+      {{ 'imprimer_bon' | translate }}
+    </button>
+
+    <!-- SS + encaissé → aucune action -->
+    <span *ngIf="isSS
+                 && c.etatConsultation === 'encaisse'"
+          class="text-muted"
+          style="font-size:11px;">
+      <i class="fa fa-check-circle text-success"></i>
+      {{ 'encaisse_label' | translate }}
+    </span>
+
+    <!-- ── AUTRES ÉTATS → dropdown ──────────────── -->
+
+    <button type="button"
+            class="btn btn-xs"
+            [class.btn-primary]="!isGrise(
+              c.etatConsultation)"
+            [class.btn-default]="isGrise(
+              c.etatConsultation)"
+            [disabled]="isGrise(c.etatConsultation)"
+            *ngIf="c.etatConsultation !== 'encaisse'"
+            (click)="toggleDropdown(c.id, $event)">
+      {{ 'selectionner' | translate }}&nbsp;
+      <span class="caret"></span>
+    </button>
+
+    <ul *ngIf="dropdownOuvertId === c.id
+               && c.etatConsultation !== 'encaisse'
+               && !isGrise(c.etatConsultation)"
+        style="position:absolute; top:100%; right:0;
+               z-index:99999; display:block;
+               min-width:180px; padding:5px 0;
+               margin:2px 0 0; list-style:none;
+               background:#fff;
+               border:1px solid rgba(0,0,0,.15);
+               border-radius:4px;
+               box-shadow:0 6px 12px rgba(0,0,0,.175);">
+
+      <!-- SS + attente_validation : Valider + Rejeter -->
+      <ng-container *ngIf="c.etatConsultation
+                            === 'attente_validation'
+                            && isSS">
+        <li>
+          <a href="javascript:void(0)"
+             style="display:block;padding:6px 16px;
+                    color:#333;cursor:pointer;
+                    text-decoration:none;"
+             (mouseover)="survolItem($event,true)"
+             (mouseout)="survolItem($event,false)"
+             (click)="ouvrirValider(c,$event)">
+            <i class="fa fa-check"
+               style="color:#3c763d;
+                      margin-right:7px;"></i>
+            {{ 'valider' | translate }}
+          </a>
+        </li>
+        <li role="separator"
+            style="height:1px;margin:4px 0;
+                   background:#e5e5e5;"></li>
+        <li>
+          <a href="javascript:void(0)"
+             style="display:block;padding:6px 16px;
+                    color:#333;cursor:pointer;
+                    text-decoration:none;"
+             (mouseover)="survolItem($event,true)"
+             (mouseout)="survolItem($event,false)"
+             (click)="ouvrirRejeter(c,$event)">
+            <i class="fa fa-times"
+               style="color:#a94442;
+                      margin-right:7px;"></i>
+            {{ 'rejeter' | translate }}
+          </a>
+        </li>
+      </ng-container>
+
+      <!-- SS + valide : Rejeter seulement -->
+      <ng-container *ngIf="c.etatConsultation === 'valide'
+                            && isSS">
+        <li>
+          <a href="javascript:void(0)"
+             style="display:block;padding:6px 16px;
+                    color:#333;cursor:pointer;
+                    text-decoration:none;"
+             (mouseover)="survolItem($event,true)"
+             (mouseout)="survolItem($event,false)"
+             (click)="ouvrirRejeter(c,$event)">
+            <i class="fa fa-times"
+               style="color:#a94442;
+                      margin-right:7px;"></i>
+            {{ 'rejeter' | translate }}
+          </a>
+        </li>
+      </ng-container>
+
+      <!-- Prestataire + valide : Encaisser -->
+      <ng-container *ngIf="c.etatConsultation === 'valide'
+                            && isPrestataire">
+        <li>
+          <a href="javascript:void(0)"
+             style="display:block;padding:6px 16px;
+                    color:#333;cursor:pointer;
+                    text-decoration:none;"
+             (mouseover)="survolItem($event,true)"
+             (mouseout)="survolItem($event,false)"
+             (click)="ouvrirEncaisser(c,$event)">
+            <i class="fa fa-money"
+               style="color:#31708f;
+                      margin-right:7px;"></i>
+            {{ 'encaisser' | translate }}
+          </a>
+        </li>
+      </ng-container>
+
+      <!-- Prestataire + attente : informatif -->
+      <ng-container *ngIf="c.etatConsultation
+                            === 'attente_validation'
+                            && isPrestataire">
+        <li class="disabled">
+          <a style="display:block;padding:6px 16px;
+                    color:#999;cursor:not-allowed;">
+            <i class="fa fa-clock-o"
+               style="margin-right:7px;"></i>
+            {{ 'en_attente' | translate }}
+          </a>
+        </li>
+      </ng-container>
+
+    </ul>
+  </div>
+</td>
+<!-- FIN COLONNE ACTIONS -->
+            <!-- FIN COLONNE ACTIONS -->
+
+          </tr>
+
+          <tr *ngIf="pagedConsultations.length === 0">
+            <td colspan="11" class="text-center text-muted"
+                style="padding:30px;">
+              <i class="fa fa-inbox fa-2x"></i><br><br>
+              {{ 'aucun_resultat' | translate }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="row" *ngIf="!isLoading && totalPages > 1"
+         style="margin-top:10px;">
+      <div class="col-sm-12">
+        <ul class="pagination pagination-sm no-margin pull-right">
+          <li [class.disabled]="currentPage === 0">
+            <a (click)="changerPage(currentPage - 1)" style="cursor:pointer;">
+              <i class="fa fa-chevron-left"></i>
+            </a>
+          </li>
+          <li *ngFor="let p of getPagesArray()"
+              [class.active]="currentPage + 1 === p">
+            <a (click)="changerPage(p - 1)" style="cursor:pointer;">{{ p }}</a>
+          </li>
+          <li [class.disabled]="currentPage + 1 === totalPages">
+            <a (click)="changerPage(currentPage + 1)" style="cursor:pointer;">
+              <i class="fa fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===== MODAL VALIDER ===== -->
+<div class="modal fade"
+     [class.in]="showModalValider"
+     [style.display]="showModalValider ? 'block' : 'none'"
+     tabindex="-1" role="dialog" style="z-index:1050; overflow-y:auto;">
+  <div class="modal-dialog" role="document"
+       style="width:600px; max-width:95%;
+              margin-top:20px;
+              margin-bottom:20px;">
+    <div class="modal-content"
+         *ngIf="consultationSelectionnee"
+         style="max-height:calc(100vh - 40px);
+                display:flex;
+                flex-direction:column;">
+
+      <!-- Header fixe -->
+      <div class="modal-header"
+           style="background:#3c8dbc;color:#fff;border-radius:3px 3px 0 0;
+                  flex-shrink:0;">
+        <button type="button" class="close"
+                style="color:#fff;opacity:1;"
+                (click)="fermerModals()">
+          <span>&times;</span>
+        </button>
+        <h4 class="modal-title">
+          <i class="fa fa-check-circle"></i>
+          {{ 'valider_consultation' | translate }}
+        </h4>
+      </div>
+
+      <!-- Body scrollable -->
+      <div class="modal-body"
+           style="overflow-y:auto; flex:1 1 auto;">
+
+        <!-- Infos assuré -->
+        <table class="table table-bordered table-condensed"
+               style="font-size:13px; margin-bottom:15px;">
+          <tbody>
+            <tr>
+              <td width="40%" class="bg-gray-light">
+                <strong>{{ 'assure_principal' | translate }} :</strong>
+              </td>
+              <td>
+                {{ consultationSelectionnee.nomAdherent
+                   || consultationSelectionnee.codeAdherent }}
+              </td>
+            </tr>
+            <tr *ngIf="consultationSelectionnee.nomAyantDroit">
+              <td class="bg-gray-light">
+                <strong>{{ 'ayant_droit' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.nomAyantDroit }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'groupe' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.groupe || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'souscripteur' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.souscripteur || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'taux_couverture' | translate }} :</strong>
+              </td>
+              <td>
+                {{ consultationSelectionnee.taux
+                   ? consultationSelectionnee.taux + '%' : '-' }}
+              </td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'type_consultation' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.typeConsultation }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'montant_declare' | translate }} :</strong>
+              </td>
+              <td>
+                <strong>
+                  {{ formatMontant(consultationSelectionnee.montant) }} FCFA
+                </strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr style="margin:10px 0;">
+
+        <!-- ===== BLOC CONSOMMATION ADHÉRENT ===== -->
+      <!-- ===== BLOC CONSOMMATION ADHÉRENT ===== -->
+<div style="margin-bottom:15px;">
+
+  <!-- Chargement -->
+  <div *ngIf="isLoadingConso" class="text-center" style="padding:12px 0;">
+    <i class="fa fa-spinner fa-spin text-muted"></i>
+    <span class="text-muted" style="margin-left:6px; font-size:12px;">
+      Chargement de la consommation...
+    </span>
+  </div>
+
+  <!-- Données -->
+  <div *ngIf="!isLoadingConso && consommation && isSS">
+
+    <!-- Titre section -->
+    <div style="background:#3c8dbc; color:#fff; padding:6px 10px;
+                border-radius:3px 3px 0 0; margin-bottom:0;">
+      <strong style="font-size:12px;">
+        <i class="fa fa-bar-chart"></i>
+        Consommation {{ anneeEncours }} — Part Zenithe (taux appliqué)
+      </strong>
+    </div>
+
+    <!-- Alerte dynamique basée sur montant/taux en cours -->
+    <div *ngIf="niveauAlerteActuel === 'CRITIQUE'"
+         class="alert alert-danger"
+         style="padding:7px 12px; margin:0; border-radius:0; font-size:12px;">
+      <i class="fa fa-exclamation-triangle"></i>
+      <strong> Plafond dépassé !</strong>
+      {{ messageAlerteActuel }}
+    </div>
+    <div *ngIf="niveauAlerteActuel === 'ATTENTION'"
+         class="alert alert-warning"
+         style="padding:7px 12px; margin:0; border-radius:0; font-size:12px;">
+      <i class="fa fa-warning"></i>
+      <strong> Attention !</strong>
+      {{ messageAlerteActuel }}
+    </div>
+    <div *ngIf="niveauAlerteActuel === 'NORMAL'"
+         class="alert alert-success"
+         style="padding:7px 12px; margin:0; border-radius:0; font-size:12px;">
+      <i class="fa fa-check-circle"></i>
+      {{ messageAlerteActuel }}
+    </div>
+
+    <!-- Tableau détail -->
+    <table class="table table-bordered table-condensed"
+           style="font-size:11px; margin-bottom:0;">
+      <thead>
+        <tr style="background:#f4f4f4;">
+          <th style="width:35%;">Type de prestation</th>
+          <th class="text-center" style="width:8%;">Nb</th>
+          <th class="text-right" style="width:19%;">
+            Encaissé (FCFA)
+            <br><small class="text-muted">Réel Zenithe</small>
+          </th>
+          <th class="text-right" style="width:19%;">
+            En cours (FCFA)
+            <br><small class="text-muted">Engagé</small>
+          </th>
+          <th class="text-right" style="width:19%;">
+            Total projeté
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Consultations — ligne dynamique -->
+        <tr style="background:#fffef0;">
+          <td>
+            <i class="fa fa-stethoscope text-info"></i>
+            {{ 'consultation' | translate }}
+            <small class="text-warning"
+                   *ngIf="partZenitheEnCours > 0">
+              (+{{ formatMontant(partZenitheEnCours) }} en cours)
+            </small>
+          </td>
+          <td class="text-center">
+            {{ consommation.nbreConsultationsEncaissees }}
+          </td>
+          <td class="text-right text-success">
+            {{ formatMontant(consommation.montantConsultationsEncaissees) }}
+          </td>
+          <td class="text-right text-warning">
+            <!-- En cours = valeur serveur + consultation actuelle -->
+            <strong>
+              {{ formatMontant(
+                   consommation.montantConsultationsEnCours
+                 + partZenitheEnCours) }}
+            </strong>
+          </td>
+          <td class="text-right">
+            <strong>
+              {{ formatMontant(
+                   consommation.montantConsultationsEncaissees
+                 + consommation.montantConsultationsEnCours
+                 + partZenitheEnCours) }}
+            </strong>
+          </td>
+        </tr>
+
+        <!-- Ordonnances -->
+        <tr>
+          <td>
+            <i class="fa fa-medkit text-success"></i>
+            {{ 'ordonnance' | translate }}
+          </td>
+          <td class="text-center">
+            {{ consommation.nbreOrdonnancesEncaissees }}
+          </td>
+          <td class="text-right text-success">
+            {{ formatMontant(consommation.montantOrdonnancesEncaissees) }}
+          </td>
+          <td class="text-right text-warning">
+            {{ formatMontant(consommation.montantOrdonnancesEnCours) }}
+          </td>
+          <td class="text-right">
+            <strong>
+              {{ formatMontant(
+                   consommation.montantOrdonnancesEncaissees
+                 + consommation.montantOrdonnancesEnCours) }}
+            </strong>
+          </td>
+        </tr>
+
+        <!-- Examens -->
+        <tr>
+          <td>
+            <i class="fa fa-flask text-warning"></i>
+            {{ 'examen' | translate }}
+          </td>
+          <td class="text-center">
+            {{ consommation.nbreExamensEncaisses }}
+          </td>
+          <td class="text-right text-success">
+            {{ formatMontant(consommation.montantExamensEncaisses) }}
+          </td>
+          <td class="text-right text-warning">
+            {{ formatMontant(consommation.montantExamensEnCours) }}
+          </td>
+          <td class="text-right">
+            <strong>
+              {{ formatMontant(
+                   consommation.montantExamensEncaisses
+                 + consommation.montantExamensEnCours) }}
+            </strong>
+          </td>
+        </tr>
+
+        <!-- Bons manuels -->
+        <tr>
+          <td>
+            <i class="fa fa-file-text-o text-muted"></i>
+            Bons manuels
+          </td>
+          <td class="text-center">
+            {{ consommation.nbreBonsManuelsEncaisses }}
+          </td>
+          <td class="text-right text-success">
+            {{ formatMontant(consommation.montantBonsManuelsEncaisses) }}
+          </td>
+          <td class="text-right text-warning">
+            {{ formatMontant(consommation.montantBonsManuelsEnCours) }}
+          </td>
+          <td class="text-right">
+            <strong>
+              {{ formatMontant(
+                   consommation.montantBonsManuelsEncaisses
+                 + consommation.montantBonsManuelsEnCours) }}
+            </strong>
+          </td>
+        </tr>
+
+      </tbody>
+      <tfoot>
+
+        <!-- Total dynamique -->
+        <tr style="background:#f4f4f4; font-weight:bold; font-size:12px;">
+          <td colspan="2"><strong>Total</strong></td>
+          <td class="text-right text-success">
+            {{ formatMontant(consommation.totalEncaisse) }}
+          </td>
+          <td class="text-right text-warning">
+            <!-- En cours total + consultation actuelle -->
+            <strong>
+              {{ formatMontant(totalEnCoursAvecActuelle) }}
+            </strong>
+          </td>
+          <td class="text-right">
+            <strong>
+              {{ formatMontant(totalProjecteAvecActuelle) }}
+            </strong>
+          </td>
+        </tr>
+
+        <!-- Plafond -->
+        <tr style="background:#fff;">
+          <td colspan="3" class="text-right text-muted"
+              style="font-size:11px;">
+            Plafond annuel
+          </td>
+          <td colspan="2" class="text-right">
+            <strong style="font-size:12px;">
+              {{ formatMontant(consommation.plafondGlobal) }} FCFA
+            </strong>
+          </td>
+        </tr>
+
+        <!-- Solde après encaissements réels -->
+        <tr style="background:#fff;">
+          <td colspan="3" class="text-right text-muted"
+              style="font-size:11px;">
+            Solde après encaissements
+          </td>
+          <td colspan="2" class="text-right">
+            <strong [ngClass]="getSoldeClass(soldeApresEncaisseActuel)"
+                    style="font-size:12px;">
+              {{ formatMontant(soldeApresEncaisseActuel) }} FCFA
+            </strong>
+          </td>
+        </tr>
+
+        <!-- Solde projeté — dynamique -->
+        <tr style="background:#fff;">
+          <td colspan="3" class="text-right text-muted"
+              style="font-size:11px;">
+            Solde projeté (avec en cours)
+          </td>
+          <td colspan="2" class="text-right">
+            <strong [ngClass]="getSoldeClass(soldeProjecteAvecActuelle)"
+                    style="font-size:12px;">
+              {{ formatMontant(soldeProjecteAvecActuelle) }} FCFA
+            </strong>
+          </td>
+        </tr>
+
+      </tfoot>
+    </table>
+
+    <!-- Barres de progression dynamiques -->
+    <div style="padding:8px 0 0 0;">
+
+      <!-- Barre encaissé -->
+      <div style="display:flex; justify-content:space-between;
+                  font-size:11px; margin-bottom:2px;">
+        <span class="text-muted">
+          Encaissé :
+          <strong>
+            {{ consommation.pourcentageEncaisse | number:'1.0-1' }}%
+          </strong>
+        </span>
+        <span class="text-muted">
+          {{ formatMontant(consommation.totalEncaisse) }}
+          /
+          {{ formatMontant(consommation.plafondGlobal) }} FCFA
+        </span>
+      </div>
+      <div class="progress progress-xs" style="margin-bottom:6px;">
+        <div [ngClass]="'progress-bar ' + getBarreEncaisseClass()"
+             role="progressbar"
+             [style.width.%]="min100(consommation.pourcentageEncaisse)">
+        </div>
+      </div>
+
+      <!-- Barre projection — dynamique selon montant/taux saisi -->
+      <div style="display:flex; justify-content:space-between;
+                  font-size:11px; margin-bottom:2px;">
+        <span class="text-muted">
+          Projection totale (avec consultation actuelle) :
+          <strong
+            [class.text-danger]="pourcentageEnCoursActuel >= 100"
+            [class.text-warning]="pourcentageEnCoursActuel >= 80
+                                  && pourcentageEnCoursActuel < 100"
+            [class.text-success]="pourcentageEnCoursActuel < 80">
+            {{ pourcentageEnCoursActuel | number:'1.0-1' }}%
+          </strong>
+        </span>
+        <span class="text-muted">
+          {{ formatMontant(totalProjecteAvecActuelle) }}
+          /
+          {{ formatMontant(consommation.plafondGlobal) }} FCFA
+        </span>
+      </div>
+      <div class="progress progress-xs" style="margin-bottom:0;">
+        <div [ngClass]="'progress-bar ' + getBarreProjectionActuelleClass()"
+             role="progressbar"
+             [style.width.%]="min100(pourcentageEnCoursActuel)">
+        </div>
+      </div>
+
+    </div>
+    <!-- fin barres -->
+
+  </div>
+  <!-- fin consommation -->
+
+</div>
+<!-- ===== FIN BLOC CONSOMMATION ===== -->
+        <!-- ===== FIN BLOC CONSOMMATION ===== -->
+
+        <!-- Formulaire de validation -->
+        <ng-container *ngIf="!showConfirmationValider">
+
+          <div class="form-group" [class.has-error]="tauxErreur">
+            <label class="control-label">
+              {{ 'montant_valide' | translate }}
+              <span class="text-red">*</span>
+            </label>
+            <div class="input-group">
+              <input type="number" class="form-control"
+                     [(ngModel)]="montantValideInput" min="0">
+              <span class="input-group-addon">FCFA</span>
+            </div>
+          </div>
+
+          <div class="form-group" [class.has-error]="tauxErreur">
+            <label class="control-label">
+              {{ 'taux_couverture' | translate }}
+              <span class="text-red">*</span>
+            </label>
+            <div class="input-group">
+              <input type="number" class="form-control"
+                     [(ngModel)]="tauxInput"
+                     min="0" max="100"
+                     (ngModelChange)="onTauxChange()">
+              <span class="input-group-addon">%</span>
+            </div>
+            <span class="help-block" *ngIf="tauxErreur">
+              <i class="fa fa-warning"></i>
+              {{ 'taux_max_100' | translate }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label class="control-label">{{ 'observation' | translate }}</label>
+            <textarea class="form-control" rows="3"
+                      [(ngModel)]="observationInput"
+                      placeholder="{{ 'saisir_observation' | translate }}">
+            </textarea>
+          </div>
+
+        </ng-container>
+
+        <!-- Dialogue de confirmation -->
+        <div *ngIf="showConfirmationValider">
+          <div class="callout callout-info">
+            <h4>
+              <i class="fa fa-info-circle"></i>
+              {{ 'confirmation' | translate }}
+            </h4>
+            <p style="font-size:14px; margin-top:8px;">
+              {{ 'confirmer_validation_msg' | translate }}
+              <strong class="text-primary">
+                {{ formatMontant(montantValideInput) }} FCFA
+              </strong>
+              {{ 'et_taux' | translate }}
+              <strong class="text-primary">{{ tauxInput }}%</strong> ?
+            </p>
+          </div>
+          <div class="text-center" style="margin-top:15px;">
+            <button type="button" class="btn btn-success btn-lg"
+                    style="margin-right:15px;"
+                    (click)="confirmerValidation()">
+              <i class="fa fa-check"></i> {{ 'oui' | translate }}
+            </button>
+            <button type="button" class="btn btn-default btn-lg"
+                    (click)="annulerConfirmationValider()">
+              <i class="fa fa-arrow-left"></i> {{ 'non' | translate }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <!-- fin modal-body -->
+
+      <!-- Footer fixe — formulaire -->
+      <div class="modal-footer"
+           *ngIf="!showConfirmationValider"
+           style="flex-shrink:0; border-top:1px solid #e5e5e5;">
+        <button type="button" class="btn btn-default pull-left"
+                (click)="fermerModals()">
+          <i class="fa fa-times"></i> {{ 'fermer' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary"
+                [disabled]="tauxErreur"
+                (click)="confirmerValidation()">
+          <i class="fa fa-check"></i> {{ 'valider' | translate }}
+        </button>
+      </div>
+
+      <!-- Footer fixe — confirmation -->
+      <div class="modal-footer"
+           *ngIf="showConfirmationValider"
+           style="flex-shrink:0; border-top:1px solid #e5e5e5;">
+        <button type="button" class="btn btn-default"
+                (click)="annulerConfirmationValider()">
+          <i class="fa fa-arrow-left"></i>
+          {{ 'retour_formulaire' | translate }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade in"
+     *ngIf="showModalValider" style="z-index:1040;"></div>
+
+
+<!-- ===== MODAL REJETER ===== -->
+<div class="modal fade"
+     [class.in]="showModalRejeter"
+     [style.display]="showModalRejeter ? 'block' : 'none'"
+     tabindex="-1" role="dialog" style="z-index:1050; overflow-y:auto;">
+  <div class="modal-dialog" role="document"
+       style="max-width:520px; width:520px;
+              margin-top:20px;
+              margin-bottom:20px;">
+    <div class="modal-content"
+         *ngIf="consultationSelectionnee"
+         style="max-height:calc(100vh - 40px);
+                display:flex;
+                flex-direction:column;">
+
+      <!-- Header fixe -->
+      <div class="modal-header"
+           style="background:#dd4b39;color:#fff;border-radius:3px 3px 0 0;
+                  flex-shrink:0;">
+        <button type="button" class="close"
+                style="color:#fff;opacity:1;"
+                (click)="fermerModals()">
+          <span>&times;</span>
+        </button>
+        <h4 class="modal-title">
+          <i class="fa fa-info-circle"></i>
+          {{ 'confirmation' | translate }}
+        </h4>
+      </div>
+
+      <!-- Body scrollable -->
+      <div class="modal-body" style="overflow-y:auto; flex:1 1 auto;">
+        <table class="table table-bordered table-condensed"
+               style="font-size:13px;">
+          <tbody>
+            <tr>
+              <td width="40%" class="bg-gray-light">
+                <strong>{{ 'assure_principal' | translate }} :</strong>
+              </td>
+              <td>
+                {{ consultationSelectionnee.nomAdherent
+                   || consultationSelectionnee.codeAdherent }}
+              </td>
+            </tr>
+            <tr *ngIf="consultationSelectionnee.nomAyantDroit">
+              <td class="bg-gray-light">
+                <strong>{{ 'ayant_droit' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.nomAyantDroit }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'groupe' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.groupe || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'souscripteur' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.souscripteur || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'taux_couverture' | translate }} :</strong>
+              </td>
+              <td>
+                {{ consultationSelectionnee.taux
+                   ? consultationSelectionnee.taux + '' : '-' }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-danger">
+          <p style="font-size:14px;">
+            {{ 'confirmer_rejet_consultation' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer fixe -->
+      <div class="modal-footer"
+           style="flex-shrink:0; border-top:1px solid #e5e5e5;">
+        <button type="button" class="btn btn-danger"
+                (click)="confirmerRejet()">
+          <i class="fa fa-times"></i> {{ 'oui' | translate }}
+        </button>
+        <button type="button" class="btn btn-default"
+                (click)="fermerModals()">
+          {{ 'non' | translate }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade in"
+     *ngIf="showModalRejeter" style="z-index:1040;"></div>
+
+
+<!-- ===== MODAL ENCAISSER (Prestataire uniquement) ===== -->
+<div class="modal fade"
+     [class.in]="showModalEncaisser"
+     [style.display]="showModalEncaisser ? 'block' : 'none'"
+     tabindex="-1" role="dialog" style="z-index:1050; overflow-y:auto;">
+  <div class="modal-dialog" role="document"
+       style="width:600px; max-width:95%;
+              margin-top:20px;
+              margin-bottom:20px;">
+    <div class="modal-content"
+         *ngIf="consultationSelectionnee"
+         style="max-height:calc(100vh - 40px);
+                display:flex;
+                flex-direction:column;">
+
+      <!-- Header fixe -->
+      <div class="modal-header"
+           style="background:#00a65a;color:#fff;border-radius:3px 3px 0 0;
+                  flex-shrink:0;">
+        <button type="button" class="close"
+                style="color:#fff;opacity:1;"
+                (click)="fermerModals()">
+          <span>&times;</span>
+        </button>
+        <h4 class="modal-title">
+          <i class="fa fa-money"></i>
+          {{ 'confirmer_encaissement' | translate }}
+        </h4>
+      </div>
+
+      <!-- Body scrollable -->
+      <div class="modal-body" style="overflow-y:auto; flex:1 1 auto;">
+        <table class="table table-bordered table-condensed"
+               style="font-size:13px;">
+          <tbody>
+            <tr>
+              <td width="40%" class="bg-gray-light">
+                <strong>{{ 'assure_principal' | translate }} :</strong>
+              </td>
+              <td>
+                {{ consultationSelectionnee.nomAdherent
+                   || consultationSelectionnee.codeAdherent }}
+              </td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'souscripteur' | translate }} :</strong>
+              </td>
+              <td>{{ consultationSelectionnee.souscripteur || '-' }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'montant_valide' | translate }} :</strong>
+              </td>
+              <td>
+                <strong class="text-success">
+                  {{ formatMontant(consultationSelectionnee.montantValide || 0) }}
+                  FCFA
+                </strong>
+              </td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'part_zenithe' | translate }} :</strong>
+              </td>
+              <td>
+                {{ formatMontant(consultationSelectionnee.partZenithe || 0) }}
+                FCFA
+              </td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'part_assure' | translate }} :</strong>
+              </td>
+              <td>
+                {{ formatMontant(consultationSelectionnee.partAssure || 0) }}
+                FCFA
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout callout-info">
+          <p style="font-size:14px;">
+            {{ 'confirmer_encaissement_msg' | translate }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Footer fixe -->
+      <div class="modal-footer"
+           style="flex-shrink:0; border-top:1px solid #e5e5e5;">
+        <button type="button" class="btn btn-success"
+                (click)="confirmerEncaissement()">
+          <i class="fa fa-money"></i> {{ 'encaisser' | translate }}
+        </button>
+        <button type="button" class="btn btn-default"
+                (click)="fermerModals()">
+          {{ 'fermer' | translate }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade in"
+     *ngIf="showModalEncaisser" style="z-index:1040;"></div>

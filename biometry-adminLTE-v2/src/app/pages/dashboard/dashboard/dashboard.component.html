@@ -1,0 +1,251 @@
+<!-- Main content -->
+<section class="content">
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="text-center" style="padding: 60px;">
+    <i class="fa fa-spinner fa-spin fa-3x text-muted"></i>
+    <p class="text-muted" style="margin-top:10px;">{{ 'chargement' | translate }}</p>
+  </div>
+
+  <!-- ====================== DASHBOARD SERVICE SANTE / ADMIN ====================== -->
+  <ng-container *ngIf="!isLoading && (isServiceSante || isAdmin)">
+
+    <!-- Cards compteurs en attente -->
+    <div class="row">
+      <div class="col-lg-3 col-xs-6">
+        <div class="small-box bg-aqua">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsSS?.consultationsEnAttente || 0) }}</h3>
+            <p class="text-center">{{ 'consultations' | translate }}</p>
+          </div>
+          <div class="icon"><i class="ion ion-ios-pulse-strong"></i></div>
+          <a routerLink="/public/admin/consultation" class="small-box-footer">
+            {{ 'voir_plus' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-xs-6">
+        <div class="small-box bg-green">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsSS?.ordonnancesEnAttente || 0) }}</h3>
+            <p class="text-center">{{ 'ordonnances' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fa fa-file-text-o"></i></div>
+          <a routerLink="/public/admin/ordonnance" class="small-box-footer">
+            {{ 'voir_plus' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-xs-6">
+        <div class="small-box bg-yellow">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsSS?.examensEnAttente || 0) }}</h3>
+            <p class="text-center">{{ 'examens' | translate }}</p>
+          </div>
+          <div class="icon"><i class="ion ion-beaker"></i></div>
+          <a routerLink="/public/admin/examen" class="small-box-footer">
+            {{ 'voir_plus' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-3 col-xs-6">
+        <div class="small-box bg-red">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsSS?.totalVisitesAnnee || 0) }}</h3>
+            <p class="text-center">{{ 'visites' | translate }} {{ anneeSelectionnee }}</p>
+          </div>
+          <div class="icon"><i class="ion ion-ios-people"></i></div>
+          <a href="#" class="small-box-footer">
+            Stats <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphique CanvasJS -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box box-info">
+          <div class="box-header with-border">
+            <h3 class="box-title">
+              {{ 'consomeprestation' | translate }}, ANNEE: {{ anneeSelectionnee }}
+            </h3>
+            <div class="box-tools pull-right">
+              <select class="form-control input-sm"
+                      style="width:120px;display:inline-block;"
+                      (change)="onAnneeChange($event)">
+                <option *ngFor="let a of anneesDisponibles"
+                        [value]="a"
+                        [selected]="a === anneeSelectionnee">
+                  {{ a }}
+                </option>
+              </select>
+              <button type="button" class="btn btn-box-tool" data-widget="collapse">
+                <i class="fa fa-minus"></i>
+              </button>
+              <button type="button" class="btn btn-box-tool" data-widget="remove">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <div class="box-body">
+            <canvasjs-chart
+              [options]="chartOptions"
+              [styles]="{width:'100%',height:'360px'}">
+            </canvasjs-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats mois courant -->
+    <div class="row">
+      <div class="col-md-4">
+        <div class="info-box">
+          <span class="info-box-icon bg-aqua"><i class="fa fa-check"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'valides_ce_mois' | translate }}</span>
+            <span class="info-box-number">
+              {{ formatNumber(statsSS?.totalValidesMois || 0) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="info-box">
+          <span class="info-box-icon bg-green"><i class="fa fa-money"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'encaisses_ce_mois' | translate }}</span>
+            <span class="info-box-number">
+              {{ formatNumber(statsSS?.totalEncaissesMois || 0) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="info-box">
+          <span class="info-box-icon bg-yellow"><i class="fa fa-bar-chart"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">
+              {{ 'montant' | translate }} {{ anneeSelectionnee }}
+            </span>
+            <span class="info-box-number" style="font-size:14px;">
+              {{ formatMontant(statsSS?.montantTotalAnnee || 0) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ====================== DASHBOARD PRESTATAIRE ====================== -->
+  <ng-container *ngIf="!isLoading && isPrestataire">
+
+    <!-- Cards prestataire -->
+    <div class="row">
+
+           <div *ngIf="statsPrestataire?.accesConsultation" class="col-lg-3 col-xs-6">
+        <div class="small-box bg-aqua">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsPrestataire?.consultationsMois || 0) }}</h3>
+            <p class="text-center">{{ 'consultations_ce_mois' | translate }}</p>
+          </div>
+          <div class="icon"><i class="ion ion-ios-pulse-strong"></i></div>
+          <a routerLink="/public/admin/consultation" class="small-box-footer">
+            {{ 'voir' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+        <div *ngIf="statsPrestataire?.accesOrdonnance" class="col-lg-3 col-xs-6">
+        <div class="small-box bg-green">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsPrestataire?.ordonnancesMois || 0) }}</h3>
+            <p class="text-center">{{ 'ordonnances_ce_mois' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fa fa-file-text-o"></i></div>
+          <a routerLink="/public/admin/ordonnance" class="small-box-footer">
+            {{ 'voir' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+      <div *ngIf="statsPrestataire?.accesExamen" class="col-lg-3 col-xs-6">
+        <div class="small-box bg-yellow">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsPrestataire?.examensMois || 0) }}</h3>
+            <p class="text-center">{{ 'examens_ce_mois' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fa fa-flask"></i></div>
+          <a routerLink="/public/admin/examen" class="small-box-footer">
+            {{ 'voir' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-xs-6">
+        <div class="small-box bg-orange">
+          <div class="inner">
+            <h3 class="text-center">{{ formatNumber(statsPrestataire?.visitesAujourdhui || 0) }}</h3>
+            <p class="text-center">{{ 'visites_aujourdhui' | translate }}</p>
+          </div>
+          <div class="icon"><i class="ion ion-ios-people"></i></div>
+          <a routerLink="/public/admin/consultation" class="small-box-footer">
+            {{ 'voir' | translate }} <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+ 
+
+    
+
+      
+
+      <div class="col-lg-3 col-xs-6">
+        <div class="small-box bg-red">
+          <div class="inner">
+            <h3 class="text-center">{{ formatMontant(statsPrestataire?.montantTotalAnnee || 0) }}</h3>
+            <p class="text-center">{{ 'total_encaisse' | translate }} {{ anneeSelectionnee }}</p>
+          </div>
+          <div class="icon"><i class="ion ion-stats-bars"></i></div>
+          <a href="#" class="small-box-footer">
+            Stats <i class="fa fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphique prestataire -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="box box-success">
+          <div class="box-header with-border">
+            <h3 class="box-title text-center" >
+              {{ 'encaissements_par_mois' | translate }} — {{ anneeSelectionnee }}
+            </h3>
+            <div class="box-tools pull-right">
+              <select class="form-control input-sm"
+                      style="width:120px;display:inline-block;"
+                      (change)="onAnneeChange($event)">
+                <option *ngFor="let a of anneesDisponibles"
+                        [value]="a"
+                        [selected]="a === anneeSelectionnee">
+                  {{ a }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="box-body">
+            <canvasjs-chart
+              [options]="chartOptions"
+              [styles]="{width:'100%',height:'300px'}">
+            </canvasjs-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </ng-container>
+
+</section>

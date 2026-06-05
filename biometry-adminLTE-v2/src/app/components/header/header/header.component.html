@@ -1,0 +1,107 @@
+<header class="main-header">
+  <a routerLink="/public/admin/accueil" class="logo">
+    <span class="logo-mini"><b>E</b>S</span>
+    <span class="logo-lg"><b>ZENITHE</b> Insurance</span>
+  </a>
+
+  <nav class="navbar navbar-static-top" role="navigation">
+    <a href="#" class="sidebar-toggle" (click)="toggleSidebar($event)" role="button">
+      <span class="sr-only">Toggle navigation</span>
+    </a>
+
+    <div class="navbar-custom-menu">
+      <ul class="nav navbar-nav">
+
+        <!-- Consultations en attente -->
+        <li class="dropdown messages-menu" *ngIf="consultationCount > 0" [class.open]="dropdowns['consultations']">
+          <a href="#" class="dropdown-toggle" (click)="toggleDropdown('consultations', $event)">
+            <i class="ion ion-ios-pulse-strong"></i>
+            <span class="label label-info">{{ consultationCount }}</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li class="header">{{ consultationCount }} consultations en attente</li>
+            <li><ul class="menu"><li>
+              <a href="#" (click)="goToConsultations(); $event.preventDefault()">
+                <i class="ion ion-ios-pulse-strong text-info"></i> Voir toutes
+              </a>
+            </li></ul></li>
+          </ul>
+        </li>
+
+        <!-- Ordonnances en attente -->
+        <li class="dropdown messages-menu" *ngIf="ordonnanceCount > 0" [class.open]="dropdowns['ordonnances']">
+          <a href="#" class="dropdown-toggle" (click)="toggleDropdown('ordonnances', $event)">
+            <i class="fa fa-file-text-o"></i>
+            <span class="label label-success">{{ ordonnanceCount }}</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li class="header">{{ ordonnanceCount }} ordonnances en attente</li>
+            <li><ul class="menu"><li>
+              <a href="#" (click)="goToOrdonnances(); $event.preventDefault()">
+                <i class="fa fa-file-text-o text-success"></i> Voir toutes
+              </a>
+            </li></ul></li>
+          </ul>
+        </li>
+
+        <!-- Examens en attente -->
+        <li class="dropdown messages-menu" *ngIf="examenCount > 0" [class.open]="dropdowns['examens']">
+          <a href="#" class="dropdown-toggle" (click)="toggleDropdown('examens', $event)">
+            <i class="ion ion-beaker"></i>
+            <span class="label label-warning">{{ examenCount }}</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li class="header">{{ examenCount }} examens en attente</li>
+            <li><ul class="menu"><li>
+              <a href="#" (click)="goToExamens(); $event.preventDefault()">
+                <i class="ion ion-beaker text-warning"></i> Voir tous
+              </a>
+            </li></ul></li>
+          </ul>
+        </li>
+
+        <!-- Menu Utilisateur -->
+        <li class="dropdown user user-menu" [class.open]="dropdowns['user']">
+          <a href="#" class="dropdown-toggle" (click)="toggleDropdown('user', $event)">
+            <!-- Initiales à la place de la photo
+            <span class="user-image" style="display:inline-block;width:40px;height:40px;
+              border-radius:50%;background:#3c8dbc;color:white;text-align:center;
+              line-height:40px;font-weight:bold;font-size:14px;margin-top:10px;">
+              {{ getInitiales() }}
+            </span> -->
+             <img src="./img/user2-160x160.png" class="user-image" alt="User image">
+            <span class="hidden-xs">{{ user?.prenom }} {{ user?.nom }} <i class="caret"></i></span>
+          </a>
+          <ul class="dropdown-menu">
+            <li class="user-header">
+             <!-- <span class="img-circle" style="display:inline-block;width:90px;height:90px;
+                border-radius:50%;background:#3c8dbc;color:white;text-align:center;
+                line-height:90px;font-size:28px;font-weight:bold;">
+                {{ getInitiales() }}
+              </span> -->
+              <img src="./img/user2-160x160.png" class="user-image" alt="User image">
+              <p>
+                {{ user?.prenom }} {{ user?.nom }} — {{ user?.profilLibelle }}
+                <small>{{ user?.login }}</small>
+              </p>
+            </li>
+            <li class="user-footer">
+              <div class="pull-left">
+                <a routerLink="/public/admin/parametre" class="btn btn-default btn-flat"
+                  (click)="closeAllDropdowns()">
+                  Paramètres
+                </a>
+              </div>
+              <div class="pull-right">
+                <a (click)="logout()" class="btn btn-default btn-flat" style="cursor:pointer;">
+                  Déconnexion
+                </a>
+              </div>
+            </li>
+          </ul>
+        </li>
+
+      </ul>
+    </div>
+  </nav>
+</header>

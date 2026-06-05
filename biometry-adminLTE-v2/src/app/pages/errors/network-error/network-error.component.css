@@ -1,0 +1,356 @@
+body.error-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 70px;
+  margin: 100;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.navbar-custom {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  border: none !important;
+  backdrop-filter: blur(10px);
+}
+
+.navbar-custom .navbar-brand {
+  color: #fff !important;
+}
+
+.error-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.error-content {
+  background: #fff;
+  border-radius: 20px;
+  padding: 50px 40px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* WiFi Icon Animation */
+.wifi-icon-container {
+  margin-bottom: 30px;
+}
+
+.wifi-icon {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+
+.wifi-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.wifi-circle.disconnected {
+  background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-50%, -50%) rotate(-5deg); }
+  75% { transform: translate(-50%, -50%) rotate(5deg); }
+}
+
+.wifi-circle i {
+  font-size: 40px;
+  color: #fff;
+}
+
+.wifi-wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 3px solid #667eea;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.wifi-wave.active {
+  animation: waveExpand 2s ease-out infinite;
+}
+
+.wave-1 {
+  width: 90px;
+  height: 90px;
+}
+
+.wave-2 {
+  width: 105px;
+  height: 105px;
+  animation-delay: 0.5s;
+}
+
+.wave-3 {
+  width: 120px;
+  height: 120px;
+  animation-delay: 1s;
+}
+
+@keyframes waveExpand {
+  0% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* Error Text */
+.error-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.error-message {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+/* Countdown Circle */
+.countdown-container {
+  margin: 30px 0;
+}
+
+.countdown-circle {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+}
+
+.countdown-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.countdown-bg {
+  fill: none;
+  stroke: #e0e0e0;
+  stroke-width: 8;
+}
+
+.countdown-progress {
+  fill: none;
+  stroke: url(#gradient);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.countdown-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.countdown-number {
+  display: block;
+  font-size: 48px;
+  font-weight: bold;
+  color: #667eea;
+  line-height: 1;
+}
+
+.countdown-label {
+  display: block;
+  font-size: 14px;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* Status Message */
+.status-message {
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  font-size: 16px;
+  font-weight: 500;
+  background: #f8f9fa;
+  color: #666;
+  transition: all 0.3s ease;
+}
+
+.status-message i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.status-message.checking {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-message.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  animation: successPulse 0.5s ease-out;
+}
+
+@keyframes successPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin: 30px 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  border-radius: 25px;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-default {
+  background: #f8f9fa;
+  color: #666;
+}
+
+.btn-default:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+/* Tips Section */
+.tips-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.tips-section h4 {
+  color: #333;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.tips-section h4 i {
+  color: #ffa726;
+  margin-right: 8px;
+}
+
+.tips-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.tips-section li {
+  color: #666;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+/* Footer */
+.footer {
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  padding: 15px 0;
+  backdrop-filter: blur(10px);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .error-content {
+    padding: 40px 20px;
+  }
+
+  .error-title {
+    font-size: 24px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+  }
+ 
+}

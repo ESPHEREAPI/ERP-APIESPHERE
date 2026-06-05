@@ -1,0 +1,622 @@
+<div class="box box-warning">
+  <div class="box-header with-border">
+    <h3 class="box-title">
+      <i class="fa fa-flask text-warning"></i>
+      {{ 'examen' | translate }}
+    </h3>
+  </div>
+
+  <div class="box-body">
+
+    <!-- Succès -->
+    <div *ngIf="success"
+         class="alert alert-success text-center"
+         style="font-size:14px;">
+      <i class="fa fa-check-circle fa-2x"></i><br><br>
+      <strong>
+        {{ 'examens_enregistres' | translate }}
+      </strong><br>
+      <small>{{ 'redirection_cours' | translate }}</small>
+    </div>
+
+    <div *ngIf="!success">
+
+      <div *ngIf="isLoading"
+           class="text-center" style="padding:40px;">
+        <i class="fa fa-spinner fa-spin fa-2x
+                  text-muted"></i>
+      </div>
+
+      <div *ngIf="!isLoading">
+
+        <!-- Infos assuré -->
+        <div class="row" style="margin-bottom:15px;">
+          <div class="col-md-6 col-md-offset-3">
+            <table class="table table-bordered
+                          table-condensed"
+                   style="font-size:13px;">
+              <tbody>
+                <tr>
+                  <td class="bg-gray-light" width="40%">
+                    <strong>
+                      {{ 'assure_principal' | translate }} :
+                    </strong>
+                  </td>
+                  <td>{{ nomAssure || '-' }}</td>
+                </tr>
+                <tr *ngIf="nomAyantDroit">
+                  <td class="bg-gray-light">
+                    <strong>
+                      <i class="fa fa-user text-info"></i>
+                      {{ 'ayant_droit_concerne'
+                         | translate }} :
+                    </strong>
+                  </td>
+                  <td>
+                    <span class="text-info">
+                      <strong>{{ nomAyantDroit }}</strong>
+                    </span>
+                    <span *ngIf="lienParente"
+                          class="text-muted"
+                          style="margin-left:8px;
+                                 font-size:11px;">
+                      ({{ lienParente }})
+                    </span>
+                  </td>
+                </tr>
+                <tr *ngIf="groupe">
+                  <td class="bg-gray-light">
+                    <strong>
+                      {{ 'groupe' | translate }} :
+                    </strong>
+                  </td>
+                  <td>{{ groupe }}</td>
+                </tr>
+                <tr>
+                  <td class="bg-gray-light">
+                    <strong>
+                      {{ 'souscripteur' | translate }} :
+                    </strong>
+                  </td>
+                  <td>{{ souscripteur || '-' }}</td>
+                </tr>
+                <tr>
+                  <td class="bg-gray-light">
+                    <strong>
+                      {{ 'nature_affection' | translate }}
+                      <span class="text-danger">*</span>
+                    </strong>
+                  </td>
+                  <td>
+                    <input type="text"
+                           class="form-control input-sm"
+                           [(ngModel)]="natureAffection"
+                           placeholder="{{ 'nature_affection'
+                                          | translate }}">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Consommation -->
+        <div *ngIf="isLoadingConso"
+             class="text-center" style="padding:8px;">
+          <i class="fa fa-spinner fa-spin text-muted"></i>
+          <span class="text-muted"
+                style="margin-left:6px;font-size:12px;">
+            {{ 'chargement_consommation' | translate }}
+          </span>
+        </div>
+
+        <div *ngIf="!isLoadingConso && consommation"
+             style="margin-bottom:15px;">
+          <div *ngIf="consommation.niveauAlerte==='CRITIQUE'"
+               class="alert alert-danger"
+               style="padding:8px;font-size:12px;">
+            <i class="fa fa-exclamation-triangle"></i>
+            <strong>
+              {{ 'plafond_depasse' | translate }}
+            </strong>
+            {{ consommation.messageAlerte }}
+          </div>
+          <div *ngIf="consommation.niveauAlerte==='ATTENTION'"
+               class="alert alert-warning"
+               style="padding:8px;font-size:12px;">
+            <i class="fa fa-warning"></i>
+            {{ consommation.messageAlerte }}
+          </div>
+          <div *ngIf="consommation.niveauAlerte==='NORMAL'"
+               class="alert alert-success"
+               style="padding:8px;font-size:12px;">
+            <i class="fa fa-check-circle"></i>
+            {{ consommation.messageAlerte }}
+          </div>
+          <div style="font-size:11px;margin-bottom:2px;">
+            {{ 'solde_disponible' | translate }} :
+            <strong [ngClass]="getSoldeClass(
+              consommation.soldeApresEncaisse)">
+              {{ formatMontant(
+                 consommation.soldeApresEncaisse) }} FCFA
+            </strong>
+          </div>
+          <div class="progress progress-xs">
+            <div [ngClass]="'progress-bar '
+                  + getBarreClass(
+                    consommation.pourcentageEncaisse)"
+                 [style.width.%]="min100(
+                   consommation.pourcentageEncaisse)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Erreur -->
+        <div *ngIf="erreur"
+             class="alert alert-danger"
+             style="font-size:13px;">
+          <i class="fa fa-times-circle"></i>
+          {{ erreur }}
+        </div>
+
+        <!-- Tableau examens -->
+        <div class="table-responsive">
+          <table class="table table-bordered
+                        table-condensed"
+                 style="font-size:12px;">
+            <thead>
+              <tr style="background:#f39c12;color:#fff;">
+                <th style="width:30%;">
+                  {{ 'liste_examens' | translate }}
+                </th>
+                <th style="width:20%;">
+                  {{ 'type_examen' | translate }}
+                </th>
+                <th style="width:15%;">
+                  {{ 'valeur' | translate }}
+                </th>
+                <th style="width:10%;">
+                  {{ 'nombre' | translate }}
+                </th>
+                <th style="width:13%;"
+                    class="text-right">
+                  {{ 'total' | translate }}
+                </th>
+                <th style="width:6%;"
+                    class="text-center">
+                  <i class="fa fa-cog"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let l of lignes;
+                          index as i;
+                          trackBy: trackByIndex">
+
+                <!-- Sélection examen -->
+                <td class="exm-cell">
+                  <div class="input-group input-group-sm">
+                    <input type="text"
+                           class="form-control exm-input"
+                           [value]="l.nom
+                             || ('selectionner' | translate)"
+                           [class.has-value]="!!l.nom"
+                           readonly
+                           (click)="ouvrirDropdown(
+                             i, $event)" />
+                    <span class="input-group-btn">
+                      <button class="btn btn-default btn-sm"
+                              type="button"
+                              (click)="ouvrirDropdown(
+                                i, $event)">
+                        <i class="fa"
+                           [class.fa-chevron-down]=
+                             "dropdownOuvertIndex !== i"
+                           [class.fa-chevron-up]=
+                             "dropdownOuvertIndex === i">
+                        </i>
+                      </button>
+                    </span>
+                  </div>
+
+                  <!-- Dropdown fixed -->
+                  <div *ngIf="dropdownOuvertIndex === i"
+                       class="exm-dropdown"
+                       [style.top.px]="dropdownY"
+                       [style.left.px]="dropdownX"
+                       [style.width.px]="dropdownW">
+
+                    <div class="exm-search">
+                      <div class="input-group
+                                  input-group-sm">
+                        <span class="input-group-addon">
+                          <i class="fa fa-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control"
+                               [(ngModel)]="searchExamen"
+                               placeholder="Rechercher..."
+                               (ngModelChange)=
+                                 "onSearchExamen($event)"
+                               (click)=
+                                 "$event.stopPropagation()" />
+                        <span class="input-group-btn">
+                          <button
+                            class="btn btn-default btn-sm"
+                            type="button"
+                            *ngIf="searchExamen"
+                            (click)="viderRecherche()">
+                            <i class="fa fa-times"></i>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div *ngIf="isLoadingExamens"
+                         class="exm-loading">
+                      <i class="fa fa-spinner fa-spin"></i>
+                      {{ 'chargement' | translate }}
+                    </div>
+
+                    <div *ngIf="!isLoadingExamens
+                              && examensFiltres.length > 0"
+                         class="exm-count">
+                      {{ examensFiltres.length }} résultat(s)
+                    </div>
+
+                    <ul class="exm-list">
+                      <li *ngFor="let ex of examensFiltres"
+                          class="exm-item"
+                          (click)="selectionnerExamen(
+                            i, ex)"
+                          [class.active]=
+                            "l.examenId === ex.id">
+                        <span class="exm-item-nom">
+                          {{ ex.nom }}
+                        </span>
+                        <span *ngIf="ex.valeur"
+                              class="exm-item-prix">
+                          <span class="label
+                                       label-warning">
+                            {{ formatMontant(ex.valeur) }} F
+                          </span>
+                        </span>
+                        <i *ngIf="l.examenId === ex.id"
+                           class="fa fa-check text-success
+                                  exm-check">
+                        </i>
+                      </li>
+                      <li *ngIf="!isLoadingExamens
+                               && examensFiltres.length === 0"
+                          class="exm-empty">
+                        <i class="fa fa-exclamation-circle">
+                        </i>
+                        Aucun examen trouvé
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+
+                <!-- Type examen -->
+                <td>
+                  <select class="form-control input-sm"
+                          [(ngModel)]="l.typeExamen">
+                    <option value="">
+                      {{ 'selectionner' | translate }}
+                    </option>
+                    <option *ngFor="let t of typesExamen"
+                            [value]="t.id">
+                      {{ t.nom }}
+                    </option>
+                  </select>
+                </td>
+
+                <!-- Valeur -->
+                <td>
+                  <input type="number"
+                         class="form-control input-sm"
+                         [ngModel]="l.valeur"
+                         (ngModelChange)=
+                           "l.valeur = +$event"
+                         placeholder="{{ 'valeur'
+                                         | translate }}"
+                         min="0">
+                </td>
+
+                <!-- Nombre -->
+                <td>
+                  <input type="number"
+                         class="form-control input-sm"
+                         [ngModel]="l.nbre"
+                         (ngModelChange)="l.nbre = +$event"
+                         min="1"
+                         style="width:60px;">
+                </td>
+
+                <!-- Total ligne -->
+                <td class="text-right">
+                  <strong>
+                    {{ formatMontant(
+                       +(l.valeur || 0) * +(l.nbre || 1)) }}
+                  </strong>
+                </td>
+
+                <!-- Actions -->
+                <td class="text-center"
+                    style="white-space:nowrap;">
+                  <button type="button"
+                          class="btn btn-danger btn-xs"
+                          [disabled]="lignes.length === 1"
+                          (click)="supprimerLigne(i)"
+                          title="Supprimer">
+                    <i class="fa fa-minus"></i>
+                  </button>
+                  <button type="button"
+                          class="btn btn-warning btn-xs"
+                          style="margin-left:3px;"
+                          (click)="ajouterLigne()">
+                    <i class="fa fa-plus"></i>
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="6" style="padding:8px;">
+                  <button type="button"
+                          class="btn btn-warning btn-sm"
+                          (click)="$event.stopPropagation();
+                                   ouvrirDialogAjout()">
+                    <i class="fa fa-plus"></i>
+                    {{ 'ajouter_examen' | translate }}
+                  </button>
+                </td>
+              </tr>
+              <tr style="background:#f9f9f9;">
+                <td colspan="4" class="text-right">
+                  <strong>
+                    {{ 'total_examens' | translate }} :
+                  </strong>
+                </td>
+                <td class="text-right">
+                  <strong class="text-success">
+                    {{ formatMontant(montantTotal) }} FCFA
+                  </strong>
+                </td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Boutons -->
+        <div class="row" style="margin-top:15px;">
+          <div class="col-sm-12">
+            <button type="button"
+                    class="btn btn-default"
+                    (click)="retour()">
+              <i class="fa fa-arrow-left"></i>
+              {{ 'retour' | translate }}
+            </button>
+            <button type="button"
+                    class="btn btn-warning pull-right"
+                    [disabled]="isSubmitting
+                                || !formulaireValide"
+                    (click)="ouvrirConfirmation()">
+              <i class="fa fa-save"
+                 *ngIf="!isSubmitting"></i>
+              <i class="fa fa-spinner fa-spin"
+                 *ngIf="isSubmitting"></i>
+              {{ 'enregistrer_btn' | translate }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ DIALOG AJOUT EXAMEN ═══ -->
+  <div *ngIf="dialogOuvert"
+       (click)="fermerDialog()"
+       style="position:fixed;inset:0;z-index:10000;
+              background:rgba(0,0,0,.5);
+              display:flex;align-items:center;
+              justify-content:center;">
+    <div (click)="$event.stopPropagation()"
+         style="background:#fff;border-radius:6px;
+                width:440px;
+                box-shadow:0 10px 30px rgba(0,0,0,.3);
+                overflow:hidden;">
+      <div style="background:#f39c12;color:#fff;
+                  padding:14px 18px;display:flex;
+                  justify-content:space-between;
+                  align-items:center;">
+        <strong>
+          <i class="fa fa-flask"></i>&nbsp;
+          {{ 'ajouter_examen' | translate }}
+        </strong>
+        <button type="button"
+                (click)="fermerDialog()"
+                style="background:none;border:none;
+                       color:#fff;font-size:22px;
+                       cursor:pointer;line-height:1;">
+          ×
+        </button>
+      </div>
+      <div style="padding:20px;">
+        <div class="form-group">
+          <label>
+            Nom de l'examen / acte
+            <span class="text-danger">*</span>
+          </label>
+          <input type="text"
+                 class="form-control"
+                 [(ngModel)]="dialogNom"
+                 placeholder="Ex: ECHOGRAPHIE ABDOMINALE..."
+                 (keyup.enter)="confirmerAjoutExamen()" />
+        </div>
+        <div *ngIf="dialogStatut==='local'"
+             class="alert alert-success"
+             style="padding:8px;font-size:12px;">
+          <i class="fa fa-check-circle"></i>
+          Trouvé dans la liste locale.
+        </div>
+        <div *ngIf="dialogStatut==='bdd'"
+             class="alert alert-info"
+             style="padding:8px;font-size:12px;">
+          <i class="fa fa-database"></i>
+          Trouvé dans la base de données.
+        </div>
+        <div *ngIf="dialogStatut==='nouveau'"
+             class="alert alert-warning"
+             style="padding:8px;font-size:12px;">
+          <i class="fa fa-plus-circle"></i>
+          Nouvel examen créé.
+        </div>
+        <div *ngIf="dialogErreur"
+             class="alert alert-danger"
+             style="padding:8px;font-size:12px;">
+          <i class="fa fa-times-circle"></i>
+          {{ dialogErreur }}
+        </div>
+      </div>
+      <div style="padding:12px 18px;
+                  border-top:1px solid #eee;
+                  display:flex;
+                  justify-content:flex-end;gap:8px;">
+        <button type="button"
+                class="btn btn-default"
+                (click)="fermerDialog()">
+          {{ 'annuler_btn' | translate }}
+        </button>
+        <button type="button"
+                class="btn btn-warning"
+                [disabled]="dialogLoading
+                            || !dialogNom.trim()"
+                (click)="confirmerAjoutExamen()">
+          <i class="fa fa-spinner fa-spin"
+             *ngIf="dialogLoading"></i>
+          <i class="fa fa-search"
+             *ngIf="!dialogLoading"></i>
+          Rechercher / Ajouter
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ═══ FIN DIALOG AJOUT ═══ -->
+
+  <!-- ═══ DIALOG CONFIRMATION EXAMEN ═══ -->
+  <div *ngIf="dialogConfirmOuvert"
+       (click)="fermerConfirmation()"
+       style="position:fixed;inset:0;z-index:10001;
+              background:rgba(0,0,0,.5);
+              display:flex;align-items:center;
+              justify-content:center;">
+    <div (click)="$event.stopPropagation()"
+         style="background:#fff;border-radius:6px;
+                width:420px;
+                box-shadow:0 10px 30px rgba(0,0,0,.3);
+                overflow:hidden;">
+      <div style="background:#f39c12;color:#fff;
+                  padding:14px 18px;display:flex;
+                  justify-content:space-between;
+                  align-items:center;">
+        <strong>
+          <i class="fa fa-check-circle"></i>&nbsp;
+          {{ 'confirmation_titre' | translate }}
+        </strong>
+        <button type="button"
+                (click)="fermerConfirmation()"
+                style="background:none;border:none;
+                       color:#fff;font-size:22px;
+                       cursor:pointer;line-height:1;">
+          ×
+        </button>
+      </div>
+      <div style="padding:20px;">
+        <p style="margin-bottom:15px;font-size:13px;">
+          {{ 'confirmation_examen' | translate }}
+        </p>
+        <table class="table table-bordered table-condensed"
+               style="font-size:13px;">
+          <tbody>
+            <tr>
+              <td class="bg-gray-light" width="55%">
+                <strong>
+                  {{ 'detail_lignes' | translate }}
+                </strong>
+              </td>
+              <td>{{ lignes.length }}</td>
+            <tr>
+    <td class="bg-gray-light">
+        <strong>Taux de couverture</strong>
+    </td>
+    <td>
+        <span class="label label-primary">
+            {{ taux }}%
+        </span>
+    </td>
+</tr>
+<tr>
+    <td class="bg-gray-light">
+        <strong>
+            {{ 'detail_montant_total' | translate }}
+        </strong>
+    </td>
+    <td>
+        <strong>
+            {{ formatMontant(montantTotal) }} FCFA
+        </strong>
+    </td>
+</tr>
+<tr>
+    <td class="bg-gray-light">
+        <strong>
+            {{ 'detail_part_zenithe' | translate }}
+        </strong>
+    </td>
+    <td class="text-primary">
+        <strong>
+            {{ formatMontant(partZenithe) }} FCFA
+        </strong>
+    </td>
+</tr>
+<tr>
+    <td class="bg-gray-light">
+        <strong>
+            {{ 'detail_part_assure' | translate }}
+        </strong>
+    </td>
+    <td class="text-warning">
+        <strong>
+            {{ formatMontant(partAssure) }} FCFA
+        </strong>
+    </td>
+</tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:12px 18px;
+                  border-top:1px solid #eee;
+                  display:flex;
+                  justify-content:flex-end;gap:8px;">
+        <button type="button"
+                class="btn btn-default"
+                (click)="fermerConfirmation()">
+          {{ 'annuler_btn' | translate }}
+        </button>
+        <button type="button"
+                class="btn btn-warning"
+                [disabled]="isSubmitting"
+                (click)="soumettre()">
+          <i class="fa fa-check"></i>
+          {{ 'confirmer' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- ═══ FIN DIALOG CONFIRMATION ═══ -->
+
+</div>

@@ -1,0 +1,19 @@
+.ligne-attente { background-color: #fdf3e3 !important; }
+.ligne-valide  { background-color: #f0fff0 !important; }
+.ligne-rejete  { background-color: #fff0f0 !important; }
+
+.progress.progress-xs {
+  height: 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.table thead tr th {
+  background-color: #3c8dbc;
+  color: #fff;
+  white-space: nowrap;
+  vertical-align: middle;
+  font-size: 11px;
+}
+
+.table td { vertical-align: middle; }

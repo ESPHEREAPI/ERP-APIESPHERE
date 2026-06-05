@@ -1,0 +1,209 @@
+/* Transitions fluides pour le sidebar */
+.main-sidebar {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Animations des sous-menus */
+.treeview-menu {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.treeview > a > .pull-right-container > .fa-angle-left {
+  transition: transform 0.3s ease;
+}
+
+.treeview.menu-open > a > .pull-right-container > .fa-angle-left {
+  transform: rotate(-90deg);
+}
+
+/* Style pour mobile */
+@media (max-width: 767px) {
+  /* Overlay sombre quand le menu est ouvert */
+  body.sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 810;
+  }
+  
+  /* Assurer que le sidebar est au-dessus de l'overlay */
+  .main-sidebar {
+    z-index: 820;
+  }
+}
+
+/* Animation du callout */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.blink-two {
+  animation: blink 2s infinite;
+}
+
+/* Transitions fluides pour le sidebar */
+.main-sidebar {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Animations des sous-menus */
+.treeview-menu {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.treeview > a > .pull-right-container > .fa-angle-left {
+  transition: transform 0.3s ease;
+}
+
+.treeview.menu-open > a > .pull-right-container > .fa-angle-left {
+  transform: rotate(-90deg);
+}
+
+/* Style pour mobile */
+@media (max-width: 767px) {
+  body.sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 810;
+  }
+  .main-sidebar {
+    z-index: 820;
+  }
+}
+
+/* ===== ANIMATIONS BADGE CLIGNOTANT ===== */
+
+@keyframes blink-red {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.9);
+    transform: scale(1.1);
+  }
+  50% {
+    opacity: 0.3;
+    box-shadow: 0 0 2px rgba(255, 0, 0, 0.3);
+    transform: scale(1);
+  }
+}
+
+@keyframes blink-orange {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(255, 140, 0, 0.9);
+  }
+  50% {
+    opacity: 0.4;
+    box-shadow: none;
+  }
+}
+
+/* Badge clignotant sur menu parent (rouge urgent) */
+.blink-badge {
+  animation: blink-red 1s infinite !important;
+  font-weight: bold !important;
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+  border-radius: 10px !important;
+}
+
+/* Badge clignotant sur sous-menu (orange) */
+li .blink-badge {
+  animation: blink-orange 1.5s infinite !important;
+}
+
+.label-warning {
+  background-color: #f39c12;
+}
+
+.label-danger {
+  background-color: #dd4b39;
+}
+
+/* Initiales avatar */
+.initiales-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3c8dbc, #1a5276);
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+/* ===== CALLOUTS CLIGNOTANTS BAS SIDEBAR ===== */
+.sidebar-callouts {
+  padding: 8px;
+  margin-top: 10px;
+}
+
+@keyframes blink-callout {
+  0%, 100% {
+    opacity: 1;
+    background-color: #e08e0b;
+  }
+  50% {
+    opacity: 0.6;
+    background-color: #f39c12;
+  }
+}
+
+.callout-alert {
+  background-color: #e08e0b;
+  color: white;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  border-left: 4px solid #c87f0a;
+}
+
+.callout-alert-blink {
+  animation: blink-callout 1.5s infinite;
+}
+
+.callout-alert:hover {
+  background-color: #c87f0a;
+  animation: none;
+}
+
+/* ── Prestataire — validé à encaisser (VERT) ────────── */
+.callout-encaisser {
+    background-color: #00a65a;
+    color:            #fff;
+    border-radius:    4px;
+    padding:          8px 10px;
+    margin:           4px 8px;
+    font-size:        12px;
+    border-left:      4px solid #008d4c;
+    cursor:           pointer;
+}
+
+.callout-encaisser:hover {
+    background-color: #008d4c;
+    transition:       background-color 0.2s;
+}
+
+@keyframes blink-green {
+    0%, 100% { background-color: #00a65a; }
+    50%       { background-color: #008d4c; }
+}
+
+.callout-encaisser-blink {
+    animation: blink-green 1.5s infinite;
+}

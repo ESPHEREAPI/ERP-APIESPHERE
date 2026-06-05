@@ -1,0 +1,311 @@
+<!-- Box filtres -->
+<div class="box box-default">
+  <div class="box-body">
+
+    <!-- Ligne 1 -->
+    <div class="row">
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtrePrestataire"
+                 placeholder="Tous les prestataires"
+                 (keyup)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltres()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateMin"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltres()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateMax"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltres()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateEncMin"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltres()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ligne 2 -->
+    <div class="row" style="margin-top:8px;">
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="date" class="form-control"
+                 [(ngModel)]="filtreDateEncMax"
+                 (change)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button"
+                    (click)="appliquerFiltres()">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreSouscripteur"
+                 placeholder="{{ 'souscripteur' | translate }}"
+                 (keyup)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreAdherent"
+                 placeholder="{{ 'nom_adherent' | translate }}"
+                 (keyup)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control"
+                 [(ngModel)]="filtreAyantDroit"
+                 placeholder="{{ 'nom_ayant_droit' | translate }}"
+                 (keyup)="appliquerFiltres()">
+          <span class="input-group-btn">
+            <button class="btn btn-default" type="button">
+              <i class="fa fa-search"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Box liste -->
+<div class="box box-primary">
+
+  <div class="box-header with-border">
+    <h3 class="box-title">
+      <i class="fa fa-medkit"></i>
+      Liste des ordonnances
+    </h3>
+    <div class="box-tools pull-right">
+      <button class="btn btn-default btn-sm">
+        <i class="fa fa-print"></i> {{ 'exporter' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="box-body">
+
+    <!-- Nbre lignes + info -->
+    <div class="row" style="margin-bottom:10px;">
+      <div class="col-sm-4">
+        <label>
+          {{ 'nbre_lignes' | translate }}
+          <select class="form-control input-sm"
+                  style="width:auto;display:inline-block;margin:0 5px;"
+                  [(ngModel)]="pageSize"
+                  (change)="onPageSizeChange()">
+            <option [value]="10">10</option>
+            <option [value]="25">25</option>
+            <option [value]="50">50</option>
+            <option [value]="100">100</option>
+          </select>
+        </label>
+      </div>
+      <div class="col-sm-8 text-right" style="padding-top:6px;">
+        <span class="text-muted small" *ngIf="!isLoading">{{ pageInfo }}</span>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center" style="padding:40px;">
+      <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+      <p class="text-muted" style="margin-top:8px;">
+        {{ 'chargement' | translate }}
+      </p>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!isLoading"
+         style="overflow-x:auto; overflow-y:visible;">
+      <table class="table table-bordered table-hover table-condensed"
+             style="font-size:12px; margin-bottom:0;">
+        <thead>
+          <tr>
+            <th>{{ 'prestataire' | translate }}</th>
+            <th>{{ 'souscripteur' | translate }}</th>
+            <th>{{ 'assure_principal' | translate }}</th>
+            <th>{{ 'ayant_droit' | translate }}</th>
+            <th>Nature affection</th>
+            <th>{{ 'date' | translate }}</th>
+            <th class="text-center">Lignes</th>
+            <th>{{ 'etat' | translate }}</th>
+            <th class="text-center" style="width:130px;">
+              {{ 'actions' | translate }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of prestations; trackBy: trackById"
+              [class.consultation-attente]="
+                p.etatGlobal === 'attente_validation'">
+
+            <!-- Prestataire — nom enrichi -->
+            <td>{{ p.nomPrestataire || p.prestataireId }}</td>
+
+            <!-- Souscripteur -->
+            <td>{{ p.souscripteur || '-' }}</td>
+
+            <!-- Adhérent = toujours l'assuré principal -->
+            <td>{{ getNomAdherent(p) }}</td>
+
+            <!-- Ayant droit = nom si renseigné sinon - -->
+            <td>{{ getNomAyantDroit(p) }}</td>
+
+            <!-- Nature affection -->
+            <td>{{ p.natureAffection || '-' }}</td>
+
+            <!-- Date -->
+            <td style="white-space:nowrap;">{{ formatDate(p.date) }}</td>
+
+            <!-- Badge lignes en attente / total -->
+            <td class="text-center">
+              <span class="label"
+                    [class.label-warning]="p.nbreLignesEnAttente > 0"
+                    [class.label-success]="p.nbreLignesEnAttente === 0"
+                    style="font-size:11px; padding:3px 7px;">
+                {{ p.nbreLignesEnAttente }} / {{ p.nbreLignes }}
+              </span>
+            </td>
+
+            <!-- État -->
+            <td style="white-space:nowrap;">
+              <span [ngClass]="getEtatClass(p.etatGlobal)">
+                <i [class]="getEtatIcon(p.etatGlobal)"></i>
+                {{ getEtatLabel(p.etatGlobal) }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="text-center"
+                style="white-space:nowrap; position:relative; overflow:visible;">
+              <div style="position:relative; display:inline-block;">
+
+                <button type="button"
+                        class="btn btn-xs"
+                        [class.btn-primary]="!isGrise(p.etatGlobal)"
+                        [class.btn-default]="isGrise(p.etatGlobal)"
+                        [disabled]="isGrise(p.etatGlobal)"
+                        (click)="toggleDropdown(p.id, $event)">
+                  {{ 'selectionner' | translate }}&nbsp;
+                  <span class="caret"></span>
+                </button>
+
+                <ul *ngIf="!isGrise(p.etatGlobal)
+                           && dropdownOuvertId === p.id"
+                    style="position:absolute; top:100%; right:0;
+                           z-index:99999; display:block;
+                           min-width:150px; padding:5px 0; margin:2px 0 0;
+                           list-style:none; background:#fff;
+                           border:1px solid rgba(0,0,0,.15);
+                           border-radius:4px;
+                           box-shadow:0 6px 12px rgba(0,0,0,.175);">
+                  <li>
+                    <a href="javascript:void(0)"
+                       style="display:block; padding:6px 16px;
+                              color:#333; cursor:pointer;
+                              text-decoration:none;"
+                       (mouseover)="survolItem($event, true)"
+                       (mouseout)="survolItem($event, false)"
+                       (click)="ouvrirDetail(p, $event)">
+                      <i class="fa fa-list-alt text-info"
+                         style="margin-right:7px;"></i>
+                      Détails
+                    </a>
+                  </li>
+                </ul>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <tr *ngIf="prestations.length === 0">
+            <td colspan="9" class="text-center text-muted"
+                style="padding:30px;">
+              <i class="fa fa-inbox fa-2x"></i><br><br>
+              {{ 'aucun_resultat' | translate }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="row"
+         *ngIf="!isLoading && totalPages > 1"
+         style="margin-top:10px;">
+      <div class="col-sm-12">
+        <ul class="pagination pagination-sm no-margin pull-right">
+          <li [class.disabled]="currentPage === 0">
+            <a (click)="changerPage(currentPage - 1)"
+               style="cursor:pointer;">
+              <i class="fa fa-chevron-left"></i>
+            </a>
+          </li>
+          <li *ngFor="let p of getPagesArray()"
+              [class.active]="currentPage + 1 === p">
+            <a (click)="changerPage(p - 1)"
+               style="cursor:pointer;">{{ p }}</a>
+          </li>
+          <li [class.disabled]="currentPage + 1 === totalPages">
+            <a (click)="changerPage(currentPage + 1)"
+               style="cursor:pointer;">
+              <i class="fa fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>

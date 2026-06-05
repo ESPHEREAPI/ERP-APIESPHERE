@@ -1,0 +1,530 @@
+<!-- ===== BOX PRINCIPALE ===== -->
+<div class="box box-default">
+
+  <div class="box-header with-border">
+    <h3 class="box-title">
+      <i class="fa fa-medkit text-primary"></i>
+      {{ 'liste_medicaments' | translate }}
+    </h3>
+    <div class="box-tools pull-right">
+      <button class="btn btn-default btn-sm" (click)="imprimerBon()">
+        <i class="fa fa-print"></i> {{ 'imprimer_bon' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="box-body">
+
+    <!-- ===== INFOS ASSURÉ ===== -->
+    <div class="row" style="margin-bottom:15px;">
+      <div class="col-md-6 col-md-offset-3">
+        <table class="table table-bordered table-condensed" style="font-size:13px;">
+          <tbody>
+            <tr>
+              <td class="bg-gray-light" width="40%">
+                <strong>{{ 'assure_principal' | translate }} :</strong>
+              </td>
+              <td>{{ nomAssure || '-' }}</td>
+            </tr>
+            <tr *ngIf="nomAyantDroit">
+              <td class="bg-gray-light">
+                <strong>{{ 'ayant_droit' | translate }} :</strong>
+              </td>
+              <td>{{ nomAyantDroit }}</td>
+            </tr>
+            <tr *ngIf="groupe">
+              <td class="bg-gray-light">
+                <strong>{{ 'groupe' | translate }} :</strong>
+              </td>
+              <td>{{ groupe }}</td>
+            </tr>
+            <tr>
+              <td class="bg-gray-light">
+                <strong>{{ 'souscripteur' | translate }} :</strong>
+              </td>
+              <td>{{ souscripteur || '-' }}</td>
+            </tr>
+            <tr *ngIf="natureAffection">
+              <td class="bg-gray-light">
+                <strong>{{ 'nature_affection' | translate }} :</strong>
+              </td>
+              <td>{{ natureAffection }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== BLOC CONSOMMATION ===== -->
+    <div *ngIf="isLoadingConso" class="text-center" style="padding:10px;">
+      <i class="fa fa-spinner fa-spin text-muted"></i>
+      <span class="text-muted" style="margin-left:6px; font-size:12px;">
+        {{ 'chargement_consommation' | translate }}
+      </span>
+    </div>
+
+    <div *ngIf="!isLoadingConso && consommation && isSS" style="margin-bottom:20px;">
+
+      <!-- Alertes solde -->
+      <div *ngIf="consommation.niveauAlerte === 'CRITIQUE'" class="alert alert-danger"
+        style="padding:10px 14px; font-size:13px; border-radius:4px;">
+        <i class="fa fa-exclamation-triangle"></i>
+        <strong> {{ 'plafond_depasse' | translate }}</strong>
+        {{ consommation.messageAlerte }}
+      </div>
+      <div *ngIf="consommation.niveauAlerte === 'ATTENTION'" class="alert alert-warning"
+        style="padding:10px 14px; font-size:13px; border-radius:4px;">
+        <i class="fa fa-warning"></i>
+        <strong> {{ 'attention' | translate }}</strong>
+        {{ consommation.messageAlerte }}
+      </div>
+      <div *ngIf="consommation.niveauAlerte === 'NORMAL'" class="alert alert-success"
+        style="padding:10px 14px; font-size:13px; border-radius:4px;">
+        <i class="fa fa-check-circle"></i>
+        <strong>
+          {{ 'solde_disponible' | translate }} :
+          {{ formatMontant(consommation.soldeApresEncaisse) }} FCFA
+        </strong>
+        ({{ consommation.pourcentageEncaisse | number:'1.0-1' }}% {{ 'consomme' | translate }})
+      </div>
+
+      <!-- Titre consommation -->
+      <p style="font-weight:bold; font-size:12px; margin-bottom:5px;">
+        <i class="fa fa-bar-chart text-primary"></i>
+        {{ 'consommation' | translate }} {{ anneeEncours }} — {{ 'part_zenithe' | translate }}
+      </p>
+
+      <!-- Tableau consommation -->
+      <table class="table table-bordered table-condensed" style="font-size:11px; margin-bottom:8px;">
+        <thead>
+          <tr style="background:#3c8dbc; color:#fff;">
+            <th style="color:#fff;">{{ 'type' | translate }}</th>
+            <th class="text-center" style="color:#fff;">{{ 'nb' | translate }}</th>
+            <th class="text-right" style="color:#fff;">{{ 'encaisse_fcfa' | translate }}</th>
+            <th class="text-right" style="color:#fff;">{{ 'en_cours_fcfa' | translate }}</th>
+            <th class="text-right" style="color:#fff;">{{ 'total_projete' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><i class="fa fa-stethoscope text-info"></i> {{ 'consultations' | translate }}</td>
+            <td class="text-center">{{ consommation.nbreConsultationsEncaissees }}</td>
+            <td class="text-right text-success">{{ formatMontant(consommation.montantConsultationsEncaissees) }}</td>
+            <td class="text-right text-warning">{{ formatMontant(consommation.montantConsultationsEnCours) }}</td>
+            <td class="text-right">
+              <strong>{{ formatMontant(consommation.montantConsultationsEncaissees + consommation.montantConsultationsEnCours) }}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td><i class="fa fa-medkit text-success"></i> {{ 'ordonnances' | translate }}</td>
+            <td class="text-center">{{ consommation.nbreOrdonnancesEncaissees }}</td>
+            <td class="text-right text-success">{{ formatMontant(consommation.montantOrdonnancesEncaissees) }}</td>
+            <td class="text-right text-warning">{{ formatMontant(consommation.montantOrdonnancesEnCours) }}</td>
+            <td class="text-right">
+              <strong>{{ formatMontant(consommation.montantOrdonnancesEncaissees + consommation.montantOrdonnancesEnCours) }}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td><i class="fa fa-flask text-warning"></i> {{ 'examens' | translate }}</td>
+            <td class="text-center">{{ consommation.nbreExamensEncaisses }}</td>
+            <td class="text-right text-success">{{ formatMontant(consommation.montantExamensEncaisses) }}</td>
+            <td class="text-right text-warning">{{ formatMontant(consommation.montantExamensEnCours) }}</td>
+            <td class="text-right">
+              <strong>{{ formatMontant(consommation.montantExamensEncaisses + consommation.montantExamensEnCours) }}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td><i class="fa fa-file-text-o text-muted"></i> {{ 'bons_manuels' | translate }}</td>
+            <td class="text-center">{{ consommation.nbreBonsManuelsEncaisses }}</td>
+            <td class="text-right text-success">{{ formatMontant(consommation.montantBonsManuelsEncaisses) }}</td>
+            <td class="text-right text-warning">{{ formatMontant(consommation.montantBonsManuelsEnCours) }}</td>
+            <td class="text-right">
+              <strong>{{ formatMontant(consommation.montantBonsManuelsEncaisses + consommation.montantBonsManuelsEnCours) }}</strong>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="background:#f4f4f4; font-weight:bold;">
+            <td colspan="2">{{ 'total' | translate }}</td>
+            <td class="text-right text-success">{{ formatMontant(consommation.totalEncaisse) }}</td>
+            <td class="text-right text-warning">{{ formatMontant(consommation.totalEnCours) }}</td>
+            <td class="text-right">{{ formatMontant(consommation.totalProjecte) }}</td>
+          </tr>
+          <tr>
+            <td colspan="3" class="text-right text-muted" style="font-size:11px;">{{ 'plafond' | translate }}</td>
+            <td colspan="2" class="text-right">
+              <strong>{{ formatMontant(consommation.plafondGlobal) }} FCFA</strong>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" class="text-right text-muted" style="font-size:11px;">
+              {{ 'solde_apres_encaissements' | translate }}
+            </td>
+            <td colspan="2" class="text-right">
+              <strong [ngClass]="getSoldeClass(consommation.soldeApresEncaisse)">
+                {{ formatMontant(consommation.soldeApresEncaisse) }} FCFA
+              </strong>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="3" class="text-right text-muted" style="font-size:11px;">
+              {{ 'solde_projete' | translate }}
+            </td>
+            <td colspan="2" class="text-right">
+              <strong [ngClass]="getSoldeClass(consommation.soldeApresProjection)">
+                {{ formatMontant(consommation.soldeApresProjection) }} FCFA
+              </strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <!-- Barres de progression -->
+      <div style="font-size:11px; margin-bottom:2px;">
+        {{ 'encaisse' | translate }} :
+        <strong>{{ consommation.pourcentageEncaisse | number:'1.0-1' }}%</strong>
+      </div>
+      <div class="progress progress-xs" style="margin-bottom:6px;">
+        <div [ngClass]="'progress-bar ' + getBarreEncaisseClass()"
+          [style.width.%]="min100(consommation.pourcentageEncaisse)">
+        </div>
+      </div>
+      <div style="font-size:11px; margin-bottom:2px;">
+        {{ 'projection' | translate }} :
+        <strong>{{ consommation.pourcentageProjecte | number:'1.0-1' }}%</strong>
+      </div>
+      <div class="progress progress-xs" style="margin-bottom:15px;">
+        <div [ngClass]="'progress-bar ' + getBarreProjectionClass()"
+          [style.width.%]="min100(consommation.pourcentageProjecte)">
+        </div>
+      </div>
+
+    </div>
+    <!-- ===== FIN BLOC CONSOMMATION ===== -->
+
+    <!-- Loading lignes -->
+    <div *ngIf="isLoading" class="text-center" style="padding:40px;">
+      <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+    </div>
+
+    <!-- ===== TABLE MÉDICAMENTS ===== -->
+    <div *ngIf="!isLoading" style="overflow-x:auto;">
+      <table class="table table-bordered table-condensed" style="font-size:12px; margin-bottom:5px;">
+        <thead>
+          <tr style="background:#3c8dbc; color:#fff;">
+            <th style="color:#fff;">{{ 'prestataire' | translate }}</th>
+            <th style="color:#fff;">{{ 'nom_medicament' | translate }}</th>
+            <th style="color:#fff;">{{ 'posologie' | translate }}</th>
+            <th class="text-center" style="color:#fff;">{{ 'taux' | translate }}</th>
+            <th class="text-right" style="color:#fff;">{{ 'pu' | translate }}</th>
+            <th class="text-center" style="color:#fff;">{{ 'quantite' | translate }}</th>
+            <th class="text-right" style="color:#fff;">{{ 'pu_valide' | translate }}</th>
+            <th class="text-center" style="color:#fff;">{{ 'quantite_validee' | translate }}</th>
+            <th style="color:#fff;">{{ 'observations' | translate }}</th>
+            <th style="color:#fff;">{{ 'etat' | translate }}</th>
+            <th class="text-center" style="color:#fff;">{{ 'actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of lignes; trackBy: trackById"
+            [class.ligne-attente]="isEnAttente(l.etat)"
+            [class.ligne-valide]="l.decisionLocale === 'valide'"
+            [class.ligne-rejete]="l.decisionLocale === 'rejete'">
+
+            <!-- Prestataire -->
+            <td>{{ l.nomPrestataire || l.prestataireId }}</td>
+
+            <!-- Nom médicament -->
+            <td>{{ l.nom }}</td>
+
+            <!-- Posologie -->
+            <td>{{ l.posologie || '-' }}</td>
+
+            <!-- Taux -->
+            <td class="text-center">
+              <div *ngIf="isEnAttente(l.etat)" [class.has-error]="(l.tauxLocal ?? 0) > 100">
+                <input type="number" class="form-control input-sm"
+                  style="width:65px; display:inline-block;"
+                  [(ngModel)]="l.tauxLocal" min="0" max="100"
+                  (ngModelChange)="onTauxChange(l)">
+                <div *ngIf="(l.tauxLocal ?? 0) > 100" class="text-danger" style="font-size:10px;">
+                  {{ 'max_taux' | translate }}
+                </div>
+              </div>
+              <span *ngIf="!isEnAttente(l.etat)">{{ l.taux }}</span>
+            </td>
+
+            <!-- P.U original -->
+            <td class="text-right">{{ formatMontant(l.valeur) }}</td>
+
+            <!-- Qté originale -->
+            <td class="text-center">{{ l.nbre }}</td>
+
+            <!-- P.U validé -->
+            <td class="text-right">
+              <input *ngIf="isEnAttente(l.etat)" type="number"
+                class="form-control input-sm"
+                style="width:90px; display:inline-block;"
+                [(ngModel)]="l.valeurModifLocal" min="0">
+              <span *ngIf="!isEnAttente(l.etat)">
+                {{ formatMontant(l.valeurModif ?? l.valeur) }}
+              </span>
+            </td>
+
+            <!-- Qté validée -->
+            <td class="text-center">
+              <input *ngIf="isEnAttente(l.etat)" type="number"
+                class="form-control input-sm"
+                style="width:65px; display:inline-block;"
+                [(ngModel)]="l.nbreModifLocal" min="0">
+              <span *ngIf="!isEnAttente(l.etat)">
+                {{ l.nbreModif ?? l.nbre }}
+              </span>
+            </td>
+
+            <!-- Observations -->
+            <td>
+              <textarea *ngIf="isEnAttente(l.etat)" class="form-control"
+                style="width:120px; height:50px; font-size:11px;"
+                [(ngModel)]="l.observationsLocal">
+              </textarea>
+              <span *ngIf="!isEnAttente(l.etat)">{{ l.observations || '-' }}</span>
+            </td>
+
+            <!-- État -->
+            <td style="white-space:nowrap;">
+              <span *ngIf="!isEnAttente(l.etat)" [ngClass]="getEtatClass(l.etat)">
+                <i [class]="getEtatIcon(l.etat)"></i>
+                {{ getEtatLabel(l.etat) }}
+              </span>
+              <span *ngIf="isEnAttente(l.etat) && l.decisionLocale === 'valide'" class="text-success">
+                <i class="fa fa-check"></i> {{ 'valide' | translate }}
+              </span>
+              <span *ngIf="isEnAttente(l.etat) && l.decisionLocale === 'rejete'" class="text-danger">
+                <i class="fa fa-times"></i> {{ 'rejete' | translate }}
+              </span>
+              <span *ngIf="isEnAttente(l.etat) && !l.decisionLocale" class="text-warning">
+                <i class="fa fa-clock-o"></i> {{ 'en_attente' | translate }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td class="text-center" style="white-space:nowrap;">
+
+              <!-- SS : valider / rejeter -->
+              <ng-container *ngIf="isSS && isEnAttente(l.etat)">
+                <button type="button" class="btn btn-xs"
+                  [class.btn-success]="l.decisionLocale === 'valide'"
+                  [class.btn-default]="l.decisionLocale !== 'valide'"
+                  (click)="setDecision(l, 'valide')"
+                  [title]="'valider' | translate">
+                  <i class="fa fa-check"></i>
+                </button>
+                &nbsp;
+                <button type="button" class="btn btn-xs"
+                  [class.btn-danger]="l.decisionLocale === 'rejete'"
+                  [class.btn-default]="l.decisionLocale !== 'rejete'"
+                  (click)="setDecision(l, 'rejete')"
+                  [title]="'rejeter' | translate">
+                  <i class="fa fa-times"></i>
+                </button>
+              </ng-container>
+
+              <!-- Prestataire : encaisser ligne par ligne -->
+              <ng-container *ngIf="isPrestataire && l.etat === 'valide'">
+                <button type="button" class="btn btn-xs btn-info"
+                  [title]="'encaisser' | translate"
+                  [disabled]="isSubmitting"
+                  (click)="encaisserLigne(l)">
+                  <i class="fa fa-money"></i>
+                </button>
+              </ng-container>
+
+              <span *ngIf="l.etat === 'encaisse'" class="text-primary">
+                <i class="fa fa-check-circle"></i>
+              </span>
+
+              <span *ngIf="l.etat === 'rejete' && isPrestataire" class="text-muted">—</span>
+
+            </td>
+
+          </tr>
+
+          <tr *ngIf="lignes.length === 0">
+            <td colspan="11" class="text-center text-muted" style="padding:20px;">
+              <i class="fa fa-inbox fa-2x"></i><br><br>
+              {{ 'aucun_medicament' | translate }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!-- ===== FIN TABLE MÉDICAMENTS ===== -->
+
+    <!-- ===== TOTAUX ===== -->
+    <div class="row" *ngIf="!isLoading" style="margin-top:10px;">
+      <div class="col-sm-12 text-right">
+        <table style="display:inline-table; font-size:13px;">
+          <tr>
+            <td class="text-right" style="padding-right:20px;">
+              <strong>{{ 'montant_total_valide' | translate }} :</strong>
+            </td>
+            <td class="text-right">
+              <strong class="text-success">
+                {{ formatMontant(montantTotalValide) }} FCFA
+              </strong>
+            </td>
+          </tr>
+          <tr>
+            <td class="text-right" style="padding-right:20px;">
+              {{ 'montant_zenithe' | translate }} :
+            </td>
+            <td class="text-right text-primary">
+              {{ formatMontant(montantZenithe) }} FCFA
+            </td>
+          </tr>
+          <tr>
+            <td class="text-right" style="padding-right:20px;">
+              {{ 'part_assure' | translate }} :
+            </td>
+            <td class="text-right text-warning">
+              {{ formatMontant(montantAssure) }} FCFA
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== BOUTONS ===== -->
+    <div class="row" style="margin-top:15px;">
+      <div class="col-sm-12">
+
+        <button type="button" class="btn btn-default" (click)="retour()">
+          <i class="fa fa-arrow-left"></i> {{ 'retour' | translate }}
+        </button>
+
+        <!-- SS uniquement : Soumettre -->
+        <button type="button" class="btn btn-primary pull-right"
+          *ngIf="isSS"
+          [disabled]="isSubmitting || !toutesDecidees"
+          (click)="soumettre()">
+          <i class="fa fa-check-circle" *ngIf="!isSubmitting"></i>
+          <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          {{ 'soumettre' | translate }}
+        </button>
+
+        <!-- Prestataire uniquement : Encaisser tout -->
+        <button type="button" class="btn btn-info pull-right"
+          *ngIf="isPrestataire && hasLignesValides"
+          [disabled]="isSubmitting"
+          (click)="encaisserLignes()">
+          <i class="fa fa-money" *ngIf="!isSubmitting"></i>
+          <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+          {{ 'encaisser_tout' | translate }}
+          ({{ countLignesValides }}
+          {{ (countLignesValides > 1 ? 'lignes' : 'ligne') | translate }})
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ===== MODAL CONFIRMATION ===== -->
+<div class="modal fade"
+  [class.in]="showModalConfirmation"
+  [style.display]="showModalConfirmation ? 'block' : 'none'"
+  tabindex="-1" role="dialog" style="z-index:1050;">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header" style="background:#3c8dbc; color:#fff; border-radius:3px 3px 0 0;">
+        <button type="button" class="close" style="color:#fff; opacity:1;" (click)="annulerConfirmation()">
+          <span>&times;</span>
+        </button>
+        <h4 class="modal-title">
+          <i class="fa fa-info-circle"></i>
+          {{ 'confirmation_soumission' | translate }}
+        </h4>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Infos assuré -->
+        <div class="callout callout-info" style="margin-bottom:10px; font-size:12px;">
+          <strong>{{ nomAssure }}</strong>
+          <span *ngIf="nomAyantDroit">
+            — {{ 'ayant_droit' | translate }} : {{ nomAyantDroit }}
+          </span>
+          | {{ souscripteur || '-' }}
+          <span *ngIf="natureAffection"> | {{ natureAffection }}</span>
+        </div>
+
+        <!-- Tableau récapitulatif -->
+        <table class="table table-bordered table-condensed" style="font-size:12px;">
+          <thead>
+            <tr style="background:#f4f4f4;">
+              <th>{{ 'medicament' | translate }}</th>
+              <th class="text-center">{{ 'taux' | translate }}</th>
+              <th class="text-right">{{ 'pu' | translate }}</th>
+              <th class="text-center">{{ 'quantite' | translate }}</th>
+              <th class="text-right">{{ 'pu_valide' | translate }}</th>
+              <th class="text-center">{{ 'quantite_validee' | translate }}</th>
+              <th>{{ 'observations' | translate }}</th>
+              <th class="text-center">{{ 'decision' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of lignesEnAttente">
+              <td>{{ l.nom }}</td>
+              <td class="text-center">{{ l.tauxLocal }}%</td>
+              <td class="text-right">{{ formatMontant(l.valeur) }}</td>
+              <td class="text-center">{{ l.nbre }}</td>
+              <td class="text-right">{{ formatMontant(l.valeurModifLocal ?? l.valeur) }}</td>
+              <td class="text-center">{{ l.nbreModifLocal ?? l.nbre }}</td>
+              <td>{{ l.observationsLocal || '-' }}</td>
+              <td class="text-center">
+                <span *ngIf="l.decisionLocale === 'valide'" class="text-success">
+                  <i class="fa fa-check"></i> {{ 'valide' | translate }}
+                </span>
+                <span *ngIf="l.decisionLocale === 'rejete'" class="text-danger">
+                  <i class="fa fa-times"></i> {{ 'rejete' | translate }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Résumé totaux -->
+        <div class="callout callout-warning" style="margin-top:10px; font-size:13px;">
+          <p>
+            <strong>{{ 'montant_total_valide' | translate }} :</strong>
+            <strong class="text-success">{{ formatMontant(montantTotalValide) }} FCFA</strong>
+            &nbsp;|&nbsp;
+            <strong>{{ 'part_zenithe' | translate }} :</strong>
+            <strong class="text-primary">{{ formatMontant(montantZenithe) }} FCFA</strong>
+            &nbsp;|&nbsp;
+            <strong>{{ 'part_assure' | translate }} :</strong>
+            <strong class="text-warning">{{ formatMontant(montantAssure) }} FCFA</strong>
+          </p>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default pull-left" (click)="annulerConfirmation()">
+          <i class="fa fa-times"></i>
+          {{ 'non' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="confirmerSoumission()">
+          <i class="fa fa-check"></i>
+          {{ 'oui' | translate }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade in" *ngIf="showModalConfirmation" style="z-index:1040;"></div>

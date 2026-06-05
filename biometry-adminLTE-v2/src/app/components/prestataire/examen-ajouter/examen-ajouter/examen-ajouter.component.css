@@ -1,0 +1,106 @@
+/* ── Cellule examen — overflow visible pour le dropdown ── */
+.exm-cell {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* ── Input readonly stylisé ── */
+.exm-input {
+  cursor: pointer !important;
+  background: #fff !important;
+  color: #555;
+  font-size: 12px;
+}
+.exm-input.has-value {
+  font-weight: 600;
+  color: #222;
+}
+
+/* ── Dropdown en position:fixed — ne décale pas le tableau ── */
+.exm-dropdown {
+  position: fixed;
+  z-index: 99999;
+  background: #fff;
+  border: 1px solid #d2d6de;
+  border-radius: 4px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+  min-width: 340px;
+  overflow: hidden;
+}
+
+/* ── Zone recherche ── */
+.exm-search {
+  padding: 8px;
+  border-bottom: 1px solid #f4f4f4;
+  background: #fafafa;
+}
+
+/* ── Compteur résultats ── */
+.exm-count {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #aaa;
+  background: #f9f9f9;
+  border-bottom: 1px solid #f4f4f4;
+}
+
+/* ── Liste ── */
+.exm-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* ── Item ── */
+.exm-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f9f9f9;
+  font-size: 12px;
+  transition: background .1s;
+}
+.exm-item:hover {
+  background: #fffbf0;
+}
+.exm-item.active {
+  background: #fef9e7;
+  border-left: 3px solid #f39c12;
+}
+
+.exm-item-nom {
+  flex: 1;
+  color: #333;
+}
+.exm-item-prix {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+.exm-check {
+  margin-left: 6px;
+  font-size: 11px;
+}
+
+/* ── Spinner ── */
+.exm-loading {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* ── Vide ── */
+.exm-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #bbb;
+  list-style: none;
+}
+.exm-empty .fa {
+  margin-right: 6px;
+  color: #e0a800;
+}

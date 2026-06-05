@@ -1,0 +1,105 @@
+<body class="error-page">
+  <!-- Navbar -->
+  <nav class="navbar navbar-custom navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <a class="navbar-brand"><b>ZENITHE Insurance</b></a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HTTP Error Content -->
+  <div class="error-container">
+    <div class="error-content">
+      <!-- Error Icon & Code -->
+      <div class="error-icon" [ngClass]="getErrorClass()">
+        <div class="error-code-display">
+          <span class="error-code">{{ errorCode }}</span>
+          <div class="error-icon-symbol">
+            <i class="fa" [ngClass]="getIconClass()"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Title & Message -->
+      <h1 class="error-title">{{ getErrorTitle() | translate }}</h1>
+      <p class="error-message">{{ getErrorMessage() | translate }}</p>
+
+      <!-- Error Details (pour développeurs) -->
+      <div class="error-details" *ngIf="errorDetails">
+        <div class="details-toggle" (click)="toggleDetails()">
+          <i class="fa" [ngClass]="showDetails ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          {{ 'technicalDetails' | translate }}
+        </div>
+        <div class="details-content" [class.show]="showDetails">
+          <div class="detail-item">
+            <strong>{{ 'url' | translate }}:</strong>
+            <span>{{ errorDetails.url }}</span>
+          </div>
+          <div class="detail-item" *ngIf="errorDetails.timestamp">
+            <strong>{{ 'timestamp' | translate }}:</strong>
+            <span>{{ errorDetails.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="errorDetails.message">
+            <strong>{{ 'errorMessage' | translate }}:</strong>
+            <span>{{ errorDetails.message }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggestions -->
+      <div class="suggestions-section">
+        <h4><i class="fa fa-question-circle"></i> {{ 'whatCanYouDo' | translate }}</h4>
+        <ul>
+          <li *ngFor="let suggestion of getSuggestions()">{{ suggestion | translate }}</li>
+        </ul>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn btn-primary btn-lg" (click)="goBack()">
+          <i class="fa fa-arrow-left"></i>
+          {{ 'goBack' | translate }}
+        </button>
+        <button class="btn btn-success btn-lg" (click)="goToHome()">
+          <i class="fa fa-home"></i>
+          {{ 'goToHome' | translate }}
+        </button>
+        <button class="btn btn-info btn-lg" (click)="contactSupport()">
+          <i class="fa fa-life-ring"></i>
+          {{ 'contactSupport' | translate }}
+        </button>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="quick-links">
+        <h5>{{ 'quickLinks' | translate }}</h5>
+        <div class="links-grid">
+          <a (click)="navigateTo('/dashboard')" class="quick-link">
+            <i class="fa fa-dashboard"></i>
+            <span>{{ 'dashboard' | translate }}</span>
+          </a>
+          <a (click)="navigateTo('/login')" class="quick-link">
+            <i class="fa fa-sign-in"></i>
+            <span>{{ 'login' | translate }}</span>
+          </a>
+          <a (click)="navigateTo('/help')" class="quick-link">
+            <i class="fa fa-question"></i>
+            <span>{{ 'help' | translate }}</span>
+          </a>
+          <a (click)="navigateTo('/contact')" class="quick-link">
+            <i class="fa fa-envelope"></i>
+            <span>{{ 'contact' | translate }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2018-{{currentYear}} <b><a href="https://zenitheinsurance.com" target="_blank">ZENITHE Insurance</a></b>. Tous droits réservés.</p>
+    </div>
+  </footer>
+</body>

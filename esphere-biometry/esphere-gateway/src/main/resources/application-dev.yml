@@ -1,0 +1,64 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: auth
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+        - id: adherent
+          uri: http://localhost:8082
+          predicates:
+            - Path=/adherents/**,/ayants-droit/**
+        - id: prestataire
+          uri: http://localhost:8083
+          predicates:
+            - Path=/prestataires/**
+        - id: visite
+          uri: http://localhost:8084
+          predicates:
+            - Path=/visites/**,/public/webservice/**
+        - id: validation
+          uri: http://localhost:8085
+          predicates:
+            - Path=/validations/**
+        - id: bons-manuels
+          uri: http://localhost:8086
+          predicates:
+            - Path=/bons-manuels/**
+        - id: media
+          uri: http://localhost:8087
+          predicates:
+            - Path=/medias/**,/capture/**
+        - id: notification
+          uri: http://localhost:8088
+          predicates:
+            - Path=/notifications/**
+        - id: reporting
+          uri: http://localhost:8089
+          predicates:
+            - Path=/reporting/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://localhost:3000"
+            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS"]
+            allowedHeaders: "*"
+            allowCredentials: true
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+logging:
+  level:
+    com.esphere: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty: INFO

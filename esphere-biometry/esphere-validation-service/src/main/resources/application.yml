@@ -1,0 +1,26 @@
+server:
+  port: ${SERVER_PORT:8085}
+
+spring:
+  application:
+    name: esphere-validation-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jpa:
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    table: flyway_history_validation
+    validate-on-migrate: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

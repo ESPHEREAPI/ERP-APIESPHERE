@@ -1,0 +1,56 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:109.228.49.89}:${DB_PORT:3306}/${DB_NAME:biometry}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      idle-timeout: 300000
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+      pool-name: HikariPool-media
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  config:
+    import: optional:configserver:http://${CONFIG_HOST:109.228.49.89}:8888
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:109.228.49.89}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:8761/eureka/
+
+services:
+  visite-url: http://${ESPHERE_HOST:109.228.49.89}:8084
+  adherent-url: http://${ESPHERE_HOST:109.228.49.89}:8082
+
+esphere:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:86400000}
+  media:
+    capture-expiry-hours: ${MEDIA_CAPTURE_EXPIRY_HOURS:24}
+
+logging:
+  file:
+    name: ${LOG_PATH:C:/esphere/logs}/media.log
+  level:
+    root: WARN
+    com.esphere: INFO
+    org.flywaydb: WARN

@@ -1,0 +1,30 @@
+server:
+  port: 8088
+
+spring:
+  flyway:
+    table: flyway_history_notification
+  mail:
+    host: secure.emailsrvr.com
+    port: 587
+    username: info@zenitheinsurance.com
+    password: ZenIns@2021GMS
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: secure.emailsrvr.com
+          from: info@zenitheinsurance.com
+          timeout: 10000
+          connectiontimeout: 10000
+
+sms:
+  api:
+    url: https://smsvas.com/bulk/public/index.php/api/v1/sendsms
+    user: info@zenitheinsurance.com
+    password: biometrie2023
+    senderid: ZENITHE

@@ -1,0 +1,155 @@
+<aside class="main-sidebar">
+  <section class="sidebar">
+
+    <!-- User Panel -->
+    <div class="user-panel">
+      <div class="pull-left image">
+        <!--  <span class="img-circle initiales-circle">
+          {{ getInitiales() }}
+        </span>-->
+         <img src="./img/user2-160x160.png" class="user-image" alt="User image">
+      </div>
+      <div class="pull-left info">
+        <p>{{ user?.prenom }} {{ user?.nom }}</p>
+        <a href="#">
+          <i class="fa fa-circle text-success"></i> {{ user?.profilLibelle }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+    <ul class="sidebar-menu" data-widget="tree">
+      <li class="header">NAVIGATION</li>
+
+      <ng-container *ngFor="let item of menuItems">
+
+        <!-- Menu simple sans sous-menus -->
+        <li *ngIf="!item.children" [class.active]="isActive(item.route!)">
+          <a [routerLink]="item.route" (click)="closeSidebarOnMobile()">
+            <i [class]="item.icon"></i>
+            <span>{{ item.title | translate }}</span>
+            <span *ngIf="item.badgeCount"
+                  class="label pull-right"
+                   [class.label-success]="isPrestataire()"
+                  [class.label-warning]="!isPrestataire()"
+                  [class.blink-badge]="item.badgeBlink">
+              {{ item.badgeCount }}
+            </span>
+
+          </a>
+        </li>
+
+        <!-- Menu avec sous-menus -->
+        <li *ngIf="item.children"
+            class="treeview"
+            [class.active]="hasActiveChild(item)"
+            [class.menu-open]="item.isOpen">
+          <a href="#" (click)="toggleSubmenu(item, $event)">
+            <i [class]="item.icon"></i>
+            <span>{{ item.title | translate }}</span>
+            <span class="pull-right-container">
+              <span *ngIf="item.badgeCount"
+                    class="label label-danger pull-right blink-badge">
+                {{ item.badgeCount }}
+              </span>
+              <i class="fa fa-angle-left pull-right"></i>
+            </span>
+          </a>
+          <ul class="treeview-menu" [style.display]="item.isOpen ? 'block' : 'none'">
+            <li *ngFor="let child of item.children"
+                [class.active]="isActive(child.route!)">
+              <a [routerLink]="child.route" (click)="closeSidebarOnMobile()">
+                <i [class]="child.icon"></i>
+                <span>{{ child.title | translate }}</span>
+                <span *ngIf="child.badgeCount"
+                  class="label pull-right"
+                  [class.label-success]="isPrestataire()"
+                  [class.label-warning]="!isPrestataire()"
+                  [class.blink-badge]="child.badgeBlink">
+                {{ child.badgeCount }}
+            </span>
+              </a>
+            </li>
+          </ul>
+        </li>
+
+      </ng-container>
+    </ul>
+
+    <!-- ===== CALLOUTS CLIGNOTANTS EN BAS DU SIDEBAR ===== -->
+    <div class="sidebar-callouts"
+         *ngIf="consultationsEnAttente > 0 || ordonnancesEnAttente > 0 || examensEnAttente > 0">
+
+      <div *ngIf="consultationsEnAttente > 0"
+           class="callout-alert callout-alert-blink"
+           [routerLink]="'/public/admin/consultation'"
+           style="cursor:pointer;">
+        <strong>{{ 'consultation' | translate }}</strong><br>
+        {{ consultationsEnAttente }} {{ 'consultations_attente' | translate }}
+      </div>
+
+      <div *ngIf="ordonnancesEnAttente > 0"
+           class="callout-alert callout-alert-blink"
+           [routerLink]="'/public/admin/ordonnance'"
+           style="cursor:pointer;">
+        <strong>{{ 'ordonnance' | translate }}</strong><br>
+        {{ ordonnancesEnAttente }} {{ 'ordonnances_attente' | translate }}
+      </div>
+
+      <div *ngIf="examensEnAttente > 0"
+           class="callout-alert callout-alert-blink"
+           [routerLink]="'/public/admin/examen'"
+           style="cursor:pointer;">
+        <strong>{{ 'examen' | translate }}</strong><br>
+        {{ examensEnAttente }} {{ 'examens_attente' | translate }}
+      </div>
+
+    </div>
+
+
+    <!-- ===== CALLOUTS PRESTATAIRE — PRESTATIONS À ENCAISSER ===== -->
+<div class="sidebar-callouts"
+     *ngIf="(consultationsValides > 0
+          || ordonnancesValidees > 0
+          || examensValides > 0)">
+
+    <div *ngIf="consultationsValides > 0"
+         class="callout-encaisser callout-encaisser-blink"
+         [routerLink]="'/public/admin/consultation'"
+         style="cursor:pointer;">
+        <i class="fa fa-bell"></i>
+        <strong>
+            {{ 'consultation' | translate }}
+        </strong><br>
+        {{ consultationsValides }}
+        {{ 'prestations_a_encaisser' | translate }}
+    </div>
+
+    <div *ngIf="ordonnancesValidees > 0"
+         class="callout-encaisser callout-encaisser-blink"
+         [routerLink]="'/public/admin/ordonnance'"
+         style="cursor:pointer;">
+        <i class="fa fa-bell"></i>
+        <strong>
+            {{ 'ordonnance' | translate }}
+        </strong><br>
+        {{ ordonnancesValidees }}
+        {{ 'prestations_a_encaisser' | translate }}
+    </div>
+
+    <div *ngIf="examensValides > 0"
+         class="callout-encaisser callout-encaisser-blink"
+         [routerLink]="'/public/admin/examen'"
+         style="cursor:pointer;">
+        <i class="fa fa-bell"></i>
+        <strong>
+            {{ 'examen' | translate }}
+        </strong><br>
+        {{ examensValides }}
+        {{ 'prestations_a_encaisser' | translate }}
+    </div>
+
+</div>
+
+  </section>
+</aside>

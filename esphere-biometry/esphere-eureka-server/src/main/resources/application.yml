@@ -1,0 +1,21 @@
+server:
+  port: ${SERVER_PORT:8761}
+
+spring:
+  application:
+    name: esphere-eureka-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  security:
+    user:
+      name: ${EUREKA_ADMIN_USER:admin}
+      password: ${EUREKA_ADMIN_PASSWORD:esphere2024}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

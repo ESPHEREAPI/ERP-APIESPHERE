@@ -1,0 +1,120 @@
+<body class="login-page">
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p class="loading-text">Connexion en cours...</p>
+      <div class="progress-bar-container">
+        <div class="progress-bar" [style.width.%]="loadingProgress"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-custom navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <a class="navbar-brand"><b>ESPHERE</b> — ZENITHE Insurance</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown" [ngClass]="{'open': isOpen}">
+            <a role="button" class="dropdown-toggle" (click)="toggleDropdown()">
+              {{ currentLanguage.name }} <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li *ngFor="let lang of languages">
+                <a role="button" (click)="selectLanguage(lang)">{{ lang.name }}</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Login Form -->
+  <div class="container">
+    <div class="login-box" id="content_loginform">
+      <div class="login-logo text-center">
+        <a><b class="brand-main">ESPHERE</b> <span class="brand-sub">Biometry</span></a>
+      </div>
+
+      <div class="login-box-body card">
+        <p class="login-box-msg text-center">{{ 'userlogin' | translate }}</p>
+
+        <!-- Message d'erreur -->
+        <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible">
+          <button type="button" class="close" (click)="errorMessage=''">
+            <span>&times;</span>
+          </button>
+          <i class="fa fa-exclamation-triangle"></i> {{ errorMessage }}
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <!-- Login -->
+          <div class="form-group has-feedback">
+            <input type="text" formControlName="username" class="form-control"
+              placeholder="{{ 'username' | translate }}" autocomplete="username" />
+            <span class="glyphicon glyphicon-user form-control-feedback"></span>
+            <div *ngIf="f['username'].touched && f['username'].invalid" class="text-danger small">
+              <div *ngIf="f['username'].errors?.['required']">Login requis</div>
+              <div *ngIf="f['username'].errors?.['minlength']">Minimum 2 caractères</div>
+            </div>
+          </div>
+
+          <!-- Mot de passe -->
+          <div class="form-group has-feedback">
+            <input type="password" formControlName="password" class="form-control"
+              placeholder="{{ 'password' | translate }}" autocomplete="current-password" />
+            <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+            <div *ngIf="f['password'].touched && f['password'].invalid" class="text-danger small">
+              <div *ngIf="f['password'].errors?.['required']">Mot de passe requis</div>
+              <div *ngIf="f['password'].errors?.['minlength']">Minimum 4 caractères</div>
+            </div>
+          </div>
+
+          <!-- Se souvenir -->
+          <div class="form-group">
+            <div class="row">
+              <div class="col-xs-6">
+                <div class="checkbox icheck">
+                  <label>
+                    <input type="checkbox" formControlName="remember"> {{ 'me' | translate }}
+                  </label>
+                </div>
+              </div>
+              <div class="col-xs-6 text-right">
+                <a [routerLink]="['/forgot-password']" class="forgot-password-link">
+                  {{ 'forgotPassword' | translate }} ?
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bouton -->
+          <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary btn-flat btn-block"
+              [disabled]="loginForm.invalid || isLoading">
+              <span *ngIf="!isLoading"><i class="fa fa-sign-in"></i> Se connecter</span>
+              <span *ngIf="isLoading">
+                <i class="fa fa-spinner fa-spin"></i> Connexion...
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <div class="pull-right hidden-xs">
+        <b>Version</b> {{ appVersion }}
+      </div>
+      <p>&copy; 2018-{{ currentYear }} <b>ZENITHE Insurance</b>. Tous droits réservés.</p>
+    </div>
+  </footer>
+</body>

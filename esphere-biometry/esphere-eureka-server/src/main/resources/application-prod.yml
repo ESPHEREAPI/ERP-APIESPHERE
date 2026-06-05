@@ -1,0 +1,23 @@
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:109.228.49.89}
+    prefer-ip-address: false
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:${SERVER_PORT:8761}/eureka/
+  server:
+    enable-self-preservation: true
+    eviction-interval-timer-in-ms: 60000
+
+logging:
+  file:
+    name: ${LOG_PATH:C:/esphere/logs}/eureka.log
+  level:
+    root: WARN
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    com.esphere: INFO

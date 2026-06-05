@@ -1,0 +1,460 @@
+/* ========================================
+   STYLES GLOBAUX ADMINLTE + ANGULAR
+   ======================================== */
+
+/* ========== BASE ========== */
+.wrapper {
+  min-height: 100vh;
+}
+
+/* ========== LIENS ========== */
+a:link {
+  color: #3c8dbc;
+}
+
+a:visited {
+  color: #3c8dbc;
+}
+
+a:hover {
+  color: #72afd2;
+  text-decoration: none;
+}
+
+/* ========== SIDEBAR - DESKTOP ========== */
+.sidebar-mini.sidebar-collapse .main-sidebar {
+  width: 50px;
+}
+
+.sidebar-mini.sidebar-collapse .content-wrapper,
+.sidebar-mini.sidebar-collapse .main-footer {
+  margin-left: 50px !important;
+}
+
+/* Masquer le texte en mode collapsed mais garder les icônes */
+.sidebar-collapse .sidebar-menu > li > a > span:not(.pull-right-container) {
+  opacity: 0;
+  width: 0;
+  display: none;
+}
+
+/* Afficher le texte au hover en mode collapsed */
+.sidebar-collapse .sidebar-menu > li:hover > a > span:not(.pull-right-container) {
+  opacity: 1;
+  display: inline-block;
+  width: auto;
+}
+
+/* Position du logo en mode collapsed */
+.sidebar-collapse .logo > .logo-lg {
+  opacity: 0;
+}
+
+.sidebar-collapse .logo > .logo-mini {
+  opacity: 1;
+}
+
+/* ========== SIDEBAR - MOBILE ========== */
+@media (max-width: 767px) {
+  /* Par défaut, sidebar hors de l'écran */
+  .main-sidebar {
+    transform: translate(-230px, 0);
+    transition: transform 0.3s ease-in-out;
+    position: fixed;
+    z-index: 820;
+  }
+
+  /* Quand le sidebar est ouvert */
+  .sidebar-open .main-sidebar {
+    transform: translate(0, 0);
+  }
+
+  /* Overlay sombre sur mobile */
+  .sidebar-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 810;
+    animation: fadeIn 0.3s;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Content wrapper sans marge sur mobile */
+  .content-wrapper,
+  .main-footer {
+    margin-left: 0 !important;
+  }
+
+  /* Annuler le mode collapse sur mobile */
+  .sidebar-collapse .main-sidebar {
+    width: 230px;
+    transform: translate(-230px, 0);
+  }
+
+  .sidebar-collapse .content-wrapper,
+  .sidebar-collapse .main-footer {
+    margin-left: 0 !important;
+  }
+
+  /* Réafficher le texte sur mobile même en mode collapsed */
+  .sidebar-collapse .sidebar-menu > li > a > span {
+    opacity: 1 !important;
+    display: inline-block !important;
+    width: auto !important;
+  }
+}
+
+/* ========== MENU TREEVIEW ========== */
+.sidebar-menu .treeview-menu {
+  display: none;
+  padding-left: 5px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-menu .treeview.active > .treeview-menu,
+.sidebar-menu .treeview.menu-open > .treeview-menu {
+  display: block;
+}
+
+/* Animation de la flèche */
+.treeview > a > .pull-right-container > .fa-angle-left {
+  transition: transform 0.3s ease;
+}
+
+.treeview.menu-open > a > .pull-right-container > .fa-angle-left,
+.treeview.active > a > .pull-right-container > .fa-angle-left {
+  transform: rotate(-90deg);
+}
+
+/* Menu déroulant en mode collapsed */
+.sidebar-collapse .sidebar-menu > li.treeview:hover > .treeview-menu {
+  display: block;
+  position: absolute;
+  left: 50px;
+  top: 0;
+  background: #2c3e50;
+  width: 180px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  padding-left: 10px;
+}
+
+/* ========== TRANSITIONS ========== */
+.main-sidebar,
+.content-wrapper,
+.main-footer,
+.control-sidebar,
+.control-sidebar-bg {
+  transition: all 0.3s ease-in-out;
+}
+
+/* ========== DROPDOWNS ========== */
+.dropdown-menu {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.dropdown.open > .dropdown-menu {
+  display: block;
+  opacity: 1;
+}
+
+/* Dropdowns mobile */
+@media (max-width: 767px) {
+  .dropdown-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+  }
+  
+  .navbar-custom-menu .navbar-nav > li > .dropdown-menu {
+    position: absolute;
+    right: 0;
+    left: auto;
+    border: 1px solid #ddd;
+  }
+}
+
+/* ========== BOUTON TOGGLE SIDEBAR ========== */
+.sidebar-toggle {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* ========== USER PANEL ========== */
+.user-panel {
+  padding: 10px;
+}
+
+.user-panel > .image > img {
+  width: 45px;
+  height: 45px;
+}
+
+/* ========== NOTIFICATIONS BADGES ========== */
+.label {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ========== CONTROL SIDEBAR ========== */
+.control-sidebar {
+  position: fixed;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  transition: right 0.3s ease-in-out;
+  z-index: 1010;
+}
+
+.control-sidebar-open .control-sidebar {
+  right: 0;
+}
+
+.control-sidebar-dark {
+  color: #b8c7ce;
+  background: #222d32;
+}
+
+.control-sidebar-dark .nav-tabs.control-sidebar-tabs > li > a {
+  color: #b8c7ce;
+}
+
+.control-sidebar-dark .nav-tabs.control-sidebar-tabs > li.active > a,
+.control-sidebar-dark .nav-tabs.control-sidebar-tabs > li.active > a:hover,
+.control-sidebar-dark .nav-tabs.control-sidebar-tabs > li.active > a:focus {
+  background: #1e282c;
+  color: #fff;
+}
+
+.control-sidebar-bg {
+  position: fixed;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  background: inherit;
+  z-index: 1009;
+  transition: right 0.3s ease-in-out;
+}
+
+.control-sidebar-open .control-sidebar-bg {
+  right: 0;
+}
+
+/* ========== ANIMATIONS BLINK ========== */
+.blink {
+  animation: blinker 0.6s linear infinite;
+}
+
+@keyframes blinker {
+  50% { opacity: 0; }
+}
+
+.blink-one {
+  animation: blinker-one 1s linear infinite;
+}
+
+@keyframes blinker-one {
+  0% { opacity: 0; }
+}
+
+.blink-two {
+  animation: blinker-two 1.4s linear infinite;
+}
+
+@keyframes blinker-two {
+  100% { opacity: 0; }
+}
+
+/* ========== FORMULAIRES ========== */
+.form-group .help-block {
+  color: #dd4b39;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.form-group.has-error .form-control {
+  border-color: #dd4b39;
+}
+
+.form-horizontal .checkbox,
+.form-horizontal .checkbox-inline,
+.form-horizontal .radio,
+.form-horizontal .radio-inline {
+  padding-top: 0;
+}
+
+/* ========== ALERTES ========== */
+.alert {
+  border-radius: 3px;
+  margin-bottom: 15px;
+}
+
+.alert .icon {
+  margin-right: 10px;
+}
+
+/* ========== SMALL BOXES ========== */
+.small-box > .inner {
+  padding: 10px;
+  min-height: 110px;
+}
+
+.small-box:hover {
+  text-decoration: none;
+  color: #f9f9f9;
+}
+
+.small-box:hover .icon {
+  font-size: 95px;
+  transition: font-size 0.3s ease;
+}
+
+/* ========== TEXTE CENTRÉ ========== */
+p.text-center { 
+  text-align: center;
+}
+
+h3.text-center { 
+  text-align: center;
+}
+
+/* ========== SPINNER ========== */
+.fa-spinner {
+  animation: fa-spin 2s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(359deg); }
+}
+
+/* ========== LOGIN PAGE ========== */
+.login-page {
+  background: #d2d6de;
+}
+
+.login-box {
+  margin: 7% auto;
+}
+
+/* ========== BREADCRUMB ========== */
+.content-header > .breadcrumb {
+  background: transparent;
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 12px;
+  padding: 7px 5px;
+  position: absolute;
+  top: 15px;
+  right: 10px;
+  border-radius: 2px;
+}
+
+/* ========== NAVIGATION ========== */
+.navbar-nav > .user-menu > .dropdown-menu {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  padding: 0;
+  width: 280px;
+}
+
+.sidebar-menu li.active > a {
+  border-left-color: #3c8dbc;
+}
+
+/* ========== TIMELINE ========== */
+.timeline > li > .timeline-item {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  margin-top: 0;
+  background: #fff;
+  color: #444;
+  margin-left: 60px;
+  margin-right: 15px;
+  padding: 0;
+  position: relative;
+}
+
+/* ========== BOX TOOLS ========== */
+.box-tools {
+  display: inline-block;
+}
+
+/* ========== IMPRESSION ========== */
+@media print {
+  .main-sidebar,
+  .main-header,
+  .content-header,
+  .main-footer {
+    display: none !important;
+  }
+  
+  .content-wrapper {
+    margin-left: 0 !important;
+    min-height: 0 !important;
+  }
+}
+
+/* ========== FIXES SPÉCIFIQUES ========== */
+
+/* Fix pour éviter le scroll horizontal */
+body {
+  overflow-x: hidden;
+}
+
+/* Fix pour les icônes qui disparaissent */
+.sidebar-menu > li > a > .fa,
+.sidebar-menu > li > a > .glyphicon,
+.sidebar-menu > li > a > .ion {
+  width: 20px;
+  flex-shrink: 0;
+}
+
+/* Fix pour le z-index du header */
+.main-header {
+  z-index: 1015;
+  position: relative;
+}
+
+/* Fix pour le callout dans le sidebar */
+.sidebar .callout {
+  margin: 10px;
+  padding: 10px;
+  border-radius: 3px;
+}
+
+/* Assurer que les menus sont cliquables */
+.treeview > a {
+  cursor: pointer;
+}
+
+/* Fix pour les sous-menus actifs */
+.treeview-menu > li.active > a {
+  font-weight: bold;
+  color: #fff;
+}

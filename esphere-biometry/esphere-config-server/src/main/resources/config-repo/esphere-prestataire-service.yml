@@ -1,0 +1,6 @@
+server:
+  port: 8083
+
+spring:
+  flyway:
+    table: flyway_history_prestataire

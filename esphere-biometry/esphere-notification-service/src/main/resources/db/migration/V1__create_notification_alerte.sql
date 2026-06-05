@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS dbx45ty_notification (
+    id              INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    destinataire_id VARCHAR(255)    NOT NULL,
+    type_dest       VARCHAR(20)     NOT NULL,
+    canal           VARCHAR(20)     NOT NULL,
+    sujet           VARCHAR(255)    NULL,
+    message         TEXT            NOT NULL,
+    telephone       VARCHAR(20)     NULL,
+    email_dest      VARCHAR(255)    NULL,
+    statut          VARCHAR(20)     NOT NULL DEFAULT 'en_attente',
+    event_type      VARCHAR(50)     NOT NULL,
+    reference_id    VARCHAR(255)    NULL,
+    lu              TINYINT(1)      NOT NULL DEFAULT 0,
+    envoye_par      INT UNSIGNED    NULL,
+    date_lecture    DATETIME        NULL,
+    date_envoi      DATETIME        NULL,
+    date_creation   DATETIME        NOT NULL,
+    erreur          VARCHAR(500)    NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

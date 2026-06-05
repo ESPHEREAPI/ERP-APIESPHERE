@@ -1,0 +1,88 @@
+<body class="error-page">
+  <!-- Navbar -->
+  <nav class="navbar navbar-custom navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <a class="navbar-brand"><b>ZENITHE Insurance</b></a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Network Error Content -->
+  <div class="error-container">
+    <div class="error-content">
+      <!-- Animated WiFi Icon -->
+      <div class="wifi-icon-container">
+        <div class="wifi-icon">
+          <div class="wifi-circle" [class.disconnected]="!isConnected">
+            <i class="fa fa-wifi"></i>
+          </div>
+          <div class="wifi-wave wave-1" [class.active]="isConnected"></div>
+          <div class="wifi-wave wave-2" [class.active]="isConnected"></div>
+          <div class="wifi-wave wave-3" [class.active]="isConnected"></div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <h1 class="error-title">{{ 'connectionLost' | translate }}</h1>
+      <p class="error-message">{{ 'connectionLostMessage' | translate }}</p>
+
+      <!-- Countdown Timer -->
+      <div class="countdown-container">
+        <div class="countdown-circle">
+          <svg class="countdown-svg" viewBox="0 0 100 100">
+            <circle class="countdown-bg" cx="50" cy="50" r="45"></circle>
+            <circle class="countdown-progress" cx="50" cy="50" r="45" 
+                    [style.stroke-dashoffset]="progressOffset"></circle>
+          </svg>
+          <div class="countdown-text">
+            <span class="countdown-number">{{ countdown }}</span>
+            <span class="countdown-label">{{ 'seconds' | translate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection Status -->
+      <div class="status-message" [class.checking]="isChecking" [class.success]="isConnected">
+        <i class="fa" [ngClass]="{
+          'fa-refresh fa-spin': isChecking,
+          'fa-check-circle': isConnected,
+          'fa-times-circle': !isChecking && !isConnected
+        }"></i>
+        <span *ngIf="isChecking">{{ 'checkingConnection' | translate }}...</span>
+        <span *ngIf="!isChecking && isConnected">{{ 'connectionRestored' | translate }}</span>
+        <span *ngIf="!isChecking && !isConnected">{{ 'noConnection' | translate }}</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <button class="btn btn-primary btn-lg" (click)="retryConnection()" [disabled]="isChecking">
+          <i class="fa fa-refresh" [class.fa-spin]="isChecking"></i>
+          {{ 'retryNow' | translate }}
+        </button>
+        <button class="btn btn-default btn-lg" (click)="goToLogin()">
+          <i class="fa fa-home"></i>
+          {{ 'backToHome' | translate }}
+        </button>
+      </div>
+
+      <!-- Tips Section -->
+      <div class="tips-section">
+        <h4><i class="fa fa-lightbulb-o"></i> {{ 'troubleshootingTips' | translate }}</h4>
+        <ul>
+          <li>{{ 'tip1' | translate }}</li>
+          <li>{{ 'tip2' | translate }}</li>
+          <li>{{ 'tip3' | translate }}</li>
+          <li>{{ 'tip4' | translate }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container text-center">
+      <p>&copy; 2018-{{currentYear}} <b><a href="https://zenitheinsurance.com" target="_blank">ZENITHE Insurance</a></b>. Tous droits réservés.</p>
+    </div>
+  </footer>
+</body>

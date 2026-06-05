@@ -1,0 +1,18 @@
+.progress.progress-xs {
+  height: 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.callout {
+  border-radius: 4px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+.callout-info {
+  border-left: 4px solid #3c8dbc;
+  background: #f4f8fb;
+}
+
+.table td { vertical-align: middle; }

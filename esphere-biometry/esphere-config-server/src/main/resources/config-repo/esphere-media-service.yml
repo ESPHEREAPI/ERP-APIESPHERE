@@ -1,0 +1,19 @@
+server:
+  port: 8087
+
+spring:
+  flyway:
+    table: flyway_history_media
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 105MB
+
+media:
+  storage:
+    base-path: C:/biometry-media
+
+services:
+  visite-url: http://localhost:8084
+  adherent-url: http://localhost:8082

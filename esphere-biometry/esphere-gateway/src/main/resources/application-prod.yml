@@ -1,0 +1,76 @@
+# SSL désactivé sur la Gateway : Apache gère le certificat HTTPS en amont.
+# La Gateway n'écoute qu'en HTTP sur localhost:8080, inaccessible depuis l'extérieur.
+server:
+  ssl:
+    enabled: false
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: auth
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8081
+          predicates:
+            - Path=/auth/**
+        - id: adherent
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8082
+          predicates:
+            - Path=/adherents/**,/ayants-droit/**
+        - id: prestataire
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8083
+          predicates:
+            - Path=/prestataires/**
+        - id: visite
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8084
+          predicates:
+            - Path=/visites/**,/public/webservice/**
+        - id: validation
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8085
+          predicates:
+            - Path=/validations/**
+        - id: bons-manuels
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8086
+          predicates:
+            - Path=/bons-manuels/**
+        - id: media
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8087
+          predicates:
+            - Path=/medias/**,/capture/**
+        - id: notification
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8088
+          predicates:
+            - Path=/notifications/**
+        - id: reporting
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8089
+          predicates:
+            - Path=/reporting/**
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "https://zenbio.zenitheinsurance.com"
+            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS"]
+            allowedHeaders: "Authorization,Content-Type,X-Requested-With"
+            allowCredentials: true
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:109.228.49.89}
+    prefer-ip-address: true
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:8761/eureka/
+
+logging:
+  file:
+    name: ${LOG_PATH:C:/esphere/logs}/gateway.log
+  level:
+    root: WARN
+    com.esphere: INFO
+    org.springframework.cloud.gateway: INFO
