@@ -1,0 +1,222 @@
+<!-- subscriber-list.component.html -->
+<div class="card card-outline card-primary">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-users mr-2"></i>Gestion des souscripteurs
+    </h3>
+    <div class="card-tools">
+      <button class="btn btn-primary btn-sm" (click)="onCreateNew()">
+        <i class="fas fa-user-plus mr-1"></i>Nouveau souscripteur
+      </button>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- Filtres -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="input-group">
+          <div class="input-group-prepend">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+          </div>
+          <input
+            type="text"
+            [formControl]="searchCtrl"
+            class="form-control"
+            placeholder="Rechercher par nom, email, police..."
+          />
+          <div class="input-group-append" *ngIf="searchCtrl.value">
+            <button class="btn btn-outline-secondary" type="button" (click)="searchCtrl.setValue('')">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="btn-group" role="group">
+          <button
+            type="button"
+            class="btn"
+            [class.btn-secondary]="statusFilter === undefined"
+            [class.btn-outline-secondary]="statusFilter !== undefined"
+            (click)="setStatusFilter(undefined)"
+          >
+            Tous <span class="badge badge-light ml-1">{{ total }}</span>
+          </button>
+          <button
+            type="button"
+            class="btn"
+            [class.btn-success]="statusFilter === true"
+            [class.btn-outline-success]="statusFilter !== true"
+            (click)="setStatusFilter(true)"
+          >
+            <i class="fas fa-check-circle mr-1"></i>Actifs
+          </button>
+          <button
+            type="button"
+            class="btn"
+            [class.btn-danger]="statusFilter === false"
+            [class.btn-outline-danger]="statusFilter !== false"
+            (click)="setStatusFilter(false)"
+          >
+            <i class="fas fa-pause-circle mr-1"></i>Inactifs
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div *ngIf="isLoading" class="overlay">
+      <i class="fas fa-2x fa-sync-alt fa-spin"></i>
+    </div>
+
+    <!-- Tableau -->
+    <div class="table-responsive">
+      <table class="table table-hover table-striped table-sm">
+        <thead class="thead-dark">
+          <tr>
+            <th>#</th>
+            <th>N° Police</th>
+            <th>Souscripteur</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>TituLaire du Compte</th>
+            <th class="text-center">Mode mot de passe</th>
+            <th class="text-center">Statut</th>
+            <th class="text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="!isLoading && subscribers.length === 0">
+            <td colspan="9" class="text-center text-muted py-4">
+              <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+              Aucun souscripteur trouvé
+            </td>
+          </tr>
+          <tr *ngFor="let sub of subscribers; trackBy: trackById">
+            <td>{{ sub.id }}</td>
+            <td>
+              <span class="badge badge-secondary font-weight-normal">
+                {{ sub.policyNumber }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <span
+                  class="avatar-initials mr-2"
+                  [style.background]="getAvatarColor(sub.id!)"
+                >
+                  {{ sub.fullName | slice:0:1 }}{{ sub.fullName.split(' ')[1] | slice:0:1 }}
+                </span>
+                <span>{{ sub.fullName }}</span>
+              </div>
+            </td>
+            <td>{{ sub.email }}</td>
+            <td>{{ sub.phoneNumber }}</td>
+            <td><code>{{ sub.username }}</code></td>
+            <td class="text-center">
+              <span
+                class="badge"
+                [class.badge-primary]="sub.passwordMode === 'manual'"
+                [class.badge-info]="sub.passwordMode === 'activation_link'"
+              >
+                <i
+                  class="fas mr-1"
+                  [class.fa-key]="sub.passwordMode === 'manual'"
+                  [class.fa-envelope]="sub.passwordMode === 'activation_link'"
+                ></i>
+                {{ sub.passwordMode === 'manual' ? 'Manuel' : 'Email activation' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button
+                class="btn btn-xs"
+                [class.btn-success]="sub.active"
+                [class.btn-outline-secondary]="!sub.active"
+                [disabled]="togglingId === sub.id"
+                (click)="onToggleStatus(sub)"
+                [title]="sub.active ? 'Désactiver' : 'Activer'"
+              >
+                <i
+                  class="fas"
+                  [class.fa-spinner]="togglingId === sub.id"
+                  [class.fa-spin]="togglingId === sub.id"
+                  [class.fa-check-circle]="togglingId !== sub.id && sub.active"
+                  [class.fa-times-circle]="togglingId !== sub.id && !sub.active"
+                ></i>
+                {{ sub.active ? 'Actif' : 'Inactif' }}
+              </button>
+            </td>
+            <td class="text-center">
+              <!-- Actions normales -->
+              <div *ngIf="confirmDeleteId !== sub.id" class="btn-group btn-group-sm">
+                <button class="btn btn-info" title="Détails" (click)="onView(sub.id!)">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-warning" title="Modifier" (click)="onEdit(sub.id!)">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-danger" title="Supprimer" (click)="onConfirmDelete(sub.id!)">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+
+              <!-- Confirmation suppression -->
+              <div *ngIf="confirmDeleteId === sub.id" class="btn-group btn-group-sm">
+                <button
+                  class="btn btn-danger"
+                  [disabled]="deletingId === sub.id"
+                  (click)="onDelete(sub.id!)"
+                  title="Confirmer la suppression"
+                >
+                  <i
+                    class="fas"
+                    [class.fa-spinner]="deletingId === sub.id"
+                    [class.fa-spin]="deletingId === sub.id"
+                    [class.fa-check]="deletingId !== sub.id"
+                  ></i>
+                  Confirmer
+                </button>
+                <button class="btn btn-secondary" (click)="onCancelDelete()" title="Annuler">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="row align-items-center mt-3" *ngIf="total > 0">
+      <div class="col-md-4 text-muted">
+        Affichage {{ (currentPage - 1) * limit + 1 }}-{{ getEndIndex() }}
+        sur {{ total }} souscripteurs
+      </div>
+      <div class="col-md-8">
+        <nav>
+          <ul class="pagination pagination-sm justify-content-end mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" (click)="goToPage(currentPage - 1)" style="cursor:pointer">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            </li>
+            <li
+              class="page-item"
+              *ngFor="let p of pages"
+              [class.active]="p === currentPage"
+            >
+              <a class="page-link" (click)="goToPage(p)" style="cursor:pointer">{{ p }}</a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" (click)="goToPage(currentPage + 1)" style="cursor:pointer">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>

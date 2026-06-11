@@ -1,0 +1,492 @@
+<!-- src/app/components/adherents/adherent-profile/adherent-profile.component.html -->
+
+  <!-- En-tête -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1><i class="fas fa-user-circle"></i> Profil Adhérent</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="/dashboard">Accueil</a></li>
+            <li class="breadcrumb-item"><a href="/adherents">Adhérents</a></li>
+            <li class="breadcrumb-item active">Profil</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenu principal -->
+  <section class="content" *ngIf="adherent">
+    <div class="container-fluid">
+      
+      <!-- Carte de profil principal -->
+      <div class="row">
+        <!-- Colonne gauche - Info carte -->
+        <div class="col-md-3">
+          
+          <!-- Widget Photo et Actions -->
+          <div class="card card-primary card-outline">
+            <div class="card-body box-profile">
+              <div class="text-center">
+                <img *ngIf="adherent.photo" 
+                     [src]="adherent.photo" 
+                     class="profile-user-img img-fluid img-circle"
+                     [alt]="adherent.assurePrincipal">
+                <div *ngIf="!adherent.photo" 
+                     class="profile-user-img img-fluid img-circle bg-secondary d-flex align-items-center justify-content-center"
+                     style="width: 128px; height: 128px; margin: 0 auto;">
+                  <i class="fas fa-user fa-4x text-white"></i>
+                </div>
+              </div>
+
+              <h3 class="profile-username text-center">{{ adherent.assurePrincipal }}</h3>
+
+              <p class="text-muted text-center">
+                <span class="badge" [ngClass]="getStatutBadgeClass(adherent.statut)">
+                  {{ adherent.statut }}
+                </span>
+              </p>
+
+              <ul class="list-group list-group-unbordered mb-3">
+                <li class="list-group-item">
+                  <b>Code Adhérent</b>
+                  <a class="float-right">{{ adherent.codeAdherent }}</a>
+                </li>
+                <li class="list-group-item">
+                  <b>Matricule</b>
+                  <a class="float-right">{{ adherent.matricule || '-' }}</a>
+                </li>
+                <li class="list-group-item" *ngIf="adherent.ayantsDroits">
+                  <b>Ayants Droit</b>
+                  <a class="float-right badge badge-info">{{ adherent.ayantsDroits.length }}</a>
+                </li>
+                <li class="list-group-item">
+                  <b>Enrôlement</b>
+                  <a class="float-right">
+                    <i *ngIf="adherent.enrole === 'O'" 
+                       class="fas fa-check-circle text-success"></i>
+                    <i *ngIf="adherent.enrole !== 'O'" 
+                       class="fas fa-times-circle text-danger"></i>
+                  </a>
+                </li>
+              </ul>
+
+              <div class="btn-group btn-group-sm btn-block mb-2">
+                <button type="button" class="btn btn-primary" (click)="editAdherent()">
+                  <i class="fas fa-edit"></i> Modifier
+                </button>
+                <button type="button" class="btn btn-info" (click)="printCard()">
+                  <i class="fas fa-print"></i> Imprimer
+                </button>
+              </div>
+
+              <button type="button" 
+                      class="btn btn-warning btn-sm btn-block" 
+                      *ngIf="adherent.statut === 'ACTIF'"
+                      (click)="suspendAdherent()">
+                <i class="fas fa-pause"></i> Suspendre
+              </button>
+
+              <button type="button" 
+                      class="btn btn-success btn-sm btn-block" 
+                      *ngIf="adherent.statut === 'SUSPENDU'"
+                      (click)="activateAdherent()">
+                <i class="fas fa-play"></i> Activer
+              </button>
+
+              <button type="button" 
+                      class="btn btn-secondary btn-sm btn-block" 
+                      (click)="goBack()">
+                <i class="fas fa-arrow-left"></i> Retour
+              </button>
+            </div>
+          </div>
+
+          <!-- Widget Consommation -->
+          <div class="card card-warning" *ngIf="adherent.consommation">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-chart-line"></i> Consommation</h3>
+            </div>
+            <div class="card-body">
+              <div class="info-box mb-3 bg-light">
+                <span class="info-box-icon">
+                  <i class="fas fa-money-bill-wave text-success"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Remboursé</span>
+                  <span class="info-box-number">
+                    {{ formatMontant(adherent.consommation.montantTotalRembourse) }} FCFA
+                  </span>
+                </div>
+              </div>
+
+              <div class="info-box mb-3 bg-light">
+                <span class="info-box-icon">
+                  <i class="fas fa-file-medical text-primary"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Consultations</span>
+                  <span class="info-box-number">{{ adherent.consommation.nombreConsultations }}</span>
+                </div>
+              </div>
+
+              <div class="info-box bg-light">
+                <span class="info-box-icon">
+                  <i class="fas fa-capsules text-info"></i>
+                </span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Prestations</span>
+                  <span class="info-box-number">{{ adherent.consommation.nombrePrestations }}</span>
+                </div>
+              </div>
+
+              <div class="text-center mt-3">
+                <span class="badge badge-lg" 
+                      [ngClass]="adherent.consommation.tendance === 'HAUSSE' ? 'badge-danger' : 
+                                 adherent.consommation.tendance === 'BAISSE' ? 'badge-success' : 'badge-info'">
+                  <i [ngClass]="getTendanceIcon(adherent.consommation.tendance)"></i>
+                  Tendance : {{ adherent.consommation.tendance }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Colonne droite - Détails -->
+        <div class="col-md-9">
+          
+          <!-- Navigation par onglets -->
+          <div class="card card-primary card-outline card-outline-tabs">
+            <div class="card-header p-0 border-bottom-0">
+              <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                  <a class="nav-link" 
+                     [class.active]="activeTab === 'identity'"
+                     (click)="changeTab('identity')"
+                     href="javascript:void(0)">
+                    <i class="fas fa-id-card"></i> Identité
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" 
+                     [class.active]="activeTab === 'police'"
+                     (click)="changeTab('police')"
+                     href="javascript:void(0)">
+                    <i class="fas fa-shield-alt"></i> Couverture
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" 
+                     [class.active]="activeTab === 'ayants'"
+                     (click)="changeTab('ayants')"
+                     href="javascript:void(0)">
+                    <i class="fas fa-users"></i> Ayants Droit 
+                    <span class="badge badge-info ml-1" *ngIf="adherent.ayantsDroits">
+                      {{ adherent.ayantsDroits.length }}
+                    </span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" 
+                     [class.active]="activeTab === 'plafonds'"
+                     (click)="changeTab('plafonds')"
+                     href="javascript:void(0)">
+                    <i class="fas fa-layer-group"></i> Plafonds
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" 
+                     [class.active]="activeTab === 'history'"
+                     (click)="changeTab('history')"
+                     href="javascript:void(0)">
+                    <i class="fas fa-history"></i> Historique
+                  </a>
+                </li>
+              </ul>
+            </div>
+            
+            <div class="card-body">
+              
+              <!-- Onglet Identité -->
+              <div *ngIf="activeTab === 'identity'">
+                <h4><i class="fas fa-user"></i> Informations Personnelles</h4>
+                <hr>
+                <div class="row">
+                  <div class="col-md-6">
+                    <dl class="row">
+                      <dt class="col-sm-5">Nom complet</dt>
+                      <dd class="col-sm-7">{{ adherent.assurePrincipal }}</dd>
+
+                      <dt class="col-sm-5">Date de naissance</dt>
+                      <dd class="col-sm-7">
+                        {{ adherent.naissance | date:'dd/MM/yyyy' }}
+                        <span class="badge badge-secondary ml-2">
+                          {{ calculateAge(adherent.naissance) }} ans
+                        </span>
+                      </dd>
+
+                      <dt class="col-sm-5">Sexe</dt>
+                      <dd class="col-sm-7">
+                        <span [class]="adherent.sexe === 'M' ? 'badge badge-primary' : 'badge badge-pink'">
+                          {{ adherent.sexe === 'M' ? 'Masculin' : 'Féminin' }}
+                        </span>
+                      </dd>
+
+                      <dt class="col-sm-5">Matricule</dt>
+                      <dd class="col-sm-7">{{ adherent.matricule || '-' }}</dd>
+                    </dl>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <dl class="row">
+                      <dt class="col-sm-5">Téléphone</dt>
+                      <dd class="col-sm-7">
+                        <a href="javascript:void(0)" (click)="callPhone()" *ngIf="adherent.telephone">
+                          <i class="fas fa-phone text-success"></i> {{ adherent.telephone }}
+                        </a>
+                        <span *ngIf="!adherent.telephone">-</span>
+                      </dd>
+
+                      <dt class="col-sm-5">Email</dt>
+                      <dd class="col-sm-7">
+                        <a href="javascript:void(0)" (click)="sendEmail()" *ngIf="adherent.email">
+                          <i class="fas fa-envelope text-info"></i> {{ adherent.email }}
+                        </a>
+                        <span *ngIf="!adherent.email">-</span>
+                      </dd>
+
+                      <dt class="col-sm-5">Adresse</dt>
+                      <dd class="col-sm-7">{{ adherent.adresse || '-' }}</dd>
+
+                      <dt class="col-sm-5">Ville</dt>
+                      <dd class="col-sm-7">{{ adherent.ville || '-' }}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Onglet Couverture -->
+              <div *ngIf="activeTab === 'police'">
+                <h4><i class="fas fa-shield-alt"></i> Informations de Couverture</h4>
+                <hr>
+                <div class="row">
+                  <div class="col-md-6">
+                    <dl class="row">
+                      <dt class="col-sm-5">Souscripteur</dt>
+                      <dd class="col-sm-7">
+                        <strong>{{ adherent.souscripteur }}</strong>
+                      </dd>
+
+                      <dt class="col-sm-5">Numéro de Police</dt>
+                      <dd class="col-sm-7">
+                        <span class="badge badge-primary">{{ adherent.police }}</span>
+                      </dd>
+
+                      <dt class="col-sm-5">Groupe</dt>
+                      <dd class="col-sm-7">{{ adherent.groupe || '-' }}</dd>
+
+                      <dt class="col-sm-5">Taux de couverture</dt>
+                      <dd class="col-sm-7">
+                        <span class="badge badge-success">{{ adherent.taux || 100 }}%</span>
+                      </dd>
+                    </dl>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <dl class="row">
+                      <dt class="col-sm-5">Date d'effet</dt>
+                      <dd class="col-sm-7">
+                        {{ adherent.effetPolice | date:'dd/MM/yyyy' }}
+                      </dd>
+
+                      <dt class="col-sm-5">Date d'échéance</dt>
+                      <dd class="col-sm-7">
+                        {{ adherent.echeancePolice | date:'dd/MM/yyyy' }}
+                      </dd>
+
+                      <dt class="col-sm-5">Date d'enrôlement</dt>
+                      <dd class="col-sm-7">
+                        {{ adherent.dateEnrole ? (adherent.dateEnrole | date:'dd/MM/yyyy HH:mm') : '-' }}
+                      </dd>
+
+                      <dt class="col-sm-5">Carte imprimée</dt>
+                      <dd class="col-sm-7">
+                        <i *ngIf="adherent.imprime === 'O'" class="fas fa-check-circle text-success"></i>
+                        <i *ngIf="adherent.imprime !== 'O'" class="fas fa-times-circle text-danger"></i>
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Onglet Ayants Droit -->
+              <div *ngIf="activeTab === 'ayants'">
+                <h4>
+                  <i class="fas fa-users"></i> Ayants Droit
+                  <button class="btn btn-success btn-sm float-right">
+                    <i class="fas fa-plus"></i> Ajouter un ayant droit
+                  </button>
+                </h4>
+                <hr>
+                
+                <div *ngIf="!adherent.ayantsDroits || adherent.ayantsDroits.length === 0" 
+                     class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Aucun ayant droit enregistré
+                </div>
+
+                <div class="row" *ngIf="adherent.ayantsDroits && adherent.ayantsDroits.length > 0">
+                  <div class="col-md-6" *ngFor="let ayant of adherent.ayantsDroits">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="row">
+                          <div class="col-3">
+                            <img *ngIf="ayant.photo" 
+                                 [src]="ayant.photo" 
+                                 class="img-fluid rounded-circle"
+                                 [alt]="ayant.nom">
+                            <div *ngIf="!ayant.photo" 
+                                 class="bg-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                 style="width: 60px; height: 60px;">
+                              <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                          </div>
+                          <div class="col-9">
+                            <h5 class="mb-1">{{ ayant.nom }}</h5>
+                            <p class="text-muted mb-1">
+                              <small>
+                                <i class="fas fa-link"></i> {{ ayant.lienpare }}
+                              </small>
+                            </p>
+                            <p class="mb-1">
+                              <span [class]="ayant.sexe === 'M' ? 'badge badge-primary' : 'badge badge-pink'">
+                                {{ ayant.sexe === 'M' ? 'M' : 'F' }}
+                              </span>
+                              <span class="badge badge-secondary ml-1">
+                                {{ calculateAge(ayant.naissance) }} ans
+                              </span>
+                              <span class="badge ml-1" [ngClass]="getStatutBadgeClass(ayant.statut)">
+                                {{ ayant.statut }}
+                              </span>
+                            </p>
+                            <div class="btn-group btn-group-sm">
+                              <button class="btn btn-info" title="Voir">
+                                <i class="fas fa-eye"></i>
+                              </button>
+                              <button class="btn btn-primary" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Onglet Plafonds -->
+              <div *ngIf="activeTab === 'plafonds'">
+                <h4><i class="fas fa-layer-group"></i> Plafonds de Couverture</h4>
+                <hr>
+                
+                <div *ngIf="adherent.plafonds">
+                  <!-- Plafond global -->
+                  <div class="card bg-light">
+                    <div class="card-body">
+                      <h5>Plafond Global</h5>
+                      <div class="progress mb-2" style="height: 30px;">
+                        <div class="progress-bar" 
+                             [class.bg-success]="adherent.plafonds.pourcentageUtilisation < 50"
+                             [class.bg-warning]="adherent.plafonds.pourcentageUtilisation >= 50 && adherent.plafonds.pourcentageUtilisation < 80"
+                             [class.bg-danger]="adherent.plafonds.pourcentageUtilisation >= 80"
+                             [style.width.%]="adherent.plafonds.pourcentageUtilisation">
+                          {{ adherent.plafonds.pourcentageUtilisation | number:'1.0-0' }}%
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col-4 text-center">
+                          <small class="text-muted">Plafond</small>
+                          <h5>{{ formatMontant(adherent.plafonds.plafondGlobal) }}</h5>
+                        </div>
+                        <div class="col-4 text-center">
+                          <small class="text-muted">Utilisé</small>
+                          <h5 class="text-danger">{{ formatMontant(adherent.plafonds.montantUtilise) }}</h5>
+                        </div>
+                        <div class="col-4 text-center">
+                          <small class="text-muted">Restant</small>
+                          <h5 class="text-success">{{ formatMontant(adherent.plafonds.montantRestant) }}</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Plafonds par catégorie -->
+                  <div *ngIf="adherent.plafonds.detailsParCategorie && adherent.plafonds.detailsParCategorie.length > 0">
+                    <h5 class="mt-4">Détails par Catégorie</h5>
+                    <div class="row">
+                      <div class="col-md-6" *ngFor="let cat of adherent.plafonds.detailsParCategorie">
+                        <div class="card">
+                          <div class="card-header" [ngClass]="getPlafondStatutClass(cat.statut)">
+                            <h5 class="card-title text-white mb-0">{{ cat.categorieNom }}</h5>
+                          </div>
+                          <div class="card-body">
+                            <div class="progress mb-2">
+                              <div class="progress-bar" 
+                                   [ngClass]="getPlafondStatutClass(cat.statut)"
+                                   [style.width.%]="cat.pourcentageUtilisation">
+                                {{ cat.pourcentageUtilisation | number:'1.0-0' }}%
+                              </div>
+                            </div>
+                            <div class="row small">
+                              <div class="col-4">
+                                <strong>{{ formatMontant(cat.plafond) }}</strong><br>
+                                <small class="text-muted">Plafond</small>
+                              </div>
+                              <div class="col-4">
+                                <strong>{{ formatMontant(cat.montantUtilise) }}</strong><br>
+                                <small class="text-muted">Utilisé</small>
+                              </div>
+                              <div class="col-4">
+                                <strong>{{ formatMontant(cat.montantRestant) }}</strong><br>
+                                <small class="text-muted">Restant</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div *ngIf="!adherent.plafonds" class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> Aucune information de plafond disponible
+                </div>
+              </div>
+
+              <!-- Onglet Historique -->
+              <div *ngIf="activeTab === 'history'">
+                <h4><i class="fas fa-history"></i> Historique des Consommations</h4>
+                <hr>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle"></i> L'historique détaillé sera affiché ici
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Loader -->
+  <div *ngIf="loading" class="overlay">
+    <i class="fas fa-3x fa-sync-alt fa-spin"></i>
+  </div>
+

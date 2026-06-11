@@ -1,0 +1,375 @@
+<!-- ─────────────────────────────────────────────────────────────────────────
+     header.component.html — AdminLTE 3 / Angular 18
+
+     Alertes police :
+      • badge-blink-expired  → clignotement rapide si expirée
+      • badge-pulse-warning  → pulsation douce si avertissement
+      • avatar-glow-expired  → halo rouge pulsant autour de l'avatar
+      • avatar-glow-warning  → halo orange pulsant autour de l'avatar
+      • shake-once           → vibration unique au chargement
+      • alert-banner-*       → bannière fixe sous le header (dismissible)
+      • Son Web Audio API    → déclenché depuis le .ts (playAlertSound)
+     ─────────────────────────────────────────────────────────────────────── -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     BANNIÈRE D'ALERTE — affichée sous le header, dismissible
+     Visible uniquement si showBanner=true et statut dégradé
+     ═══════════════════════════════════════════════════════════════════════════ -->
+
+<!-- Bannière rouge : police EXPIRÉE -->
+<div *ngIf="showBanner && policeStatus === 'expired'"
+     class="alert-banner-expired">
+  <i class="fas fa-times-circle mr-2"></i>
+  <strong>POLICE EXPIRÉE</strong> —
+  Votre couverture a expiré depuis {{ joursRestants * -1 }} jour(s).
+  Contactez votre assureur immédiatement.
+  <!-- Bouton rejouer le son -->
+  <button class="alert-banner-close mr-5" (click)="replaySound($event)"
+          title="Rejouer l'alerte sonore">
+    <i class="fas fa-volume-up"></i>
+  </button>
+  <!-- Bouton fermer la bannière -->
+  <button class="alert-banner-close" (click)="dismissBanner($event)"
+          title="Fermer cette bannière">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
+
+<!-- Bannière orange : police EXPIRE BIENTÔT -->
+<div *ngIf="showBanner && policeStatus === 'warning'"
+     class="alert-banner-warning">
+  <i class="fas fa-exclamation-triangle mr-2"></i>
+  <strong>ATTENTION</strong> —
+  Votre police expire dans <strong>{{ joursRestants }} jour(s)</strong>.
+  Pensez à renouveler votre contrat.
+  <button class="alert-banner-close mr-5" (click)="replaySound($event)"
+          title="Rejouer l'alerte sonore">
+    <i class="fas fa-volume-up"></i>
+  </button>
+  <button class="alert-banner-close" (click)="dismissBanner($event)"
+          title="Fermer cette bannière">
+    <i class="fas fa-times"></i>
+  </button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAVBAR PRINCIPALE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<nav class="main-header navbar navbar-expand navbar-white navbar-light"
+     (click)="$event.stopPropagation()">
+
+  <!-- ── GAUCHE : burger + navigation ──────────────────────────────────────── -->
+  <ul class="navbar-nav">
+    <li class="nav-item">
+      <a class="nav-link" data-widget="pushmenu" href="#" role="button">
+        <i class="fas fa-bars"></i>
+      </a>
+    </li>
+    <li class="nav-item d-none d-sm-inline-block">
+      <a routerLink="/dashboard" class="nav-link">Accueil</a>
+    </li>
+    <li class="nav-item d-none d-sm-inline-block">
+      <a routerLink="/contact" class="nav-link">Contact</a>
+    </li>
+  </ul>
+
+  <!-- ── DROITE : notifications + profil ───────────────────────────────────── -->
+  <ul class="navbar-nav ml-auto align-items-center">
+
+    <!-- ── Messages ───────────────────────────────────────────────────────── -->
+    <li class="nav-item dropdown" [class.show]="showMsgDropdown"
+        (click)="showMsgDropdown=!showMsgDropdown; showNotifDropdown=false; showUserDropdown=false">
+      <a class="nav-link" href="#" (click)="$event.preventDefault()">
+        <i class="far fa-comments"></i>
+        <span class="badge badge-danger navbar-badge">3</span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right"
+           [class.show]="showMsgDropdown">
+        <span class="dropdown-item dropdown-header">3 Messages</span>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item" (click)="$event.preventDefault()">
+          <div class="media">
+            <div class="img-circle mr-3 d-flex align-items-center justify-content-center
+                 bg-primary text-white font-weight-bold"
+                 style="width:50px;height:50px;min-width:50px;
+                        font-size:1rem;border-radius:50%;">BD</div>
+            <div class="media-body">
+              <h3 class="dropdown-item-title">Brad Diesel
+                <span class="float-right text-sm text-danger"><i class="fas fa-star"></i></span>
+              </h3>
+              <p class="text-sm">Appelez-moi quand vous pourrez...</p>
+              <p class="text-sm text-muted">
+                <i class="far fa-clock mr-1"></i> Il y a 4 heures
+              </p>
+            </div>
+          </div>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item dropdown-footer"
+           (click)="$event.preventDefault()">Voir tous les messages</a>
+      </div>
+    </li>
+
+    <!-- ── Notifications ──────────────────────────────────────────────────── -->
+    <li class="nav-item dropdown" [class.show]="showNotifDropdown"
+        (click)="showNotifDropdown=!showNotifDropdown; showMsgDropdown=false; showUserDropdown=false">
+      <a class="nav-link" href="#" (click)="$event.preventDefault()">
+        <i class="far fa-bell"></i>
+        <!-- Le badge "15" clignote aussi si police expirée -->
+        <span class="badge navbar-badge"
+              [class.badge-danger]="policeStatus === 'expired'"
+              [class.badge-warning]="policeStatus === 'warning'"
+              [class.badge-warning]="policeStatus === 'valid'"
+              [class.badge-blink-expired]="policeStatus === 'expired'"
+              [class.badge-pulse-warning]="policeStatus === 'warning'">
+          15
+        </span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right"
+           [class.show]="showNotifDropdown">
+        <span class="dropdown-item dropdown-header">15 Notifications</span>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item" (click)="$event.preventDefault()">
+          <i class="fas fa-envelope mr-2"></i> 4 nouveaux messages
+          <span class="float-right text-muted text-sm">3 mins</span>
+        </a>
+        <!-- Notif police si statut dégradé -->
+        <ng-container *ngIf="user && policeStatus !== 'valid'">
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item" (click)="$event.preventDefault()">
+            <i [class]="statusIcon + ' mr-2'"
+               [class.text-danger]="policeStatus === 'expired'"
+               [class.text-warning]="policeStatus === 'warning'"></i>
+            <span [class.text-danger]="policeStatus === 'expired'"
+                  [class.text-warning]="policeStatus === 'warning'">
+              {{ statusLabel }}
+            </span>
+            <span class="float-right text-muted text-sm">Police</span>
+          </a>
+        </ng-container>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="dropdown-item dropdown-footer"
+           (click)="$event.preventDefault()">Voir toutes les notifications</a>
+      </div>
+    </li>
+
+    <!-- ─────────────────────────────────────────────────────────────────────
+         PROFIL UTILISATEUR
+         Toutes les animations d'alerte sont conditionnées au policeStatus
+         ───────────────────────────────────────────────────────────────────── -->
+    <li *ngIf="user" class="nav-item dropdown user-menu"
+        [class.show]="showUserDropdown"
+        (click)="showUserDropdown=!showUserDropdown; showMsgDropdown=false; showNotifDropdown=false">
+
+      <a href="#" class="nav-link dropdown-toggle d-flex align-items-center"
+         (click)="$event.preventDefault()" style="gap:8px;">
+
+        <!-- Avatar avec halo animé selon statut + vibration initiale -->
+        <div class="d-flex align-items-center justify-content-center elevation-2"
+             [style.background]="avatarColor"
+             style="width:34px; height:34px; min-width:34px;
+                    color:#fff; font-weight:700; font-size:.85rem;
+                    border:2px solid rgba(255,255,255,.6); border-radius:50%;"
+             [class.avatar-glow-expired]="policeStatus === 'expired'"
+             [class.avatar-glow-warning]="policeStatus === 'warning'"
+             [class.shake-once]="shakeActive">
+          {{ initiales }}
+        </div>
+
+        <!-- Nom + badge statut animé -->
+        <div class="d-none d-md-flex flex-column" style="line-height:1.2;">
+          <span class="font-weight-bold text-dark"
+                style="font-size:.82rem; max-width:160px;"
+                [title]="user.lastname ">
+            {{ truncatedName }}
+          </span>
+          <!-- Badge clignote si expired, pulse si warning -->
+          <span class="badge"
+                [class.badge-success]="policeStatus === 'valid'"
+                [class.badge-warning]="policeStatus === 'warning'"
+                [class.badge-danger]="policeStatus === 'expired'"
+                [class.badge-blink-expired]="policeStatus === 'expired'"
+                [class.badge-pulse-warning]="policeStatus === 'warning'"
+                style="font-size:.65rem; padding:2px 5px;">
+            <i [class]="statusIcon + ' mr-1'" style="font-size:.6rem;"></i>
+            {{ statusLabel }}
+          </span>
+        </div>
+
+        <i class="fas fa-caret-down text-muted ml-1" style="font-size:.75rem;"></i>
+      </a>
+
+      <!-- ─────────────────── DROPDOWN PROFIL ──────────────────────────────── -->
+      <div class="dropdown-menu dropdown-menu-right dropdown-menu-lg p-0"
+           [class.show]="showUserDropdown"
+           style="min-width:320px; border:none;
+                  box-shadow:0 8px 32px rgba(0,0,0,.15);">
+
+        <!-- En-tête dégradé -->
+        <div class="d-flex align-items-center p-3"
+             [style.background]="'linear-gradient(135deg,' + avatarColor + ' 0%,#1a1f36 100%)'"
+             style="border-radius:4px 4px 0 0;">
+          <div class="d-flex align-items-center justify-content-center mr-3"
+               [style.background]="avatarColor"
+               style="width:52px; height:52px; min-width:52px;
+                      color:#fff; font-weight:800; font-size:1.3rem;
+                      border:3px solid rgba(255,255,255,.5); border-radius:50%;"
+               [class.avatar-glow-expired]="policeStatus === 'expired'"
+               [class.avatar-glow-warning]="policeStatus === 'warning'">
+            {{ initiales }}
+          </div>
+          <div class="flex-grow-1 overflow-hidden">
+            <div class="text-white font-weight-bold"
+                 style="font-size:.95rem; white-space:nowrap;
+                        overflow:hidden; text-overflow:ellipsis;"
+                 [title]="user.lastname ">
+              {{ user.lastname  }}
+            </div>
+            <div class="text-white-50"
+                 style="font-size:.78rem; white-space:nowrap;
+                        overflow:hidden; text-overflow:ellipsis;"
+                 [title]="user.email ">
+              <i class="fas fa-envelope mr-1" style="font-size:.7rem;"></i>
+              {{ user.email  }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Corps : informations police -->
+        <div class="px-3 pt-3 pb-2">
+
+          <!-- Numéro de police -->
+          <div class="d-flex align-items-center justify-content-between mb-2
+                      py-1 px-2 rounded hover-row">
+            <span class="text-muted" style="font-size:.78rem;">
+              <i class="fas fa-id-card mr-2 text-primary"></i>Numéro de police
+            </span>
+            <span class="font-weight-bold text-dark"
+                  style="font-size:.82rem; letter-spacing:.5px;">
+              {{ user.userName  }}
+            </span>
+          </div>
+
+          <div class="dropdown-divider my-2"></div>
+
+          <!-- Date d'effet -->
+          <div class="d-flex align-items-center justify-content-between mb-2
+                      py-1 px-2 rounded hover-row">
+            <span class="text-muted" style="font-size:.78rem;">
+              <i class="fas fa-calendar-check mr-2 text-success"></i>Date d'effet
+            </span>
+            <span class="badge badge-light border" style="font-size:.78rem;">
+              {{ user.effet ?? '—' }}
+            </span>
+          </div>
+
+          <!-- Date d'échéance avec badge coloré + animation si dégradé -->
+          <div class="d-flex align-items-center justify-content-between mb-2
+                      py-1 px-2 rounded hover-row">
+            <span class="text-muted" style="font-size:.78rem;">
+              <i class="fas fa-calendar-times mr-2"
+                 [class.text-success]="policeStatus === 'valid'"
+                 [class.text-warning]="policeStatus === 'warning'"
+                 [class.text-danger]="policeStatus === 'expired'"></i>
+              Date d'échéance
+            </span>
+            <span class="badge"
+                  [class.badge-success]="policeStatus === 'valid'"
+                  [class.badge-warning]="policeStatus === 'warning'"
+                  [class.badge-danger]="policeStatus === 'expired'"
+                  [class.badge-blink-expired]="policeStatus === 'expired'"
+                  [class.badge-pulse-warning]="policeStatus === 'warning'"
+                  style="font-size:.78rem;">
+              {{ user.echeance ?? '—' }}
+            </span>
+          </div>
+
+          <!-- Barre de progression -->
+          <div *ngIf="policeStatus !== 'valid'" class="mt-3 mb-1 px-2">
+            <div class="d-flex justify-content-between mb-1">
+              <small class="text-muted" style="font-size:.72rem;">Validité de la police</small>
+              <small class="font-weight-bold" style="font-size:.72rem;"
+                     [class.text-danger]="policeStatus === 'expired'"
+                     [class.text-warning]="policeStatus === 'warning'">
+                <ng-container *ngIf="policeStatus === 'expired'">
+                  Expirée depuis {{ joursRestants * -1 }} j
+                </ng-container>
+                <ng-container *ngIf="policeStatus === 'warning'">
+                  {{ joursRestants }} j restant(s)
+                </ng-container>
+              </small>
+            </div>
+            <div class="progress" style="height:5px; border-radius:3px;">
+              <div class="progress-bar"
+                   [class.bg-danger]="policeStatus === 'expired'"
+                   [class.bg-warning]="policeStatus === 'warning'"
+                   [style.width]="policeStatus === 'expired' ? '100%' :
+                                  ((30 - joursRestants) / 30 * 100) + '%'">
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertes textuelles dans le dropdown -->
+          <div *ngIf="policeStatus === 'expired'"
+               class="alert alert-danger py-1 px-2 mt-2 mb-1"
+               style="font-size:.75rem; border-radius:4px;">
+            <i class="fas fa-exclamation-circle mr-1"></i>
+            Police expirée. Contactez votre assureur.
+            <!-- Bouton rejouer le son depuis le dropdown -->
+            <button class="btn btn-sm btn-outline-danger ml-2 py-0 px-1"
+                    style="font-size:.7rem;" (click)="replaySound($event)"
+                    title="Rejouer l'alerte">
+              <i class="fas fa-volume-up"></i>
+            </button>
+          </div>
+          <div *ngIf="policeStatus === 'warning'"
+               class="alert alert-warning py-1 px-2 mt-2 mb-1"
+               style="font-size:.75rem; border-radius:4px;">
+            <i class="fas fa-clock mr-1"></i>
+            Expire dans {{ joursRestants }} j. Pensez au renouvellement.
+            <button class="btn btn-sm btn-outline-warning ml-2 py-0 px-1"
+                    style="font-size:.7rem;" (click)="replaySound($event)"
+                    title="Rejouer l'alerte">
+              <i class="fas fa-volume-up"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Pied : déconnexion -->
+        <div class="dropdown-divider m-0"></div>
+        <div class="p-2">
+          <a href="#" class="dropdown-item text-danger d-flex align-items-center"
+             style="border-radius:4px; font-size:.85rem;"
+             (click)="logout($event)">
+            <span *ngIf="!loggingOut">
+              <i class="fas fa-power-off mr-2"></i>Se déconnecter
+            </span>
+            <span *ngIf="loggingOut">
+              <span class="spinner-border spinner-border-sm mr-2" role="status"></span>
+              Déconnexion...
+            </span>
+            <i class="fas fa-arrow-right ml-auto text-muted" style="font-size:.75rem;"></i>
+          </a>
+        </div>
+
+      </div>
+    </li>
+
+    <!-- Fallback déconnexion si session absente -->
+    <li *ngIf="!user" class="nav-item">
+      <a class="nav-link text-danger" href="#"
+         (click)="logout($event)" title="Se déconnecter">
+        <i class="fas fa-power-off"></i>
+      </a>
+    </li>
+
+  </ul>
+</nav>
+
+<!-- Overlay fermeture dropdowns -->
+<div *ngIf="showUserDropdown || showNotifDropdown || showMsgDropdown"
+     style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;"
+     (click)="closeAllDropdowns()">
+</div>

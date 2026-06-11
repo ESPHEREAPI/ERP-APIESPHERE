@@ -1,0 +1,346 @@
+<!-- src/app/components/adherents/adherent-list/adherent-list.component.html -->
+
+
+  <!-- En-tête de contenu -->
+  <section class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1><i class="fas fa-users"></i> Gestion des Adhérents</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="/dashboard">Accueil</a></li>
+            <li class="breadcrumb-item active">Adhérents</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenu principal -->
+  <section class="content">
+    <div class="container-fluid">
+      
+      <!-- Filtres de recherche -->
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-search"></i> Recherche et Filtres</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="onSearch()">
+            <div class="row">
+              <!-- Recherche globale -->
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>Recherche (Nom / Matricule)</label>
+                  <input type="text" 
+                         class="form-control" 
+                         [(ngModel)]="filter.search" 
+                         name="search"
+                         placeholder="Rechercher un adhérent...">
+                </div>
+              </div>
+
+              <!-- Souscripteur -->
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Souscripteur</label>
+                  <input type="text" 
+                         class="form-control" 
+                         [(ngModel)]="filter.souscripteur" 
+                         name="souscripteur"
+                         placeholder="Code souscripteur">
+                </div>
+              </div>
+
+              <!-- Police -->
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Police</label>
+                  <input type="text" 
+                         class="form-control" 
+                         [(ngModel)]="filter.police" 
+                         name="police"
+                         placeholder="Numéro de police">
+                </div>
+              </div>
+
+              <!-- Groupe -->
+              <div class="col-md-2">
+                <div class="form-group">
+                  <label>Groupe</label>
+                  <input type="number" 
+                         class="form-control" 
+                         [(ngModel)]="filter.groupe" 
+                         name="groupe"
+                         placeholder="N° groupe">
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <!-- Statut -->
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Statut</label>
+                  <select class="form-control" [(ngModel)]="filter.statut" name="statut">
+                    <option value="">Tous les statuts</option>
+                    <option *ngFor="let statut of statutOptions" [value]="statut">
+                      {{ statut }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Sexe -->
+              <div class="col-md-2">
+                <div class="form-group">
+                  <label>Sexe</label>
+                  <select class="form-control" [(ngModel)]="filter.sexe" name="sexe">
+                    <option value="">Tous</option>
+                    <option value="M">Masculin</option>
+                    <option value="F">Féminin</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Enrôlement -->
+              <div class="col-md-3">
+                <div class="form-group">
+                  <label>Enrôlement</label>
+                  <select class="form-control" [(ngModel)]="filter.enrole" name="enrole">
+                    <option value="">Tous</option>
+                    <option *ngFor="let opt of enroleOptions" [value]="opt.value">
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Boutons d'action -->
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>&nbsp;</label>
+                  <div class="btn-group d-block">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-search"></i> Rechercher
+                    </button>
+                    <button type="button" class="btn btn-secondary" (click)="resetFilters()">
+                      <i class="fas fa-redo"></i> Réinitialiser
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Liste des adhérents -->
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-list"></i> Liste des Adhérents 
+            <span class="badge badge-info ml-2">{{ totalElements }} résultat(s)</span>
+          </h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-success btn-sm" (click)="createAdherent()">
+              <i class="fas fa-plus"></i> Nouvel Adhérent
+            </button>
+            <div class="btn-group ml-2">
+              <button type="button" 
+                      class="btn btn-default btn-sm" 
+                      (click)="exportExcel()"
+                      title="Exporter en Excel">
+                <i class="fas fa-file-excel text-success"></i>
+              </button>
+              <button type="button" 
+                      class="btn btn-default btn-sm" 
+                      (click)="exportPdf()"
+                      title="Exporter en PDF">
+                <i class="fas fa-file-pdf text-danger"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          <!-- Loader -->
+          <div *ngIf="loading" class="overlay">
+            <i class="fas fa-2x fa-sync-alt fa-spin"></i>
+          </div>
+
+          <!-- Table -->
+          <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">#</th>
+                  <th (click)="onSort('assurePrincipal')" style="cursor: pointer;">
+                    Assuré Principal 
+                    <i class="fas fa-sort ml-1"></i>
+                  </th>
+                  <th>Matricule</th>
+                  <th>Date Naissance / Âge</th>
+                  <th>Sexe</th>
+                  <th>Téléphone</th>
+                  <th>Police / Groupe</th>
+                  <th>Statut</th>
+                  <th>Enrôlement</th>
+                  <th style="width: 150px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="adherents.length === 0 && !loading">
+                  <td colspan="10" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-2"></i>
+                    <p>Aucun adhérent trouvé</p>
+                  </td>
+                </tr>
+                <tr *ngFor="let adherent of adherents; let i = index">
+                  <td>
+                    <img *ngIf="adherent.photo" 
+                         [src]="adherent.photo" 
+                         class="img-circle elevation-2" 
+                         style="width: 40px; height: 40px;"
+                         [alt]="adherent.assurePrincipal">
+                    <span *ngIf="!adherent.photo" 
+                          class="img-circle elevation-2 bg-secondary d-inline-flex align-items-center justify-content-center"
+                          style="width: 40px; height: 40px;">
+                      <i class="fas fa-user text-white"></i>
+                    </span>
+                  </td>
+                  <td>
+                    <strong>{{ adherent.assurePrincipal }}</strong><br>
+                    <small class="text-muted">{{ adherent.codeAdherent }}</small>
+                  </td>
+                  <td>{{ adherent.matricule || '-' }}</td>
+                  <td>
+                    {{ adherent.naissance | date:'dd/MM/yyyy' }}<br>
+                    <small class="text-muted">{{ calculateAge(adherent.naissance) }} ans</small>
+                  </td>
+                  <td>
+                    <span [class]="adherent.sexe === 'M' ? 'badge badge-primary' : 'badge badge-pink'">
+                      {{ adherent.sexe === 'M' ? 'Masculin' : 'Féminin' }}
+                    </span>
+                  </td>
+                  <td>
+                    <i class="fas fa-phone text-muted"></i> {{ adherent.telephone || '-' }}
+                  </td>
+                  <td>
+                    <strong>{{ adherent.police }}</strong><br>
+                    <small class="text-muted">Groupe {{ adherent.groupe || '-' }}</small>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getStatutBadgeClass(adherent.statut)">
+                      {{ adherent.statut }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <i *ngIf="adherent.enrole === 'O'" 
+                       class="fas fa-fingerprint text-success" 
+                       title="Enrôlé"></i>
+                    <i *ngIf="adherent.enrole !== 'O'" 
+                       class="fas fa-fingerprint text-muted" 
+                       title="Non enrôlé"></i>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <button type="button" 
+                              class="btn btn-info" 
+                              (click)="viewProfile(adherent.codeAdherent!)"
+                              title="Voir le profil">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button type="button" 
+                              class="btn btn-primary" 
+                              (click)="editAdherent(adherent.codeAdherent!)"
+                              title="Modifier">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button type="button" 
+                              class="btn btn-warning" 
+                              *ngIf="adherent.statut === 'ACTIF'"
+                              (click)="suspendAdherent(adherent)"
+                              title="Suspendre">
+                        <i class="fas fa-pause"></i>
+                      </button>
+                      <button type="button" 
+                              class="btn btn-success" 
+                              *ngIf="adherent.statut === 'SUSPENDU'"
+                              (click)="activateAdherent(adherent)"
+                              title="Activer">
+                        <i class="fas fa-play"></i>
+                      </button>
+                      <button type="button" 
+                              class="btn btn-danger" 
+                              (click)="deleteAdherent(adherent)"
+                              title="Supprimer">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer" *ngIf="totalPages > 0">
+          <div class="row align-items-center">
+            <div class="col-sm-5">
+              <div class="form-inline">
+                <label class="mr-2">Afficher</label>
+                <select class="form-control form-control-sm" 
+                        [(ngModel)]="pageSize" 
+                        (change)="onPageSizeChange(pageSize)">
+                  <option [value]="10">10</option>
+                  <option [value]="20">20</option>
+                  <option [value]="50">50</option>
+                  <option [value]="100">100</option>
+                </select>
+                <label class="ml-2">lignes par page</label>
+              </div>
+            </div>
+            <div class="col-sm-7">
+              <ul class="pagination pagination-sm float-right mb-0">
+                <li class="page-item" [class.disabled]="currentPage === 0">
+                  <a class="page-link" (click)="onPageChange(0)" href="javascript:void(0)">
+                    <i class="fas fa-angle-double-left"></i>
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === 0">
+                  <a class="page-link" (click)="onPageChange(currentPage - 1)" href="javascript:void(0)">
+                    <i class="fas fa-angle-left"></i>
+                  </a>
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link">
+                    Page {{ currentPage + 1 }} / {{ totalPages }}
+                  </span>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+                  <a class="page-link" (click)="onPageChange(currentPage + 1)" href="javascript:void(0)">
+                    <i class="fas fa-angle-right"></i>
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+                  <a class="page-link" (click)="onPageChange(totalPages - 1)" href="javascript:void(0)">
+                    <i class="fas fa-angle-double-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+

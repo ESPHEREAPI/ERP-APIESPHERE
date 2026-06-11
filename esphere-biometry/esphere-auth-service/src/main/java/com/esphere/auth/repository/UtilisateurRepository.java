@@ -1,6 +1,8 @@
 package com.esphere.auth.repository;
 
 import com.esphere.auth.entity.Utilisateur;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,10 @@ public interface UtilisateurRepository
         extends JpaRepository<Utilisateur, Integer> {
 
     Optional<Utilisateur> findByLogin(String login);
+
+    // Recherche paginée par nom, prénom ou login (pour UserController)
+    Page<Utilisateur> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrLoginContainingIgnoreCase(
+            String nom, String prenom, String login, Pageable pageable);
 
     Optional<Utilisateur> findByEmail(String email);
 

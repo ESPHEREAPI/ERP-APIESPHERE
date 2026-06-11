@@ -1,0 +1,268 @@
+<!-- login.component.html -->
+<div class="content-wrapper" style="background: transparent;">
+  <div class="content login-content">
+
+    <p-toast position="top-right"></p-toast>
+
+    <div class="hold-transition">
+      <div class="container">
+        <div class="justify-content-center">
+          <div class="col-sm-9">
+            <div class="login-box-container">
+
+              <!-- Logo -->
+              <div class="text-center mb-4 logo-container animate__animated animate__fadeInDown">
+                <a href="#" class="navbar-brand">
+                  <img src="./favicon-96x96.png" alt="zenithe Logo"
+                    class="brand-image img-circle elevation-3 logo-pulse" style="opacity:.8">
+                  <span class="brand-text">
+                    <b class="login-logo">ZEN-BIO</b> Gestion Couverture Santé
+                  </span>
+                </a>
+              </div>
+
+              <!-- Carte login -->
+              <div class="card card-primary card-outline login-card animate__animated animate__fadeInUp">
+                <div class="card-header text-center bg-white border-0 pb-0">
+                  <div class="lock-icon-container">
+                    <i class="fas fa-lock text-muted"></i>
+                  </div>
+                  <p class="login-box-msg text-muted mb-0">Veuillez vous authentifier</p>
+                </div>
+
+                <div class="card-body login-card-body pt-3">
+
+                  <!-- Erreur -->
+                  <div *ngIf="errorMessage"
+                    class="alert alert-danger alert-dismissible fade show animate__animated animate__shakeX"
+                    role="alert">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>{{ errorMessage }}
+                    <button type="button" class="close" (click)="errorMessage=''" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+
+                  <form #f="ngForm" (ngSubmit)="onLogin(f.value)" novalidate>
+
+                    <!-- SELECT PROFIL -->
+                    <div class="form-group mb-4">
+                      <label for="profil" class="form-label text-muted small mb-2">
+                        <i class="fas fa-id-badge mr-1"></i>Profil de connexion <span class="text-danger">*</span>
+                      </label>
+                      <div class="input-group input-group-lg">
+                        <div class="input-group-prepend">
+                          <span class="input-group-text bg-primary text-white border-0">
+                            <i class="fas fa-users"></i>
+                          </span>
+                        </div>
+                        <select class="form-control form-control-lg custom-select custom-select-lg"
+                          id="profil" name="profil" ngModel required #profil="ngModel"
+                          (change)="onProfilChange($any($event.target).value)"
+                          [class.is-invalid]="profil.invalid && profil.touched"
+                          [class.is-valid]="profil.valid && profil.touched"
+                          style="border-left:none;">
+                          <option value="" disabled selected>-- Sélectionnez votre profil --</option>
+                          <option *ngFor="let p of profilList" [value]="p.value">{{ p.label }}</option>
+                        </select>
+                        <div *ngIf="profil.invalid && profil.touched" class="invalid-feedback">
+                          Veuillez sélectionner un profil de connexion
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- CALLOUTS contextuels -->
+                    <div *ngIf="selectedProfil === ProfilType.SOUSCRIPTEUR"
+                      class="callout callout-info animate__animated animate__fadeIn mb-4">
+                      <h5 class="mb-1"><i class="fas fa-info-circle mr-2 text-info"></i>Connexion Souscripteur</h5>
+                      <p class="mb-0 small">Saisissez votre <strong>numéro de police maladie</strong> et votre <strong>mot de passe</strong>.</p>
+                      <div class="mt-2"><span class="badge badge-info"><i class="fas fa-file-medical mr-1"></i>N° Police Maladie requis</span></div>
+                    </div>
+
+                    <div *ngIf="selectedProfil === ProfilType.ADHERENT"
+                      class="callout callout-success animate__animated animate__fadeIn mb-4">
+                      <h5 class="mb-1"><i class="fas fa-user-check mr-2 text-success"></i>Connexion Adhérent</h5>
+                      <p class="mb-0 small"><strong>N° de téléphone d'enrôlement</strong> comme identifiant · <strong>Code adhérent</strong> comme mot de passe.</p>
+                      <div class="mt-2">
+                        <span class="badge badge-success"><i class="fas fa-phone mr-1"></i>N° Téléphone enrôlement</span>
+                        <span class="badge badge-secondary ml-1"><i class="fas fa-key mr-1"></i>Code adhérent = Mot de passe</span>
+                      </div>
+                    </div>
+
+                    <div *ngIf="selectedProfil === ProfilType.SERVICE_SANTE"
+                      class="callout callout-warning animate__animated animate__fadeIn mb-4">
+                      <h5 class="mb-1"><i class="fas fa-heartbeat mr-2 text-warning"></i>Connexion Service Santé</h5>
+                      <p class="mb-0 small">Utilisez vos <strong>paramètres biométriques</strong> enregistrés pour vous connecter.</p>
+                      <div class="mt-2"><span class="badge badge-warning text-dark"><i class="fas fa-fingerprint mr-1"></i>Authentification biométrique</span></div>
+                    </div>
+
+                    <div *ngIf="selectedProfil === ProfilType.DII"
+                      class="callout callout-warning animate__animated animate__fadeIn mb-4">
+                      <h5 class="mb-1"><i class="fas fa-microchip mr-2 text-warning"></i>Connexion DII</h5>
+                      <p class="mb-0 small">Accès sécurisé par <strong>authentification biométrique</strong> liée à votre compte DII.</p>
+                      <div class="mt-2">
+                        <span class="badge badge-warning text-dark"><i class="fas fa-fingerprint mr-1"></i>Biométrie</span>
+                        <span class="badge badge-dark ml-1"><i class="fas fa-shield-alt mr-1"></i>Accès sécurisé</span>
+                      </div>
+                    </div>
+
+                    <div *ngIf="selectedProfil === ProfilType.INTERMEDIAIRE || selectedProfil === ProfilType.PRESTATAIRE"
+                      class="callout callout-danger animate__animated animate__fadeIn mb-4">
+                      <h5 class="mb-1"><i class="fas fa-tools mr-2 text-danger"></i>Profil non disponible</h5>
+                      <p class="mb-0 small">L'accès pour ce profil n'est pas encore défini. Contactez l'<strong>administrateur système</strong>.</p>
+                      <div class="mt-2">
+                        <a href="mailto:admin@zenitheinsurance.com" class="btn btn-sm btn-outline-danger">
+                          <i class="fas fa-envelope mr-1"></i>Contacter l'administrateur
+                        </a>
+                      </div>
+                    </div>
+
+                    <!-- CHAMPS ACTIFS -->
+                    <ng-container *ngIf="isLoginFormEnabled()">
+                      <div class="form-group mb-4">
+                        <label for="username" class="form-label text-muted small mb-2">
+                          <i class="fas fa-user mr-1"></i>
+                          <span *ngIf="selectedProfil === ProfilType.ADHERENT">Numéro de téléphone</span>
+                          <span *ngIf="selectedProfil === ProfilType.SOUSCRIPTEUR">Numéro de police maladie</span>
+                          <span *ngIf="selectedProfil === ProfilType.SERVICE_SANTE || selectedProfil === ProfilType.DII">Identifiant biométrique</span>
+                        </label>
+                        <div class="input-group input-group-lg input-animate">
+                          <input type="text" class="form-control form-control-lg" id="username"
+                            [placeholder]="getUsernamePlaceholder()" name="username" ngModel required
+                            #username="ngModel" [disabled]="loading"
+                            [class.is-invalid]="username.invalid && username.touched"
+                            [class.is-valid]="username.valid && username.touched">
+                          <div class="input-group-append">
+                            <div class="input-group-text bg-white border-left-0">
+                              <span class="fas fa-id-card text-primary"></span>
+                            </div>
+                          </div>
+                          <div *ngIf="username.invalid && username.touched" class="invalid-feedback">Ce champ est requis</div>
+                        </div>
+                      </div>
+
+                      <div class="form-group mb-4">
+                        <label for="password" class="form-label text-muted small mb-2">
+                          <i class="fas fa-lock mr-1"></i>
+                          <span *ngIf="selectedProfil === ProfilType.ADHERENT">Code adhérent</span>
+                          <span *ngIf="selectedProfil === ProfilType.SOUSCRIPTEUR">Mot de passe</span>
+                          <span *ngIf="selectedProfil === ProfilType.SERVICE_SANTE || selectedProfil === ProfilType.DII">Code biométrique</span>
+                        </label>
+                        <div class="input-group input-group-lg input-animate">
+                          <input [type]="showPassword ? 'text' : 'password'" class="form-control form-control-lg"
+                            id="password" [placeholder]="getPasswordPlaceholder()" name="password" ngModel required
+                            #password="ngModel" [disabled]="loading"
+                            [class.is-invalid]="password.invalid && password.touched"
+                            [class.is-valid]="password.valid && password.touched">
+                          <div class="input-group-append">
+                            <button class="btn btn-outline-secondary bg-white border-left-0" type="button"
+                              (click)="togglePasswordVisibility()" [disabled]="loading" style="border-color:#ced4da;">
+                              <span [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-primary"></span>
+                            </button>
+                          </div>
+                          <div *ngIf="password.invalid && password.touched" class="invalid-feedback">Ce champ est requis</div>
+                        </div>
+                      </div>
+
+                      <div class="row align-items-center mb-3">
+                        <div class="col-7">
+                          <div class="icheck-primary">
+                            <input type="checkbox" id="remember" name="remember" ngModel [disabled]="loading">
+                            <label for="remember" class="text-muted"><small>Se souvenir de moi</small></label>
+                          </div>
+                        </div>
+                        <div class="col-5 text-right">
+                          <button type="submit" class="btn btn-primary btn-lg btn-block btn-login"
+                            [disabled]="loading || f.invalid" [class.btn-loading]="loading">
+                            <span *ngIf="!loading" class="d-flex align-items-center justify-content-center">
+                              <i class="fas fa-sign-in-alt mr-2"></i><span>CONNEXION</span>
+                            </span>
+                            <span *ngIf="loading" class="d-flex align-items-center justify-content-center">
+                              <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                              <span>CONNEXION...</span>
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </ng-container>
+
+                    <!-- CHAMPS DÉSACTIVÉS -->
+                    <ng-container *ngIf="!selectedProfil">
+                      <div class="form-group mb-4">
+                        <label class="form-label text-muted small mb-2"><i class="fas fa-user mr-1"></i>Identifiant</label>
+                        <div class="input-group input-group-lg">
+                          <input type="text" class="form-control form-control-lg" disabled
+                            placeholder="Sélectionnez d'abord un profil" style="background:#e9ecef;cursor:not-allowed;">
+                          <div class="input-group-append">
+                            <div class="input-group-text bg-light border-left-0"><span class="fas fa-lock text-muted"></span></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group mb-4">
+                        <label class="form-label text-muted small mb-2"><i class="fas fa-lock mr-1"></i>Mot de passe</label>
+                        <div class="input-group input-group-lg">
+                          <input type="password" class="form-control form-control-lg" disabled
+                            placeholder="Sélectionnez d'abord un profil" style="background:#e9ecef;cursor:not-allowed;">
+                          <div class="input-group-append">
+                            <div class="input-group-text bg-light border-left-0"><span class="fas fa-lock text-muted"></span></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <div class="col-12">
+                          <button type="button" class="btn btn-secondary btn-lg btn-block" disabled>
+                            <i class="fas fa-sign-in-alt mr-2"></i>CONNEXION
+                          </button>
+                        </div>
+                      </div>
+                    </ng-container>
+
+                  </form>
+
+                  <!-- DIVIDER -->
+                  <div class="social-auth-links text-center mb-3">
+                    <div class="or-divider"><span class="or-text">OU</span></div>
+                  </div>
+
+                  <!-- LIEN CONDITIONNEL -->
+                  <p class="mb-0 text-center">
+                    <!-- Souscripteur, Service Santé, DII → Mot de passe oublié -->
+                    <a *ngIf="showForgotPassword()"
+                      [routerLink]="['/forgot-password']"
+                      [queryParams]="{ profil: selectedProfil }"
+                      class="text-primary">
+                      <small><i class="fas fa-question-circle mr-1"></i>Mot de passe oublié ?</small>
+                    </a>
+
+                    <!-- Adhérent → Contactez-nous -->
+                    <a *ngIf="selectedProfil === ProfilType.ADHERENT"
+                      [routerLink]="['/contact-us']"
+                      class="text-success font-weight-bold">
+                      <small><i class="fas fa-headset mr-1"></i>Contactez-nous</small>
+                    </a>
+
+                    <!-- Aucun profil -->
+                    <span *ngIf="!selectedProfil" class="text-muted">
+                      <small><i class="fas fa-info-circle mr-1"></i>Sélectionnez un profil pour continuer</small>
+                    </span>
+                  </p>
+
+                </div>
+              </div>
+
+              <!-- Footer -->
+              <div class="text-center mt-3">
+                <p class="text-muted">
+                  <small>&copy; 2008-{{ currentYear }}
+                    <a href="https://zenitheinsurance.com" target="_blank">ZENITHE Insurance</a>
+                    Tous droits réservés.
+                  </small>
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

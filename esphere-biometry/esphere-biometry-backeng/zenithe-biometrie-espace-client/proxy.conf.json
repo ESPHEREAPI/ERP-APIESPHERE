@@ -1,0 +1,28 @@
+{
+    "/partenaire": {
+      "target": "http://localhost:8180",
+      "secure": false,
+      "changeOrigin": true,
+      "logLevel": "debug"
+    },
+
+    "/users": {
+      "target": "http://localhost:8180",
+      "secure": false,
+      "changeOrigin": true,
+      "logLevel": "debug"
+    },
+    "/dashboard": {
+      "target": "http://localhost:8180",
+      "secure": false,
+      "changeOrigin": true,
+      "logLevel": "debug"
+    },
+     "/subscriber": {
+      "target": "http://localhost:8180",
+      "secure": false,
+      "changeOrigin": true,
+      "logLevel": "debug"
+    }
+   
+  }

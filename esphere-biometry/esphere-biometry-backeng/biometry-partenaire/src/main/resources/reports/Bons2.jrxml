@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 9.0.0.final using JasperReports Library version 6.21.0-4f56c4f36cd19e17675219a9ac4692d5f0f13b06  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Bons" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cb5affe4-56f0-4148-95a5-0ece2846d8d6">
+	<parameter name="debut" class="java.util.Date"/>
+	<parameter name="fin" class="java.sql.Date"/>
+	<queryString>
+		<![CDATA[]]>
+	</queryString>
+	<field name="prestataire" class="java.lang.String"/>
+	<field name="consultation" class="java.lang.Integer"/>
+	<field name="examen" class="java.lang.Integer"/>
+	<field name="ordonance" class="java.lang.Integer"/>
+	<field name="numero" class="java.lang.Integer"/>
+	<variable name="total" class="java.lang.Integer"/>
+	<variable name="total_cons" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{consultation}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="total_exam" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{examen}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<variable name="total_ordo" class="java.lang.Integer" calculation="Sum">
+		<variableExpression><![CDATA[$F{ordonance}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<group name="Group1">
+		<groupExpression><![CDATA[$F{numero}]]></groupExpression>
+		<groupHeader>
+			<band height="30">
+				<staticText>
+					<reportElement x="0" y="0" width="310" height="30" uuid="5a6eede1-ff8d-473a-a0af-59e82c461ec0"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Préstataires]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="310" y="0" width="93" height="30" uuid="1db84483-33d9-49a0-9f80-a7595e81e51e"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Consultation]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="403" y="0" width="67" height="30" uuid="6036d6d4-c11a-417a-b8f5-d2eb7ee02323"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Examen]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="470" y="0" width="85" height="30" uuid="24c58047-7a55-4671-80c7-c73df24fb386"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Ordonanace]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="71">
+				<staticText>
+					<reportElement x="0" y="30" width="310" height="20" uuid="723fb729-3ae5-4162-9b5e-e6edfb55c2e7"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+					</textElement>
+					<text><![CDATA[TOTAL]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="310" y="0" width="93" height="20" uuid="61a682e7-952b-493b-9210-d3a317efe2ea"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{total_cons}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="403" y="0" width="67" height="20" uuid="ec34aef8-1fe2-4f69-a2d9-b6571d32810f"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{total_exam}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="470" y="0" width="85" height="20" uuid="841cc9b6-2931-4043-9dad-a30dd364fa8c"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{total_ordo}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="310" y="30" width="245" height="20" uuid="4145e86c-4315-4d8a-a789-d61912773b62"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{total_cons}+$V{total_exam}+$V{total_ordo}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="91" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="148" height="22" uuid="396d319e-3939-4606-a3f4-cb84569c5282"/>
+				<textElement>
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[ZENITHE Insurance]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="22" width="249" height="22" uuid="a9c6ffee-29db-4ec4-b414-d7e11c38417e"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[Adresse : 1540 rue Koumassi , Bali, Douala]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="44" width="148" height="22" uuid="d246e0d0-7ea0-4896-9e5a-fa4e7deed608"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[Tel : (237)233 43 41 32]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="336" y="0" width="219" height="22" uuid="5681cc6f-1dcd-4dde-8ef6-3bc1670b1e6b"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[REPUBLIQUE DU CAMEROUN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="403" y="22" width="152" height="22" uuid="ec6f4739-cdf6-463f-b011-4940e1b8acef"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[Paix-Travail-Patrie]]></text>
+			</staticText>
+			<image>
+				<reportElement mode="Opaque" x="249" y="0" width="104" height="91" uuid="43067ac0-3a90-4206-9be4-b769fc026f59"/>
+				<imageExpression><![CDATA["E:\\zenithe\\Biometrie\\SpringBoot\\biometry\\biometry\\src\\main\\java\\db\\biometry\\biometry\\reports\\logoZenithe.png"]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="90" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="10" width="555" height="30" uuid="db1ec81d-338f-404f-ae1b-1953bf21a11d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="20" isBold="true" isItalic="false" isUnderline="true" isStrikeThrough="false"/>
+				</textElement>
+				<text><![CDATA[STATISTIQUE BONS DE PRISE EN CHARGE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="60" width="120" height="30" uuid="ab2b6857-f15c-42d2-9188-dfec4291ab88"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[PERIODE :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="120" y="60" width="216" height="30" uuid="f48f6df4-23d3-4c36-ab11-e83bfb6f92c1"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{debut}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="336" y="60" width="44" height="30" uuid="d6e34fd4-60b2-49ed-826d-92ca7d3d7c94"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[A]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="380" y="60" width="175" height="30" uuid="c0ad8b32-1be2-4813-a4d1-4fb87da18146"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{fin}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField pattern="#,##0.###;(#,##0.###-)">
+				<reportElement x="310" y="0" width="93" height="20" uuid="dcf716e9-2b96-4a60-8c83-c6f9b865e073">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="41eec010-3b54-44f7-bdca-ad69cd33fab4"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{consultation}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###-)">
+				<reportElement x="403" y="0" width="67" height="20" uuid="f5e93f8d-5e98-4391-b0d9-488135f5aa11">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="41eec010-3b54-44f7-bdca-ad69cd33fab4"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{examen}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;#,##0.###-">
+				<reportElement x="470" y="0" width="85" height="20" uuid="05a96ff4-f999-448d-a3b1-90d52c7b6d3e">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="41eec010-3b54-44f7-bdca-ad69cd33fab4"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{ordonance}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="0" width="310" height="20" uuid="e290d1fe-69ae-4545-8987-c069cac10c16">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="65812a33-64f8-4f7e-bd02-c804ece8bf88"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{prestataire}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="20" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="30" splitType="Stretch">
+			<textField>
+				<reportElement x="355" y="0" width="100" height="30" uuid="5546d5a5-66a1-4e4a-8af9-641356904ac9"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="455" y="0" width="100" height="30" uuid="324b5efc-b76e-49b7-b1ab-fbe2637093fd"/>
+				<textElement textAlignment="Left"/>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="MMMMM dd, yyyy">
+				<reportElement x="0" y="0" width="100" height="30" uuid="2962c997-b440-45f9-82eb-f92bbe31ccb4"/>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="90" splitType="Stretch"/>
+	</summary>
+</jasperReport>

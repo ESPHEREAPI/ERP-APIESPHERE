@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="34dadab4-fad4-4355-b9e9-9dfc0607db46">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="70"/>
+	<property name="ireport.y" value="66"/>
+	<parameter name="annee" class="java.lang.Integer"/>
+	<parameter name="societe" class="java.lang.String"/>
+	<parameter name="logo" class="java.lang.Object"/>
+	<parameter name="tel" class="java.lang.String"/>
+	<parameter name="bp" class="java.lang.String"/>
+	<parameter name="image" class="java.lang.Object"/>
+	<parameter name="mois" class="java.lang.Object"/>
+	<parameter name="signature" class="java.lang.String"/>
+	<parameter name="compte" class="java.lang.String"/>
+	<field name="semaine" class="java.lang.String"/>
+	<field name="indice" class="java.lang.Integer"/>
+	<field name="nomComplet" class="java.lang.String"/>
+	<field name="absence" class="java.lang.Integer"/>
+	<variable name="sommeAbsenceByGroup" class="java.lang.Integer" resetType="Group" resetGroup="semaines" calculation="Sum">
+		<variableExpression><![CDATA[$F{absence}]]></variableExpression>
+		<initialValueExpression><![CDATA[0]]></initialValueExpression>
+	</variable>
+	<group name="semaines">
+		<groupExpression><![CDATA[$F{semaine}]]></groupExpression>
+		<groupHeader>
+			<band height="38">
+				<staticText>
+					<reportElement uuid="86ccd0e5-5999-4c4f-a740-8babcbcb1376" x="13" y="21" width="330" height="17"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial Black" size="12" isItalic="true"/>
+					</textElement>
+					<text><![CDATA[Nom et Prenom]]></text>
+				</staticText>
+				<staticText>
+					<reportElement uuid="d1bfb2c7-954c-46d3-8dc0-360ae5d59588" x="343" y="21" width="193" height="17"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial Black" size="12" isItalic="true"/>
+					</textElement>
+					<text><![CDATA[Nombre de jour d' absence]]></text>
+				</staticText>
+				<textField>
+					<reportElement uuid="943406c1-1ce6-4524-86ab-722d612cd9ef" mode="Opaque" x="13" y="0" width="523" height="21" backcolor="#666666"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial Black" size="14" isBold="true" isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{semaine}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="15">
+				<textField>
+					<reportElement uuid="cf17b857-06ec-455e-b305-aadef8b81513" x="343" y="0" width="193" height="15"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement>
+						<font fontName="Arial Black"/>
+					</textElement>
+					<textFieldExpression><![CDATA[" "+$V{sommeAbsenceByGroup}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement uuid="86ccd0e5-5999-4c4f-a740-8babcbcb1376" x="13" y="0" width="330" height="15"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font fontName="Arial Black" size="10" isItalic="true"/>
+					</textElement>
+					<text><![CDATA[Total absence Semaine]]></text>
+				</staticText>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="81" splitType="Stretch">
+			<textField>
+				<reportElement uuid="3d99d5ac-c386-4670-89bf-5500c50968d5" x="326" y="49" width="216" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial Black" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{tel}!=null) ? "Tel: "+$P{tel}+" "+($P{bp})!=null ? "BP "+$P{bp}:"BP ":"Tel "+" "+($P{bp})!=null ? "BP "+$P{bp}:"BP "]]></textFieldExpression>
+			</textField>
+			<image scaleImage="FillFrame">
+				<reportElement uuid="9badebdb-7288-4628-95bc-09ea136245e1" x="10" y="10" width="100" height="71"/>
+				<imageExpression><![CDATA[($P{logo}!=null) ? $P{logo}:"../../image/istdi.jpg"]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement uuid="3d99d5ac-c386-4670-89bf-5500c50968d5" x="110" y="49" width="216" height="20"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial Black" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[(($P{tel}!=null) ? "Tel: "+$P{tel}+" ":"Tel: ")]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="85209787-1189-4da6-9b61-a69fbe7394b9" x="110" y="10" width="432" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial Black" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{societe}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="35" splitType="Stretch">
+			<textField>
+				<reportElement uuid="68d47365-e294-4dae-ad9e-628e5d817895" x="0" y="0" width="555" height="20"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial Black" size="14" isBold="true" isItalic="true" isUnderline="true" isStrikeThrough="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["LISTES DES ABSENCES DE "+$P{mois}+" "+$P{annee}]]></textFieldExpression>
+			</textField>
+			<textField pattern="EEEEE dd MMMMM yyyy">
+				<reportElement uuid="be0e60e6-8269-4531-9c21-c43da18de718" x="290" y="20" width="265" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial Black"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField>
+				<reportElement uuid="547df850-492f-4cb8-a59b-f39d45251236" x="13" y="0" width="330" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial Black" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$F{nomComplet}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="824728b1-c597-4b05-b687-3a72294f72a4" x="343" y="0" width="193" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial Black" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" "+$F{absence}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement uuid="492513ec-c693-4e8c-9f47-7a20579a0c24" x="434" y="0" width="80" height="20"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement uuid="edb6b860-91c1-4193-b07e-410b1c8652f1" x="514" y="0" width="40" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

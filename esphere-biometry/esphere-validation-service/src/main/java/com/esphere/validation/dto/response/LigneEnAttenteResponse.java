@@ -40,4 +40,5 @@ public class LigneEnAttenteResponse {
     private Double valeurModif;
     private Double nbreModif;
     private Double actePrelevementModif;
+    private String statutAdherent;
 }

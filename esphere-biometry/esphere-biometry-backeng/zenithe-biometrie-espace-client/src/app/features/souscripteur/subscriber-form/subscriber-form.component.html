@@ -1,0 +1,445 @@
+<!-- subscriber-form.component.html -->
+<div class="card card-primary card-outline">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-user-plus mr-2"></i>
+      {{ isEditMode ? 'Modifier le souscripteur' : 'Nouveau souscripteur' }}
+    </h3>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <div class="card-body">
+
+      <!-- ═══════════ SECTION 1 : POLICE ═══════════ -->
+      <div class="section-header mb-3">
+        <span class="badge badge-primary mr-2">1</span>
+        <strong>Identification par police</strong>
+      </div>
+
+      <div class="row">
+        <!-- Numéro de police -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="policyNumber">
+              Numéro de police <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-file-contract"></i></span>
+              </div>
+              <input
+                id="policyNumber"
+                type="text"
+                formControlName="policyNumber"
+                placeholder="1017-2130000100"
+                class="form-control"
+                [class.is-valid]="policyCheckSuccess"
+                [class.is-invalid]="hasError('policyNumber', 'required') || hasError('policyNumber', 'policyNotFound') || hasError('policyNumber', 'pattern')"
+                (input)="policyCheckError = ''"
+              />
+              <div class="input-group-append">
+                <span class="input-group-text" *ngIf="isCheckingPolicy">
+                  <i class="fas fa-spinner fa-spin text-primary"></i>
+                </span>
+                <span class="input-group-text bg-success text-white" *ngIf="policyCheckSuccess && !isCheckingPolicy">
+                  <i class="fas fa-check"></i>
+                </span>
+                <span class="input-group-text bg-danger text-white" *ngIf="policyCheckError && !isCheckingPolicy">
+                  <i class="fas fa-times"></i>
+                </span>
+              </div>
+            </div>
+            <small class="text-muted">Format : codeAgence-213xxxxxxx (ex: 1017-2130000100)</small>
+            <div class="invalid-feedback d-block" *ngIf="hasError('policyNumber', 'required')">
+              Le numéro de police est requis
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="hasError('policyNumber', 'pattern')">
+              Format invalide (ex: codeAgence-2024-001)
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="policyCheckError">
+              <i class="fas fa-exclamation-circle mr-1"></i>{{ policyCheckError }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Nom complet (auto-rempli) -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="fullName">
+              Nom complet du souscripteur <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-user"></i></span>
+              </div>
+              <input
+                id="fullName"
+                type="text"
+                formControlName="fullName"
+                class="form-control bg-light"
+                placeholder="Chargé automatiquement..."
+                readonly
+              />
+            </div>
+            <small class="text-muted" *ngIf="!policyCheckSuccess">
+              <i class="fas fa-info-circle mr-1"></i>Renseignez le numéro de police pour charger ce champ
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- ═══════════ SECTION 2 : COORDONNÉES ═══════════ -->
+      <div class="section-header mb-3">
+        <span class="badge badge-info mr-2">2</span>
+        <strong>Coordonnées de contact</strong>
+      </div>
+
+      <div class="row">
+        <!-- Téléphone -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="phoneNumber">
+              Numéro de téléphone <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+              </div>
+              <input
+                id="phoneNumber"
+                type="tel"
+                formControlName="phoneNumber"
+                placeholder="+237 6XX XXX XXX"
+                class="form-control"
+                [class.is-invalid]="hasError('phoneNumber', 'required') || hasError('phoneNumber', 'pattern')"
+              />
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('phoneNumber', 'required')">
+              Le numéro de téléphone est requis
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('phoneNumber', 'pattern')">
+              Numéro de téléphone invalide
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="email">
+              Adresse email <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              </div>
+              <input
+                id="email"
+                type="email"
+                formControlName="email"
+                placeholder="exemple@domaine.com"
+                class="form-control"
+                [class.is-invalid]="hasError('email', 'required') || hasError('email', 'email')"
+              />
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('email', 'required')">
+              L'adresse email est requise
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('email', 'email')">
+              Adresse email invalide
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- ═══════════ SECTION 3 : COMPTE ═══════════ -->
+      <div class="section-header mb-3">
+        <span class="badge badge-success mr-2">3</span>
+        <strong>Paramètres du compte</strong>
+      </div>
+
+      <div class="row">
+        <!-- Nom d'utilisateur -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="username">
+             Titulaire du Compte <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-at"></i></span>
+              </div>
+              <input
+                id="username"
+                type="text"
+                formControlName="username"
+                placeholder="prenom.nom"
+                class="form-control"
+                [class.is-invalid]="hasError('username', 'required') || hasError('username', 'minlength') || hasError('username', 'pattern') || hasError('username', 'usernameNotAvailable')"
+              />
+              <div class="input-group-append" *ngIf="isCheckingUsername">
+                <span class="input-group-text">
+                  <i class="fas fa-spinner fa-spin text-primary"></i>
+                </span>
+              </div>
+            </div>
+            <small class="text-muted">Lettres, chiffres, points, tirets uniquement</small>
+            <div class="invalid-feedback d-block" *ngIf="hasError('username', 'required')">
+              Le nom d'utilisateur est requis
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="hasError('username', 'minlength')">
+              Minimum 3 caractères
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="hasError('username', 'pattern')">
+              Caractères non autorisés
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="hasError('username', 'usernameNotAvailable')">
+              <i class="fas fa-times-circle mr-1"></i>Ce nom d'utilisateur est déjà pris
+            </div>
+          </div>
+        </div>
+
+        <!-- Statut actif -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>Statut du compte</label>
+            <div class="custom-control custom-switch mt-2">
+              <input
+                id="isActive"
+                type="checkbox"
+                formControlName="isActive"
+                class="custom-control-input"
+              />
+              <label class="custom-control-label" for="isActive">
+                <span *ngIf="form.get('isActive')?.value" class="text-success">
+                  <i class="fas fa-check-circle mr-1"></i>Compte actif
+                </span>
+                <span *ngIf="!form.get('isActive')?.value" class="text-secondary">
+                  <i class="fas fa-pause-circle mr-1"></i>Compte inactif
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- ═══════════ SECTION 4 : MOT DE PASSE ═══════════ -->
+      <div class="section-header mb-3" *ngIf="!form.get('isActive')?.value">
+        <span class="badge badge-warning mr-2">4</span>
+        <strong>Configuration du mot de passe</strong>
+      </div>
+
+      <!-- Mode sélection -->
+      <div class="row mb-3" *ngIf="!form.get('isActive')?.value">
+        <div class="col-12">
+          <div class="btn-group btn-group-toggle w-100" data-toggle="buttons">
+            <label
+              class="btn btn-outline-primary"
+              [class.active]="isManualMode"
+              style="cursor:pointer"
+            >
+              <input
+                type="radio"
+                formControlName="passwordMode"
+                value="manual"
+                (change)="activationLinkSent = false"
+              />
+              <i class="fas fa-key mr-2"></i>Définir un mot de passe manuellement
+            </label>
+            <label
+              class="btn btn-outline-info"
+              [class.active]="isActivationLinkMode"
+              style="cursor:pointer"
+            >
+              <input
+                type="radio"
+                formControlName="passwordMode"
+                value="activation_link"
+              />
+              <i class="fas fa-paper-plane mr-2"></i>Envoyer un lien d'activation par email
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode mot de passe manuel -->
+      <div *ngIf="isManualMode" class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="password">
+              Mot de passe <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              </div>
+              <input
+                id="password"
+                [type]="showPassword ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="Minimum 8 caractères"
+                class="form-control"
+                [class.is-invalid]="hasError('password', 'required') || hasError('password', 'minlength')"
+              />
+              <div class="input-group-append">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="showPassword = !showPassword"
+                  title="Afficher/Masquer"
+                >
+                  <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('password', 'required')">
+              Le mot de passe est requis
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('password', 'minlength')">
+              Minimum 8 caractères
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="confirmPassword">
+              Confirmer le mot de passe <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <div class="input-group-prepend">
+                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              </div>
+              <input
+                id="confirmPassword"
+                [type]="showConfirmPassword ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                placeholder="Confirmer le mot de passe"
+                class="form-control"
+                [class.is-invalid]="hasError('confirmPassword', 'required') || hasGroupError('passwordMismatch')"
+              />
+              <div class="input-group-append">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="showConfirmPassword = !showConfirmPassword"
+                >
+                  <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+            </div>
+            <div class="invalid-feedback d-block" *ngIf="hasGroupError('passwordMismatch')">
+              <i class="fas fa-exclamation-triangle mr-1"></i>Les mots de passe ne correspondent pas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode lien d'activation -->
+      <div *ngIf="isActivationLinkMode">
+        <div class="row align-items-end">
+          <div class="col-md-4">
+            <div class="form-group">
+              <label for="activationDuration">
+                <i class="fas fa-clock mr-1"></i>Durée de validité du lien
+              </label>
+              <select
+                id="activationDuration"
+                formControlName="activationDuration"
+                class="form-control custom-select"
+              >
+                <option *ngFor="let opt of activationDurationOptions" [value]="opt.value">
+                  {{ opt.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-8">
+            <div class="form-group">
+              <button
+                type="button"
+                class="btn btn-info btn-block"
+                [disabled]="activationLinkSending || !form.get('email')?.valid"
+                (click)="sendActivationLink()"
+              >
+                <span *ngIf="activationLinkSending">
+                  <i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours...
+                </span>
+                <span *ngIf="!activationLinkSending">
+                  <i class="fas fa-paper-plane mr-2"></i>
+                  {{ activationLinkSent ? 'Renvoyer le lien' : 'Envoyer le lien d\'activation' }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lien envoyé - countdown -->
+        <div *ngIf="activationLinkSent" class="callout callout-success">
+          <div class="d-flex align-items-center justify-content-between">
+            <div>
+              <h6 class="mb-1">
+                <i class="fas fa-check-circle text-success mr-2"></i>
+                Lien d'activation envoyé !
+              </h6>
+              <p class="mb-0 text-muted">
+                Un email a été envoyé à <strong>{{ form.get('email')?.value }}</strong>.<br/>
+                Le souscripteur doit définir son mot de passe via ce lien.
+              </p>
+            </div>
+            <div class="text-center ml-3" style="min-width: 110px">
+              <div class="text-muted small mb-1">Expire dans</div>
+              <div
+                class="badge badge-pill px-3 py-2"
+                [class.badge-success]="activationCountdown !== 'Expiré'"
+                [class.badge-danger]="activationCountdown === 'Expiré'"
+                style="font-size: 1rem; font-family: monospace"
+              >
+                {{ activationCountdown }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!form.get('email')?.valid && form.get('email')?.touched" class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          Veuillez d'abord renseigner une adresse email valide pour envoyer le lien.
+        </div>
+      </div>
+
+    </div>
+    <!-- end card-body -->
+
+    <div class="card-footer">
+      <div class="d-flex justify-content-between align-items-center">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+          [disabled]="isSubmitting"
+        >
+          <i class="fas fa-times mr-1"></i>Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary px-4"
+          [disabled]="isSubmitting || form.invalid"
+        >
+          <span *ngIf="isSubmitting">
+            <i class="fas fa-spinner fa-spin mr-2"></i>Enregistrement...
+          </span>
+          <span *ngIf="!isSubmitting">
+            <i class="fas fa-save mr-2"></i>
+            {{ isEditMode ? 'Enregistrer les modifications' : 'Créer le souscripteur' }}
+          </span>
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

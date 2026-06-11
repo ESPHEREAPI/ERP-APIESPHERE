@@ -4,6 +4,7 @@ import com.esphere.validation.dto.request.ConsultationSoumissionRequest;
 import com.esphere.validation.dto.request.PrestationSoumissionRequest;
 import com.esphere.validation.dto.request.ValidationConsultationRequest;
 import com.esphere.validation.dto.request.ValidationLigneRequest;
+import com.esphere.validation.dto.response.AdherentExterneDTO;
 import com.esphere.validation.dto.response.ConsultationEnAttenteResponse;
 import com.esphere.validation.dto.response.LigneEnAttenteResponse;
 import com.esphere.validation.dto.response.PrestationResponse;
@@ -39,7 +40,7 @@ public class ValidationService {
     private final AdherentRepository adherentRepository;
     private final AdherentExterneService adherentExterneService;
     private final TauxPrestationRepository tauxPrestationRepository;
-   
+
     // ── CONSULTATIONS ─────────────────────────────────────────────
     @Transactional(readOnly = true)
     public List<ConsultationEnAttenteResponse> getConsultationsEnAttente() {
@@ -332,11 +333,12 @@ public class ValidationService {
     private ConsultationEnAttenteResponse toConsultationResponse(Consultation c) {
         Visite visite = visiteRepository.findById(c.getVisiteId()).orElse(null);
 
-        Adherent adherent = adherentRepository
-                .findActiveByCode(visite.getCodeAdherent())
-                .orElseThrow(() -> new ValidateException(
-                "Assuré Principal introuvable : "
-                + visite.getCodeAdherent()));
+    Adherent adherent = adherentRepository
+    .findActiveByCode(visite.getCodeAdherent())
+    .or(() -> adherentRepository.findNotActiveByCode(visite.getCodeAdherent()))
+    .orElseThrow(() -> new ValidateException(
+        "Assuré Principal introuvable : " + visite.getCodeAdherent()
+    ));
 
         AyantDroit ay = null;
         if (visite.getCodeAyantDroit() != null) {
@@ -377,6 +379,7 @@ public class ValidationService {
                         c.getMontantModif() != null
                         ? c.getMontantModif() : c.getMontant(),
                         c.getTaux()))
+                .statutAdherent(adherent.getStatut())
                 .build();
     }
 
@@ -417,14 +420,23 @@ public class ValidationService {
                     .observations(l.getObservations())
                     .etat(l.getEtat())
                     .date(l.getDate())
+                    .statutAdherent("-1")
                     .build();
         }
-
-        Adherent adherent = adherentRepository
-                .findActiveByCode(visite.getCodeAdherent())
-                .orElseThrow(() -> new ValidateException(
-                "Assuré Principal introuvable : "
-                + visite.getCodeAdherent()));
+        Adherent adherent = null;
+        try {
+            adherent = adherentRepository
+                    .findActiveByCode(visite.getCodeAdherent())
+                    .orElseThrow(() -> new ValidateException(
+                    "Assuré Principal introuvable : "
+                    + visite.getCodeAdherent()));
+        } catch (Exception e) {
+            adherent = adherentRepository
+                    .findNotActiveByCode(visite.getCodeAdherent())
+                    .orElseThrow(() -> new ValidateException(
+                    "Assuré Principal introuvable : "
+                    + visite.getCodeAdherent()));
+        }
 
         AyantDroit ay = null;
         if (visite.getCodeAyantDroit() != null) {
@@ -437,9 +449,8 @@ public class ValidationService {
 
         Consultation cons = consultationRepository
                 .findByVisite(visite.getId()).orElse(null);
-        Prestation prestation=prestationRepository.findById(l.getPrestationId()).orElse(null);
-        String natureAffectation=cons==null ? prestation.getNatureAffection():cons.getNatureAffection();
-        
+        Prestation prestation = prestationRepository.findById(l.getPrestationId()).orElse(null);
+        String natureAffectation = cons == null ? prestation.getNatureAffection() : cons.getNatureAffection();
 
         return LigneEnAttenteResponse.builder()
                 .id(l.getId())
@@ -466,7 +477,7 @@ public class ValidationService {
                 .valeur(l.getValeur())
                 .nbre(l.getNbre())
                 .actePrelevement(l.getActePrelevement())
-                .taux(l.getTaux())
+                .taux((l.getTaux() == null || l.getTaux() == 0.0) ? this.getTauxDernierActe(visite, adherent.getPolice()).getTaux() : l.getTaux())
                 // Valeurs modifiées
                 .valeurModif(l.getValeurModif())
                 .nbreModif(l.getNbreModif())
@@ -474,6 +485,7 @@ public class ValidationService {
                 .observations(l.getObservations())
                 .etat(l.getEtat())
                 .date(l.getDate())
+                .statutAdherent(adherent.getStatut())
                 .build();
     }
 
@@ -488,14 +500,16 @@ public class ValidationService {
         String souscripteur = null;
         Short groupe = null;
         String natureAffection = null;
+        String statut = "";
 
         if (codeAdherent != null) {
             var adherent = adherentRepository
-                    .findActiveByCode(codeAdherent).orElse(null);
+                    .findActiveByCode(codeAdherent).orElse(adherentRepository.findNotActiveByCode(codeAdherent).orElse(null));
             if (adherent != null) {
                 nomAssure = adherent.getAssurePrincipal();
                 souscripteur = adherent.getSouscripteur();
                 groupe = adherent.getGroupe();
+                statut = adherent.getStatut();
 
                 if (codeAyantDroit != null) {
                     var ay = adherent.getAyantsDroit().stream()
@@ -512,11 +526,10 @@ public class ValidationService {
         if (visite != null) {
             var consultation = consultationRepository
                     .findByVisite(visite.getId()).orElse(null);
-    
-       
+
             if (consultation != null) {
                 natureAffection = consultation.getNatureAffection();
-            }else {
+            } else {
                 natureAffection = p.getNatureAffection();
             }
         }
@@ -579,10 +592,11 @@ public class ValidationService {
                 .nomAyantDroit(nomAyantDroit)
                 .souscripteur(souscripteur)
                 .groupe(groupe)
-                .natureAffection(natureAffection!=null ? natureAffection.toUpperCase():"NON RENSEIGNE...")
+                .natureAffection(natureAffection != null ? natureAffection.toUpperCase() : "NON RENSEIGNE...")
                 .nbreLignes(total)
                 .nbreLignesEnAttente(enAttente)
                 .etatGlobal(etatGlobal)
+                .statutAdherent(statut)
                 .build();
     }
 
@@ -644,207 +658,268 @@ public class ValidationService {
 //        .build();
 //}
 
-@Transactional(readOnly = true)
-public VisiteInfoResponse getVisiteInfo(String codeVisite) {
+    @Transactional(readOnly = true)
+    public VisiteInfoResponse getVisiteInfo(String codeVisite) {
 
-    // 1. Chercher par code court d'abord
-    Visite visite = visiteRepository
-        .findByCodeCourt(codeVisite)
-        .orElse(null);
-
-    // 2. Si pas trouvé → chercher par id long
-    if (visite == null) {
-        visite = visiteRepository
-            .findById(codeVisite)
-            .orElseThrow(() -> new ValidationException(
-                "Visite introuvable : " + codeVisite, 404));
-    }
-
-    // 3. Charger l'adhérent
-    Adherent adherent = adherentRepository
-        .findActiveByCode(visite.getCodeAdherent())
-        .orElse(null);
-
-    String nomAssure     = null;
-    String nomAyantDroit = null;
-    String lienParente   = null;
-    String souscripteur  = null;
-    Short  groupe        = null;
-
-    if (adherent != null) {
-        nomAssure    = adherent.getAssurePrincipal();
-        souscripteur = adherent.getSouscripteur();
-        groupe       = adherent.getGroupe();
-
-        // 4. Charger l'ayant droit SI c'est lui le concerné
-        //    codeAyantDroit != null → la visite concerne
-        //    un ayant droit
-        final String codeAyantDroitFinal = visite.getCodeAyantDroit();
-        if (visite.getCodeAyantDroit() != null
-                && !visite.getCodeAyantDroit().isBlank()) {
-
-            var ay = adherent.getAyantsDroit()
-                .stream()
-                .filter(a -> a.getCodeAyantDroit()
-                    .equals(codeAyantDroitFinal))
-                .findFirst()
+        // 1. Chercher par code court d'abord
+        Visite visite = visiteRepository
+                .findByCodeCourt(codeVisite)
                 .orElse(null);
 
-            if (ay != null) {
-                nomAyantDroit = ay.getNom();
-                lienParente   = ay.getLienPare();
+        // 2. Si pas trouvé → chercher par id long
+        if (visite == null) {
+            visite = visiteRepository
+                    .findById(codeVisite)
+                    .orElseThrow(() -> new ValidationException(
+                    "Visite introuvable : " + codeVisite, 404));
+        }
+
+        // 3. Charger l'adhérent
+        Adherent adherent = adherentRepository
+                .findActiveByCode(visite.getCodeAdherent())
+                .orElse(null);
+
+        String nomAssure = null;
+        String nomAyantDroit = null;
+        String lienParente = null;
+        String souscripteur = null;
+        Short groupe = null;
+
+        if (adherent != null) {
+            nomAssure = adherent.getAssurePrincipal();
+            souscripteur = adherent.getSouscripteur();
+            groupe = adherent.getGroupe();
+
+            // 4. Charger l'ayant droit SI c'est lui le concerné
+            //    codeAyantDroit != null → la visite concerne
+            //    un ayant droit
+            final String codeAyantDroitFinal = visite.getCodeAyantDroit();
+            if (visite.getCodeAyantDroit() != null
+                    && !visite.getCodeAyantDroit().isBlank()) {
+
+                var ay = adherent.getAyantsDroit()
+                        .stream()
+                        .filter(a -> a.getCodeAyantDroit()
+                        .equals(codeAyantDroitFinal))
+                        .findFirst()
+                        .orElse(null);
+
+                if (ay != null) {
+                    nomAyantDroit = ay.getNom();
+                    lienParente = ay.getLienPare();
+                }
             }
         }
+
+        log.info("VisiteInfo — code={} adherent={} "
+                + "ayantDroit={} prestataire={}",
+                codeVisite,
+                visite.getCodeAdherent(),
+                visite.getCodeAyantDroit(),
+                visite.getPrestataireId());
+
+        return VisiteInfoResponse.builder()
+                .codeVisite(visite.getCodeCourt())
+                .codeAdherent(visite.getCodeAdherent())
+                .codeAyantDroit(visite.getCodeAyantDroit())
+                .nomAssure(nomAssure)
+                .nomAyantDroit(nomAyantDroit)
+                .lienParente(lienParente)
+                .souscripteur(souscripteur)
+                .groupe(groupe)
+                .prestataireId(visite.getPrestataireId())
+                .build();
+
     }
 
-    log.info("VisiteInfo — code={} adherent={} " +
-             "ayantDroit={} prestataire={}",
-             codeVisite,
-             visite.getCodeAdherent(),
-             visite.getCodeAyantDroit(),
-             visite.getPrestataireId());
+    @Transactional
+    public ConsultationEnAttenteResponse soumettreConsultation(
+            ConsultationSoumissionRequest request) {
 
-    return VisiteInfoResponse.builder()
-        .codeVisite(visite.getCodeCourt())
-        .codeAdherent(visite.getCodeAdherent())
-        .codeAyantDroit(visite.getCodeAyantDroit())
-        .nomAssure(nomAssure)
-        .nomAyantDroit(nomAyantDroit)
-        .lienParente(lienParente)
-        .souscripteur(souscripteur)
-        .groupe(groupe)
-        .prestataireId(visite.getPrestataireId())
-        .build();
-    
-}
+        // 1. Vérifier que la visite existe
+        Visite visite = visiteRepository
+                .findByCodeCourt(request.getVisiteId())
+                .orElse(null);
 
-@Transactional
-public ConsultationEnAttenteResponse soumettreConsultation(
-        ConsultationSoumissionRequest request) {
-
-    // 1. Vérifier que la visite existe
-    Visite visite = visiteRepository
-        .findByCodeCourt(request.getVisiteId())
-        .orElse(null);
-
-    if (visite == null) {
-        visite = visiteRepository
-            .findById(request.getVisiteId())
-            .orElseThrow(() -> new ValidationException(
-                "Visite introuvable : " +
-                request.getVisiteId(), 404));
-    }
-
-    // 2. Vérifier qu'une consultation n'existe pas déjà
-    boolean existe = consultationRepository
-        .findByVisite(visite.getId()).isPresent();
-
-    if (existe) {
-        throw new ValidationException(
-            "Une consultation existe déjà " +
-            "pour cette visite", 400);
-    }
-
-    // 3. Créer la consultation avec les bons champs
-    Consultation consultation = Consultation.builder()
-        .visiteId(visite.getId())
-        .typeConsultation(request.getTypeConsultation())
-        .natureConsultation(
-            Boolean.TRUE.equals(request.getPayante())
-            ? "payante" : "gratuite")
-        .montant(
-            Boolean.TRUE.equals(request.getPayante())
-            ? (request.getMontant() != null
-               ? request.getMontant() : 0.0)
-            : 0.0)
-        .taux(80.0)
-        .etatConsultation("attente_validation")
-        .date(LocalDateTime.now())
-        .supprime("-1")
-        .build();
-
-    consultationRepository.save(consultation);
-
-    log.info("Consultation soumise ✓ — visite={} " +
-             "type={} montant={}",
-             visite.getId(),
-             request.getTypeConsultation(),
-             request.getMontant());
-
-    return toConsultationResponse(consultation);
-}
-
-/**
- * Récupère le taux de couverture :
- * 1. Dans taux_prestation (police + groupe + type)
- * 2. Sinon → taux de l'adhérent
- */
-private double getTaux(
-        String police,
-        short groupe,
-        String typePrestationId,
-        String codeAdherent,String naturePrestation) {
-
-    // 1. Chercher dans taux_prestation
-    if (police != null && typePrestationId != null  && "examen".equals(naturePrestation)) {
-        Optional<TauxPrestation> tp =
-            tauxPrestationRepository
-                .findByPoliceAndGroupeAndTypePrestationId(
-                    police, groupe, typePrestationId);
-
-        if (tp.isPresent() && tp.get().getTaux() != null) {
-            log.info("Taux trouvé en base : {}% " +
-                     "police={} groupe={} type={}",
-                     tp.get().getTaux(),
-                     police, groupe, typePrestationId);
-            return tp.get().getTaux().doubleValue();
+        if (visite == null) {
+            visite = visiteRepository
+                    .findById(request.getVisiteId())
+                    .orElseThrow(() -> new ValidationException(
+                    "Visite introuvable : "
+                    + request.getVisiteId(), 404));
         }
+        AdherentExterneDTO adherent = adherentExterneService.findByCodeAdherent(visite.getCodeAdherent()).orElseThrow(() -> new ValidationException(
+                "Visite introuvable : "
+                + request.getVisiteId(), 404));
+        Double taux = this.getTauxDernierActe(visite, adherent.getPolice()).getTaux();
+
+        // 2. Vérifier qu'une consultation n'existe pas déjà
+        boolean existe = consultationRepository
+                .findByVisite(visite.getId()).isPresent();
+
+        if (existe) {
+            throw new ValidationException(
+                    "Une consultation existe déjà "
+                    + "pour cette visite", 400);
+        }
+
+        // 3. Créer la consultation avec les bons champs
+        Consultation consultation = Consultation.builder()
+                .visiteId(visite.getId())
+                .typeConsultation(request.getTypeConsultation())
+                .natureConsultation(
+                        Boolean.TRUE.equals(request.getPayante())
+                        ? "payante" : "gratuite")
+                .montant(
+                        Boolean.TRUE.equals(request.getPayante())
+                        ? (request.getMontant() != null
+                        ? request.getMontant() : 0.0)
+                        : 0.0)
+                .taux(taux)
+                .etatConsultation("attente_validation")
+                .date(LocalDateTime.now())
+                .supprime("-1")
+                .build();
+
+        consultationRepository.save(consultation);
+
+        log.info("Consultation soumise ✓ — visite={} "
+                + "type={} montant={}",
+                visite.getId(),
+                request.getTypeConsultation(),
+                request.getMontant());
+
+        return toConsultationResponse(consultation);
     }
 
-    // 2. Fallback → taux adhérent
-    if (codeAdherent != null) {
+    /**
+     * Récupère le taux de couverture : 1. Dans taux_prestation (police + groupe
+     * + type) 2. Sinon → taux de l'adhérent
+     */
+    private double getTaux(
+            String police,
+            short groupe,
+            String typePrestationId,
+            String visiteid, String naturePrestation) {
+
+// 1. Vérifier visite
+        Visite visite = visiteRepository
+                .findByCodeCourt(visiteid)
+                .orElse(null);
+
+        if (visite == null) {
+            visite = visiteRepository
+                    .findById(visiteid)
+                    .orElseThrow(() -> new ValidationException(
+                    "Visite introuvable : "
+                    + visiteid, 404));
+        }
+        // 1. Chercher dans taux_prestation
+        if (police != null && typePrestationId != null && "examen".equals(naturePrestation)) {
+            Optional<TauxPrestation> tp
+                    = tauxPrestationRepository
+                            .findByPoliceAndGroupeAndTypePrestationId(
+                                    police, groupe, typePrestationId);
+
+            if (tp.isPresent() && tp.get().getTaux() != null) {
+                log.info("Taux trouvé en base : {}% "
+                        + "police={} groupe={} type={}",
+                        tp.get().getTaux(),
+                        police, groupe, typePrestationId);
+                return tp.get().getTaux().doubleValue();
+            }
+        }
+
+        // 2. Fallback → taux adhérent
+        if (visite.getCodeAdherent() != null && visite.getCodeAyantDroit() == null) {
+            try {
+                Adherent adherent = adherentRepository
+                        .findActiveByCode(visite.getCodeAdherent())
+                        .orElse(null);
+                if (adherent != null
+                        && adherent.getTaux() != null) {
+                    log.info("Taux fallback adhérent : {}%",
+                            adherent.getTaux());
+                    return adherent.getTaux().doubleValue();
+                }
+            } catch (Exception e) {
+                log.warn("Impossible de récupérer taux "
+                        + "adhérent : {}", e.getMessage());
+            }
+        }
+
+        // 3. Taux par défaut
+        log.warn("Taux non trouvé — utilisation taux "
+                + "par défaut 80%");
+
+        // n ayant pas trouver le taux de courveture je recuper sa dernier ligne de prestation deja valide ou encaiss
         try {
-            Adherent adherent = adherentRepository
-                .findActiveByCode(codeAdherent)
-                .orElse(null);
-            if (adherent != null
-                    && adherent.getTaux() != null) {
-                log.info("Taux fallback adhérent : {}%",
-                         adherent.getTaux());
-                return adherent.getTaux().doubleValue();
-            }
+            DernierePrestationProjection dernierePrestationProjection = this.getTauxDernierActe(visite, police);
+            return dernierePrestationProjection.getTaux();
         } catch (Exception e) {
-            log.warn("Impossible de récupérer taux " +
-                     "adhérent : {}", e.getMessage());
+            //ici on lui renvoit le taux de couverture de l assure principal 
+            try {
+                Adherent adherent = adherentRepository
+                        .findActiveByCode(visite.getCodeAdherent())
+                        .orElse(null);
+                if (adherent != null
+                        && adherent.getTaux() != null) {
+                    log.info("Taux fallback adhérent : {}%",
+                            adherent.getTaux());
+                    return adherent.getTaux().doubleValue();
+                }
+            } catch (Exception ex) {
+                log.warn("Impossible de récupérer taux "
+                        + "adhérent : {}", e.getMessage());
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Récupère le taux de couverture du dernier acte selon que le bénéficiaire
+     * est l'adhérent principal ou un ayant droit.
+     */
+    public DernierePrestationProjection getTauxDernierActe(Visite visite, String police) {
+
+        boolean estAyantDroit = visite.getCodeAyantDroit() != null
+                && !visite.getCodeAyantDroit().isBlank();
+
+        if (estAyantDroit) {
+            // 👨‍👩‍👧 Ayant droit → taux spécifique à l'ayant droit
+            return ligneRepository
+                    .findDernierePrestationAyantDroit(police, visite.getCodeAyantDroit())
+                    .orElseThrow(() -> new ValidateException(
+                    "Aucune prestation valide pour l'ayant droit : "
+                    + visite.getCodeAyantDroit()));
+        } else {
+            // 👤 Adhérent principal → taux de l'assuré principal
+            return ligneRepository
+                    .findDernierePrestationAdherent(police, visite.getCodeAdherent())
+                    .orElseThrow(() -> new ValidateException(
+                    "Aucune prestation valide pour l'adhérent : "
+                    + visite.getCodeAdherent()));
         }
     }
 
-    // 3. Taux par défaut
-    log.warn("Taux non trouvé — utilisation taux " +
-             "par défaut 80%");
-    return 0.0;
-}
+    @Transactional
+    public void soumettrePrestation(
+            PrestationSoumissionRequest request) {
 
-@Transactional
-public void soumettrePrestation(
-        PrestationSoumissionRequest request) {
-    
-    
-    
+        // 1. Vérifier visite
+        Visite visite = visiteRepository
+                .findByCodeCourt(request.getVisiteId())
+                .orElse(null);
 
-    // 1. Vérifier visite
-    Visite visite = visiteRepository
-        .findByCodeCourt(request.getVisiteId())
-        .orElse(null);
+        if (visite == null) {
+            visite = visiteRepository
+                    .findById(request.getVisiteId())
+                    .orElseThrow(() -> new ValidationException(
+                    "Visite introuvable : "
+                    + request.getVisiteId(), 404));
+        }
 
-    if (visite == null) {
-        visite = visiteRepository
-            .findById(request.getVisiteId())
-            .orElseThrow(() -> new ValidationException(
-                "Visite introuvable : " +
-                request.getVisiteId(), 404));
-    }
-    
 //    //creation de la nature d affection sa se creer dans la table consultation avec CSO gratuit
 //    Consultation consultation = Consultation.builder()
 //        .visiteId(visite.getId())
@@ -857,112 +932,110 @@ public void soumettrePrestation(
 //        .date(LocalDateTime.now())
 //        .supprime("-1")
 //        .build();
-
 //    consultationRepository.save(consultation);
+        final String visiteIdFinal = visite.getId();
+        final String codeAdherent = visite.getCodeAdherent();
 
-    final String visiteIdFinal   = visite.getId();
-    final String codeAdherent    = visite.getCodeAdherent();
-
-    // 2. Récupérer police + groupe via adherent
-    String police = null;
-    short  groupe = 0;
-    try {
-        Adherent adherent = adherentRepository
-            .findActiveByCode(codeAdherent)
-            .orElse(null);
-        if (adherent != null) {
-            police = adherent.getPolice();
-            groupe = adherent.getGroupe() != null
-                     ? adherent.getGroupe() : 0;
+        // 2. Récupérer police + groupe via adherent
+        String police = null;
+        short groupe = 0;
+        try {
+            Adherent adherent = adherentRepository
+                    .findActiveByCode(codeAdherent)
+                    .orElse(null);
+            if (adherent != null) {
+                police = adherent.getPolice();
+                groupe = adherent.getGroupe() != null
+                        ? adherent.getGroupe() : 0;
+            }
+        } catch (Exception e) {
+            log.warn("Adherent non trouvé : {}",
+                    e.getMessage());
         }
-    } catch (Exception e) {
-        log.warn("Adherent non trouvé : {}",
-                 e.getMessage());
-    }
 
-    final String policeFinal = police;
-    final short  groupeFinal = groupe;
-Prestation prestation =prestationRepository.findByVisiteIdAndNaturePrestation(visiteIdFinal, request.getNaturePrestation()).orElse(null);
+        final String policeFinal = police;
+        final short groupeFinal = groupe;
+        Prestation prestation = prestationRepository.findByVisiteIdAndNaturePrestation(visiteIdFinal, request.getNaturePrestation()).orElse(null);
 
-    if (prestation==null) {
+        if (prestation == null) {
 //            3. Créer la prestation
-     prestation = Prestation.builder()
-        .visiteId(visiteIdFinal)
-        .prestataireId(request.getPrestataireId())
-        .naturePrestation(request.getNaturePrestation())
-        .natureAffection(request.getNatureAffection().toUpperCase())
-        .date(LocalDateTime.now())
-        .supprime("-1")
-        .build(); 
-    }
-
-
-    prestation = prestationRepository.save(prestation);
-    final Integer prestationId = prestation.getId();
-
-    // 4. Créer les lignes avec taux correct
-    if (request.getLignes() != null
-            && !request.getLignes().isEmpty()) {
-
-        List<LignePrestation> lignes = request.getLignes()
-            .stream()
-            .map(l -> {
-                // Récupérer le taux par type prestation
-                String typeId = l.getTypeExamen() ;
-
-                double taux = getTaux(
-                    policeFinal,
-                    groupeFinal,
-                    typeId,
-                    codeAdherent,request.getNaturePrestation());
-
-                return LignePrestation.builder()
-                    .prestationId(prestationId)
-                    .prestataireId(
-                        request.getPrestataireId())
-                    .medicamentId(l.getMedicamentId())
-                    .examenId(l.getExamenId())
-                    .typeExamen(l.getTypeExamen())
-                    .nom(l.getNom())
-                    .valeur(l.getValeur() != null
-                        ? l.getValeur() : 0.0)
-                    .nbre(l.getNbre() != null
-                        ? l.getNbre() : 1.0)
-                    .actePrelevement(
-                        l.getActePrelevement() != null
-                        ? l.getActePrelevement() : 0.0)
-                    .actePrelevementModif(0.0)
-                    .posologie(l.getPosologie())
-                    .observations(l.getObservations())
-                    .taux(taux)
+            prestation = Prestation.builder()
+                    .visiteId(visiteIdFinal)
+                    .prestataireId(request.getPrestataireId())
+                    .naturePrestation(request.getNaturePrestation())
+                    .natureAffection(request.getNatureAffection().toUpperCase())
                     .date(LocalDateTime.now())
-                    .dateValideRejete(LocalDateTime.now())
-                    .etat("attente_validation")
                     .supprime("-1")
                     .build();
-            })
-            .collect(Collectors.toList());
+        }
 
-        ligneRepository.saveAll(lignes);
+        prestation = prestationRepository.save(prestation);
+        final Integer prestationId = prestation.getId();
+
+        // 4. Créer les lignes avec taux correct
+        if (request.getLignes() != null
+                && !request.getLignes().isEmpty()) {
+
+            List<LignePrestation> lignes = request.getLignes()
+                    .stream()
+                    .map(l -> {
+                        // Récupérer le taux par type prestation
+                        String typeId = l.getTypeExamen();
+
+                        double taux = getTaux(
+                                policeFinal,
+                                groupeFinal,
+                                typeId,
+                                request.getVisiteId(), request.getNaturePrestation());
+
+                        return LignePrestation.builder()
+                                .prestationId(prestationId)
+                                .prestataireId(
+                                        request.getPrestataireId())
+                                .medicamentId(l.getMedicamentId())
+                                .examenId(l.getExamenId())
+                                .typeExamen(l.getTypeExamen())
+                                .nom(l.getNom())
+                                .valeur(l.getValeur() != null
+                                        ? l.getValeur() : 0.0)
+                                .nbre(l.getNbre() != null
+                                        ? l.getNbre() : 1.0)
+                                .actePrelevement(
+                                        l.getActePrelevement() != null
+                                        ? l.getActePrelevement() : 0.0)
+                                .actePrelevementModif(0.0)
+                                .posologie(l.getPosologie())
+                                .observations(l.getObservations())
+                                .taux(taux)
+                                .date(LocalDateTime.now())
+                                .dateValideRejete(LocalDateTime.now())
+                                .etat("attente_validation")
+                                .supprime("-1")
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            ligneRepository.saveAll(lignes);
+        }
+
+        log.info("Prestation soumise ✓ — visite={} "
+                + "nature={} lignes={}",
+                visiteIdFinal,
+                request.getNaturePrestation(),
+                request.getLignes() != null
+                ? request.getLignes().size() : 0);
     }
-
-    log.info("Prestation soumise ✓ — visite={} " +
-             "nature={} lignes={}",
-             visiteIdFinal,
-             request.getNaturePrestation(),
-             request.getLignes() != null
-                 ? request.getLignes().size() : 0);
-}
 // Renommez getTaux() en getTauxPublic() ou
 // ajoutez cette méthode publique
-public double getTauxPublic(
-        String police,
-        short  groupe,
-        String typePrestation,
-        String codeAdherent) {
 
-    return getTaux(
-        police, groupe,
-        typePrestation, codeAdherent,"examen");
-}
+    public double getTauxPublic(
+            String police,
+            short groupe,
+            String typePrestation,
+            String codeAdherent) {
+
+        return getTaux(
+                police, groupe,
+                typePrestation, codeAdherent, "examen");
+    }
 }

@@ -1,0 +1,374 @@
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">Tableau de Bord</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+          <li class="breadcrumb-item active">Tableau de Bord</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<section class="content">
+  <div class="container-fluid">
+    
+    <!-- Filtres de période -->
+    <div class="row mb-3">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-body">
+            <div class="row align-items-end">
+              <div class="col-md-3">
+                <label>Période</label>
+                <select class="form-control" [(ngModel)]="selectedPeriod" (change)="onPeriodChange()">
+                  <option *ngFor="let option of periodOptions" [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="col-md-3" *ngIf="selectedPeriod === 'custom'">
+                <label>Date début</label>
+                <input type="date" class="form-control" [(ngModel)]="customDateDebut">
+              </div>
+              
+              <div class="col-md-3" *ngIf="selectedPeriod === 'custom'">
+                <label>Date fin</label>
+                <input type="date" class="form-control" [(ngModel)]="customDateFin">
+              </div>
+              
+              <div class="col-md-3" *ngIf="selectedPeriod === 'custom'">
+                <button class="btn btn-primary" (click)="applyCustomFilters()">
+                  <i class="fas fa-search"></i> Appliquer
+                </button>
+              </div>
+              
+              <div class="col-md-3 text-right" [class.offset-md-6]="selectedPeriod !== 'custom'">
+                <button class="btn btn-info" (click)="refresh()" [disabled]="loading">
+                  <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i> Actualiser
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loader -->
+    <div class="row" *ngIf="loading">
+      <div class="col-12 text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="sr-only">Chargement...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message d'erreur -->
+    <div class="row" *ngIf="error">
+      <div class="col-12">
+        <div class="alert alert-danger alert-dismissible">
+          <button type="button" class="close" (click)="error = null">&times;</button>
+          <i class="icon fas fa-ban"></i> {{ error }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Cartes de statistiques principales -->
+    <div class="row" *ngIf="consommationGlobale && !loading">
+      <!-- Total prime ou consommation des assures a verser au prestataire -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ dashboardService.formatCurrency(consommationGlobale.totalRembourse) }}</h3>
+            <p>Total Prise en Charge</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total depense Assures ce l assure a paye chez le prestatire -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>{{ dashboardService.formatCurrency(consommationGlobale.totalDepenses) }}</h3>
+            <p>Total Ticket Moderateur(Taux a Moins 100%)</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nombre d'Assurés -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ dashboardService.formatNumber(consommationGlobale.nombreAssuresActifs) }}</h3>
+            <p>Assurés Actifs</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nombre de Consultations -->
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+          <div class="inner">
+            <h3>{{ dashboardService.formatNumber(consommationGlobale.nombreConsultations) }}</h3>
+            <p>Consultations</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-stethoscope"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistiques détaillées -->
+    <div class="row" *ngIf="consommationGlobale && !loading">
+      <!-- Info Box: Taux de Remboursement 
+      <div class="col-md-3 col-sm-6 col-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-info"><i class="fas fa-percentage"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Taux Remboursement</span>
+            <span class="info-box-number">
+              {{ dashboardService.formatPercentage(consommationGlobale.tauxRemboursementMoyen) }}
+            </span>
+          </div>
+        </div>
+      </div>-->
+
+      <!-- Info Box: Moyenne par Assuré 
+      <div class="col-md-3 col-sm-6 col-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-success"><i class="fas fa-user-check"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Moy. par Assuré</span>
+            <span class="info-box-number">
+              {{ dashboardService.formatCurrency(consommationGlobale.moyenneDepenseParAssure) }}
+            </span>
+          </div>
+        </div>
+      </div>-->
+
+      <!-- Info Box: Prestations -->
+      <div class="col-md-3 col-sm-6 col-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-warning"><i class="fas fa-clipboard-list"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Prestations</span>
+            <span class="info-box-number">
+              {{ dashboardService.formatNumber(consommationGlobale.nombrePrestations) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Box: Ayants Droit -->
+      <div class="col-md-3 col-sm-6 col-12">
+        <div class="info-box">
+          <span class="info-box-icon bg-danger"><i class="fas fa-user-friends"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Ayants Droit</span>
+            <span class="info-box-number">
+              {{ dashboardService.formatNumber(consommationGlobale.nombreAyantsDroitsActifs) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphiques -->
+    <div class="row" *ngIf="dashboardData && !loading">
+      <!-- Graphique: Consommation par Période -->
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header border-0">
+            <div class="d-flex justify-content-between">
+              <h3 class="card-title">Évolution de la Consommation</h3>
+            </div>
+          </div>
+          <div class="card-body">
+            <div style="position: relative; height: 300px;">
+              <canvas id="chartConsommationPeriode"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graphique: Répartition par Type -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header border-0">
+            <h3 class="card-title">Répartition par Type</h3>
+          </div>
+          <div class="card-body">
+            <div style="position: relative; height: 300px;">
+              <canvas id="chartTypePrestation"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tableau: Top Prestations et Prestataires -->
+    <div class="row" *ngIf="dashboardData && !loading">
+      <!-- Top Prestations -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-chart-bar mr-1"></i>
+              Top 5 des Prestations Adherent
+            </h3>
+          </div>
+          <div class="card-body">
+            <div style="position: relative; height: 300px;">
+              <canvas id="chartTopPrestations"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Prestataires -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-hospital mr-1"></i>
+              Top 5 des Prestataires
+            </h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Rang</th>
+                  <th>Prestataire</th>
+                  <th>Visites</th>
+                  <th>Montant</th>
+                  <th>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let prestataire of dashboardData.topPrestataires">
+                  <td><span class="badge badge-primary">{{ prestataire.rang }}</span></td>
+                  <td>
+                    <strong>{{ prestataire.nomPrestataire }}</strong><br>
+                    <small class="text-muted">{{ prestataire.categoriePrestataire }}</small>
+                  </td>
+                  <td>{{ dashboardService.formatNumber(prestataire.nombreVisites) }}</td>
+                  <td>{{ dashboardService.formatCurrency(prestataire.montantTotal) }}</td>
+                  <td>
+                    <span class="badge badge-info">
+                      {{ prestataire.pourcentageUtilisation.toFixed(1) }}%
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Utilisation du Plafond -->
+    <div class="row" *ngIf="dashboardData && !loading">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-chart-pie mr-1"></i>
+              Utilisation du Plafond
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-3">
+                <p class="text-center">
+                  <strong>Plafond Global</strong>
+                </p>
+                <h4 class="text-center">
+                  {{ dashboardService.formatCurrency(dashboardData.tauxUtilisationPlafond.plafondGlobal) }}
+                </h4>
+              </div>
+              <div class="col-md-3">
+                <p class="text-center">
+                  <strong>Montant Utilisé</strong>
+                </p>
+                <h4 class="text-center text-primary">
+                  {{ dashboardService.formatCurrency(dashboardData.tauxUtilisationPlafond.montantUtilise) }}
+                </h4>
+              </div>
+              <div class="col-md-3">
+                <p class="text-center">
+                  <strong>Montant Restant</strong>
+                </p>
+                <h4 class="text-center text-success">
+                  {{ dashboardService.formatCurrency(dashboardData.tauxUtilisationPlafond.montantRestant) }}
+                </h4>
+              </div>
+              <div class="col-md-3">
+                <p class="text-center">
+                  <strong>Taux d'Utilisation</strong>
+                </p>
+                <h4 class="text-center" [class.text-danger]="getPlafondPercentage() >= 90"
+                    [class.text-warning]="getPlafondPercentage() >= 70 && getPlafondPercentage() < 90"
+                    [class.text-success]="getPlafondPercentage() < 70">
+                  {{ getPlafondPercentage().toFixed(2) }}%
+                </h4>
+              </div>
+            </div>
+            <div class="progress mt-3">
+              <div class="progress-bar" [ngClass]="getProgressBarClass()" 
+                   [style.width.%]="getPlafondPercentage()">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertes -->
+    <div class="row" *ngIf="alertes.length > 0 && !loading">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              Alertes ({{ alertes.length }})
+            </h3>
+          </div>
+          <div class="card-body">
+            <div class="alert" 
+                 *ngFor="let alerte of alertes" 
+                 [ngClass]="'alert-' + getAlertClass(alerte)">
+              <h5>
+                <i [ngClass]="getAlertIcon(alerte)"></i>
+                {{ alerte.message }}
+              </h5>
+              <p class="mb-0">
+                <strong>Assuré:</strong> {{ alerte.codeAssure || 'N/A' }}<br>
+                <strong>Date:</strong> {{ alerte.dateDetection | date:'dd/MM/yyyy HH:mm' }}<br>
+                <span *ngIf="alerte.details"><strong>Détails:</strong> {{ alerte.details }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>

@@ -30,5 +30,6 @@ public class ConsultationEnAttenteResponse {
     private Double montantValide;   // ← ajouter
     private Double partZenithe;     // ← ajouter
     private Double partAssure;      // ← ajouter
+    private String statutAdherent;
   
 }

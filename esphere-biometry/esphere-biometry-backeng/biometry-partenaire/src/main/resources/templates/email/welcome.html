@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Bienvenue – ZENITHE Insurance</title>
+        <!--[if mso]>
+        <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+        <![endif]-->
+        <style>
+            body, table, td, a {
+                -webkit-text-size-adjust:100%;
+                -ms-text-size-adjust:100%;
+            }
+            table, td {
+                mso-table-lspace:0pt;
+                mso-table-rspace:0pt;
+            }
+            img {
+                -ms-interpolation-mode:bicubic;
+                border:0;
+                outline:none;
+                text-decoration:none;
+            }
+            body {
+                margin:0;
+                padding:0;
+                background-color:#EDF0F7;
+            }
+            .wrapper {
+                max-width:620px;
+                margin:0 auto;
+            }
+            @media only screen and (max-width:620px) {
+                .wrapper {
+                    width:100% !important;
+                }
+                .mobile-pad {
+                    padding-left:16px !important;
+                    padding-right:16px !important;
+                }
+            }
+        </style>
+    </head>
+    <body style="margin:0;padding:0;background-color:#EDF0F7;font-family:Arial,Helvetica,sans-serif;">
+
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#EDF0F7;">
+            <tr>
+                <td align="center" style="padding:32px 10px 40px;">
+
+                    <!-- EMAIL CARD -->
+                    <table class="wrapper" width="620" cellpadding="0" cellspacing="0" border="0"
+                           style="background-color:#FFFFFF;border-radius:3px;overflow:hidden;
+                           box-shadow:0 6px 36px rgba(26,43,94,0.14);">
+
+                        <!-- ══ TOP BAR ══ -->
+                        <tr>
+                            <td style="background-color:#111E45;padding:8px 28px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td style="font-size:10.5px;color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;">
+                                            &#x1F4CD; Boulevard de la République, face Palais DIKA AKWA — 1388 Rue Bebey Eyidi, Douala
+                                        </td>
+                                        <td align="right" style="white-space:nowrap;">
+                                            <a href="https://zenitheinsurance.com/fr/accueil"
+                                               style="font-size:10.5px;color:#F5C518;text-decoration:none;font-weight:700;font-family:Arial,sans-serif;">Notre Site Web</a>
+                                            <span style="color:rgba(255,255,255,0.25);font-size:10.5px;margin:0 6px;">|</span>
+                                            <a href="https://zenitheinsurance.com/fr/contact"
+                                               style="font-size:10.5px;color:#F5C518;text-decoration:none;font-weight:700;font-family:Arial,sans-serif;">Nous Contacter</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ══ BRAND HEADER ══ -->
+                        <tr>
+                            <td style="background-color:#1A2B5E;padding:20px 28px 16px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td width="80" valign="middle">
+                                            <!--                  <img th:src="@{/images/logo.png}"
+                                                                   src="data:image/png;base64,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"
+                                                                   alt="ZENITHE Insurance"
+                                                                   width="72" height="48"
+                                                                   style="display:block;height:48px;width:auto;max-width:72px;"/>-->
+
+                                            <img th:src="${logoBase64}" alt="ZENITHE Insurance"
+                                                 class="logo-img" />
+                                        </td>
+                                        <td width="1" style="width:1px;padding:0 12px;">
+                                            <div style="width:1px;height:40px;background-color:rgba(255,255,255,0.15);font-size:0;">&nbsp;</div>
+                                        </td>
+                                        <td valign="middle" style="padding-left:14px;">
+                                            <div style="font-size:20px;font-weight:700;color:#FFFFFF;font-family:Arial,sans-serif;letter-spacing:0.5px;line-height:1.1;">
+                                                ZENITHE
+                                            </div>
+                                            <div style="font-size:11px;font-weight:700;color:#F5C518;font-family:Arial,sans-serif;letter-spacing:3px;text-transform:uppercase;margin-top:2px;">
+                                                INSURANCE
+                                            </div>
+                                            <div style="font-size:9.5px;color:rgba(255,255,255,0.38);font-family:Arial,sans-serif;letter-spacing:1.8px;text-transform:uppercase;margin-top:5px;">
+                                                Quand nous assurons, nous assumons
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ══ YELLOW RULE ══ -->
+                        <tr>
+                            <td style="height:4px;background-color:#F5C518;font-size:0;line-height:0;">&nbsp;</td>
+                        </tr>
+
+                        <!-- ══ HERO BAND ══ -->
+                        <tr>
+                            <td align="center" style="background-color:#1A2B5E;padding:32px 28px 26px;">
+                                <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin-bottom:16px;">
+                                    <tr>
+                                        <td align="center" valign="middle"
+                                            width="60" height="60"
+                                            style="width:60px;height:60px;border-radius:50%;
+                                            background-color:rgba(245,197,24,0.12);
+                                            border:2px solid rgba(245,197,24,0.35);">
+                                            <div style="font-size:26px;line-height:56px;">&#x2705;</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div style="font-size:20px;font-weight:700;color:#FFFFFF;font-family:Arial,sans-serif;
+                                     letter-spacing:0.3px;margin-bottom:8px;">
+                                    Votre compte est activé !
+                                </div>
+                                <div style="font-size:12px;color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;
+                                     letter-spacing:0.5px;" th:text="${fromName}">
+                                    ZENITHE Insurance
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- ══ BODY ══ -->
+                        <tr>
+                            <td class="mobile-pad" style="padding:34px 32px 28px;background-color:#FFFFFF;">
+
+                                <p style="font-size:14.5px;line-height:1.8;color:#3D4A6B;font-family:Arial,sans-serif;margin:0 0 14px;">
+                                    Bonjour <strong style="color:#1A2B5E;" th:text="${recipientName}">Nom du souscripteur</strong>,
+                                </p>
+
+                                <p style="font-size:14.5px;line-height:1.8;color:#3D4A6B;font-family:Arial,sans-serif;margin:0 0 18px;">
+                                    Votre compte est maintenant
+                                    <span style="display:inline-block;background-color:#ECFDF5;border:1.5px solid #A7F3D0;
+                                          color:#065F46;border-radius:20px;padding:3px 12px;font-size:12.5px;
+                                          font-weight:700;font-family:Arial,sans-serif;margin-left:4px;">
+                                        &#x25CF; Actif
+                                    </span>
+                                    &nbsp;Vous pouvez dès à présent vous connecter à la plateforme
+                                    <strong style="color:#1A2B5E;" th:text="${fromName}">ZENITHE Insurance</strong>
+                                    avec vos identifiants ci-dessous.
+                                </p>
+
+                                <!-- INFO BOX -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                                       style="background-color:#F5F7FC;border:1px solid #D8DEEC;
+                                       border-left:4px solid #F5C518;border-radius:0 6px 6px 0;
+                                       margin:0 0 22px;">
+
+                                    <!-- Row 1 : Nom d'utilisateur -->
+                                    <tr>
+                                        <td style="padding:14px 18px;border-bottom:1px solid #D8DEEC;">
+                                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                <tr>
+                                                    <td width="40" valign="middle" style="padding-right:14px;">
+                                                        <table cellpadding="0" cellspacing="0" border="0">
+                                                            <tr>
+                                                                <td align="center" valign="middle"
+                                                                    width="34" height="34"
+                                                                    style="width:34px;height:34px;background-color:#1A2B5E;
+                                                                    border-radius:8px;font-size:18px;line-height:34px;
+                                                                    text-align:center;">
+                                                                    &#x1F464;
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                    <td valign="middle">
+                                                        <div style="font-size:10px;color:#7A86A3;text-transform:uppercase;
+                                                             letter-spacing:1.5px;font-family:Arial,sans-serif;margin-bottom:3px;">
+                                                            Nom d&apos;utilisateur
+                                                        </div>
+                                                        <div style="font-size:15px;font-weight:700;color:#1A2B5E;
+                                                             font-family:Arial,sans-serif;letter-spacing:0.3px;"
+                                                             th:text="${username}">prenom.nom</div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Row 2 : Titulaire -->
+                                    <tr>
+                                        <td style="padding:14px 18px;">
+                                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                <tr>
+                                                    <td width="40" valign="middle" style="padding-right:14px;">
+                                                        <table cellpadding="0" cellspacing="0" border="0">
+                                                            <tr>
+                                                                <td align="center" valign="middle"
+                                                                    width="34" height="34"
+                                                                    style="width:34px;height:34px;background-color:#1A2B5E;
+                                                                    border-radius:8px;font-size:18px;line-height:34px;
+                                                                    text-align:center;">
+                                                                    &#x1F4CB;
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                    <td valign="middle">
+                                                        <div style="font-size:10px;color:#7A86A3;text-transform:uppercase;
+                                                             letter-spacing:1.5px;font-family:Arial,sans-serif;margin-bottom:3px;">
+                                                            Titulaire du compte
+                                                        </div>
+                                                        <div style="font-size:15px;font-weight:700;color:#1A2B5E;
+                                                             font-family:Arial,sans-serif;letter-spacing:0.3px;"
+                                                             th:text="${titulaire}">Titulaire</div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+
+                                </table>
+
+                                <p style="font-size:14.5px;line-height:1.8;color:#3D4A6B;font-family:Arial,sans-serif;margin:0 0 14px;">
+                                    Pour accéder à votre espace personnel, cliquez sur le bouton ci-dessous :
+                                </p>
+
+                                <!-- CTA BUTTON -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:10px 0 26px;">
+                                    <tr>
+                                        <td align="center">
+                                            <table cellpadding="0" cellspacing="0" border="0">
+                                                <tr>
+                                                    <td align="center" style="background-color:#1A2B5E;border-radius:3px;
+                                                        border-bottom:4px solid #F5C518;">
+                                                        <a th:href="${loginUrl}" href="#"
+                                                           style="display:inline-block;padding:15px 46px;
+                                                           font-size:13.5px;font-weight:700;color:#FFFFFF;
+                                                           text-decoration:none;font-family:Arial,sans-serif;
+                                                           letter-spacing:1px;text-transform:uppercase;
+                                                           white-space:nowrap;">
+                                                            Se connecter &nbsp;&#8594;
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- DIVIDER -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 18px;">
+                                    <tr><td style="height:1px;background-color:#D8DEEC;font-size:0;line-height:0;">&nbsp;</td></tr>
+                                </table>
+
+                                <!-- SECURITY NOTE -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td style="background-color:#F5F7FC;border-left:4px solid #F5C518;
+                                            border-radius:0 4px 4px 0;padding:13px 16px;">
+                                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                <tr>
+                                                    <td width="26" valign="top" style="padding-right:10px;font-size:16px;line-height:1;">
+                                                        &#x1F6E1;&#xFE0F;
+                                                    </td>
+                                                    <td>
+                                                        <p style="font-size:12.5px;color:#7A86A3;font-family:Arial,sans-serif;
+                                                           margin:0;line-height:1.65;">
+                                                            Pour des raisons de sécurité, ne partagez jamais votre mot de passe.
+                                                            Si vous n&apos;êtes pas à l&apos;origine de cette activation,
+                                                            contactez-nous immédiatement.
+                                                        </p>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                            </td>
+                        </tr>
+
+                        <!-- ══ FOOTER COLONNES ══ -->
+                        <tr>
+                            <td style="background-color:#1A2B5E;border-top:4px solid #F5C518;padding:0;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr valign="top">
+                                        <td width="33%" style="padding:20px 18px;border-right:1px solid rgba(255,255,255,0.08);">
+                                            <div style="font-size:9px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+                                                 color:#F5C518;font-family:Arial,sans-serif;margin-bottom:10px;">
+                                                ZENITHE Insurance
+                                            </div>
+                                            <div style="font-size:11.5px;line-height:1.9;color:rgba(255,255,255,0.42);font-family:Arial,sans-serif;">
+                                                Boulevard de la République<br/>
+                                                Face Palais DIKA AKWA<br/>
+                                                1388 Rue Bebey Eyidi<br/>
+                                                Douala, Cameroun
+                                            </div>
+                                        </td>
+                                        <td width="33%" style="padding:20px 18px;border-right:1px solid rgba(255,255,255,0.08);">
+                                            <div style="font-size:9px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+                                                 color:#F5C518;font-family:Arial,sans-serif;margin-bottom:10px;">
+                                                Liens rapides
+                                            </div>
+                                            <div style="font-size:11.5px;line-height:1.9;font-family:Arial,sans-serif;">
+                                                <a href="https://zenitheinsurance.com/fr/centres-sante-agrees"
+                                                   style="color:rgba(255,255,255,0.42);text-decoration:none;display:block;">
+                                                    Centres de santé agréés
+                                                </a>
+                                                <a href="https://zenitheinsurance.com/fr/agence/douala"
+                                                   style="color:rgba(255,255,255,0.42);text-decoration:none;display:block;">
+                                                    Nos agences
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td width="33%" style="padding:20px 18px;">
+                                            <div style="font-size:9px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+                                                 color:#F5C518;font-family:Arial,sans-serif;margin-bottom:10px;">
+                                                Assistance
+                                            </div>
+                                            <div style="font-size:11.5px;line-height:1.9;color:rgba(255,255,255,0.42);font-family:Arial,sans-serif;">
+                                                8095 (gratuit)<br/>
+                                                (237) 694 301 432<br/>
+                                                <a href="mailto:info@zenitheinsurance.com"
+                                                   style="color:rgba(255,255,255,0.42);text-decoration:none;">
+                                                    info@zenitheinsurance.com
+                                                </a><br/>
+                                                <span style="font-size:10.5px;">Lun – Ven : 8h00 – 18h00</span><br/>
+                                                <span style="font-size:10.5px;">Sam : 9h00 – 13h00</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- ══ FOOTER BOTTOM ══ -->
+                        <tr>
+                            <td style="background-color:#111E45;padding:13px 28px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td style="font-size:11px;color:rgba(255,255,255,0.22);font-family:Arial,sans-serif;">
+                                            &copy;
+                                            <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy')}">2026</span>
+                                            <span style="color:#F5C518;font-weight:700;" th:text="${fromName}">ZENITHE Insurance</span>
+                                            — Tous droits réservés
+                                        </td>
+                                        <td align="right"
+                                            style="font-size:10.5px;color:rgba(255,255,255,0.16);
+                                            font-style:italic;font-family:Arial,sans-serif;">
+                                            Email automatique, merci de ne pas répondre.
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+    </body>
+</html>

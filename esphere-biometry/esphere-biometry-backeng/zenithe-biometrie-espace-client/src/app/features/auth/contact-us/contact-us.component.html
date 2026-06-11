@@ -1,0 +1,319 @@
+<!-- contact-us.component.html -->
+<div style="background: linear-gradient(135deg, #f4f6f9 0%, #e8f4f8 100%); min-height:100vh; padding:2rem 0;">
+    <div class="container">
+
+        <!-- En-tête -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center animate__animated animate__fadeInDown">
+
+                <!-- Logo -->
+                <div class="mb-4">
+                    <a href="#" class="navbar-brand">
+                        <img src="./favicon-96x96.png" alt="Zenithe" class="brand-image img-circle elevation-3"
+                            style="opacity:.85; width:50px;">
+                        <span class="brand-text font-weight-bold ml-2" style="font-size:1.3rem;">
+                            ZEN-BIO
+                        </span>
+                    </a>
+                </div>
+
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                    style="width:72px;height:72px;background:linear-gradient(135deg,#007bff,#0056b3);">
+                    <i class="fas fa-headset text-white" style="font-size:1.8rem;"></i>
+                </div>
+                <h2 class="font-weight-bold text-dark mb-2">Contactez-nous</h2>
+                <p class="text-muted lead mb-0" style="font-size:1rem;">
+                    Notre équipe est disponible pour vous aider. Choisissez le service concerné.
+                </p>
+                <div class="mt-3">
+                    <span class="badge badge-pill badge-light border text-muted px-3 py-2">
+                        <i class="fas fa-clock mr-1 text-success"></i>Lun – Ven : 07h30 – 17h30
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARTES CONTACT -->
+        <div class="row justify-content-center">
+
+            <!-- ==========================================
+           CARTE 1 — SERVICE SANTÉ
+      =========================================== -->
+            <div class="col-md-5 mb-4 animate__animated animate__fadeInLeft">
+                <div class="card card-outline border-0 h-100 elevation-4"
+                    style="border-radius:16px; overflow:hidden; border-top:5px solid #28a745 !important;">
+
+                    <!-- Header carte -->
+                    <div class="card-header border-0 pb-0 pt-4 px-4"
+                        style="background:linear-gradient(135deg, #f8fff9, #e6f7ed);">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3"
+                                style="width:52px;height:52px;background:linear-gradient(135deg,#28a745,#1e7e34);flex-shrink:0;">
+                                <i class="fas fa-heartbeat text-white" style="font-size:1.3rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="font-weight-bold text-dark mb-0">Service Santé</h5>
+                                <small class="text-muted">Couverture maladie & remboursements</small>
+                            </div>
+                        </div>
+                        <div class="callout"
+                            style="border-left-color:#28a745;background:#f0fff4;border-radius:8px;padding:.6rem 1rem;margin-bottom:.5rem;">
+                            <small class="text-success">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pour toute question relative à votre couverture santé, vos remboursements ou votre
+                                dossier médical.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Coordonnées -->
+                    <div class="card-body px-4 pb-0 pt-3">
+
+                        <!-- Téléphone -->
+                        <div class="media mb-3 p-3 rounded" style="background:#f8f9fa;">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-success text-white mr-3"
+                                style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div class="media-body">
+                                <small class="text-muted d-block"
+                                    style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Téléphone</small>
+                                <a href="tel:+237233000001" class="text-dark font-weight-bold text-decoration-none"
+                                    style="font-size:1rem;">
+                                    +237 694301432
+                                </a>
+                                <br>
+                                <a href="tel:+237233000002" class="text-muted text-decoration-none"
+                                    style="font-size:.85rem;">
+                                    +237 694301148
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Adresse e-mail -->
+                        <div class="media mb-3 p-3 rounded" style="background:#f8f9fa;">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-info text-white mr-3"
+                                style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="media-body">
+                                <small class="text-muted d-block"
+                                    style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">E-mail</small>
+                                <a [href]="'mailto:info@zenitheinsurance.com'"
+                                    class="text-dark font-weight-bold text-decoration-none"
+                                    style="font-size:.9rem; word-break:break-all;">
+                                    {{ 'info@zenitheinsurance.com' }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Adresse physique -->
+                        <div class="media mb-3 p-3 rounded" style="background:#f8f9fa;">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-warning text-white mr-3"
+                                style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="media-body">
+                                <small class="text-muted d-block"
+                                    style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Adresse</small>
+                                <span class="text-dark font-weight-bold" style="font-size:.9rem;">
+                                    Immeuble Zenithe, 3e étage<br>
+                                    Avenue du Gouverneur, Bonanjo<br>
+                                    Douala, Cameroun
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CTA WhatsApp -->
+                    <div class="card-footer border-0 px-4 pb-4 pt-2" style="background:transparent;">
+                        <a href="https://wa.me/237694301432?text=Bonjour%2C%20je%20contacte%20le%20Service%20Sant%C3%A9%20de%20ZENITHE%20Insurance"
+                            target="_blank" class="btn btn-block btn-lg text-white font-weight-bold"
+                            style="background:linear-gradient(135deg,#25D366,#128C7E); border:none; border-radius:12px; padding:.8rem; font-size:1rem; letter-spacing:.03em; box-shadow: 0 4px 15px rgba(37,211,102,.35);">
+                            <i class="fab fa-whatsapp mr-2" style="font-size:1.2rem;"></i>
+                            Contacter via WhatsApp
+                        </a>
+                        <p class="text-center mt-2 mb-0">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt mr-1 text-success"></i>
+                                <strong class="text-success">Appel pris en charge par ZENITHE Insurance</strong>
+                            </small>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ==========================================
+           CARTE 2 — DII
+      =========================================== -->
+            <div class="col-md-5 mb-4 animate__animated animate__fadeInRight">
+                <div class="card card-outline border-0 h-100 elevation-4"
+                    style="border-radius:16px; overflow:hidden; border-top:5px solid #007bff !important;">
+
+                    <!-- Header carte -->
+                    <div class="card-header border-0 pb-0 pt-4 px-4"
+                        style="background:linear-gradient(135deg, #f0f7ff, #ddeeff);">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center mr-3"
+                                style="width:52px;height:52px;background:linear-gradient(135deg,#007bff,#0056b3);flex-shrink:0;">
+                                <i class="fas fa-microchip text-white" style="font-size:1.3rem;"></i>
+                            </div>
+                            <div>
+                                <h5 class="font-weight-bold text-dark mb-0">DII</h5>
+                                <small class="text-muted">Division Informatique & Innovation</small>
+                            </div>
+                        </div>
+                        <div class="callout"
+                            style="border-left-color:#007bff;background:#f0f7ff;border-radius:8px;padding:.6rem 1rem;margin-bottom:.5rem;">
+                            <small class="text-primary">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pour tout problème technique, accès biométrique, ou assistance informatique liée à la
+                                plateforme ZEN-BIO.
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Coordonnées -->
+                    <div class="card-body px-4 pb-0 pt-3">
+
+                        <!-- Téléphone -->
+                        <div class="media mb-3 p-3 rounded" style="background:#f8f9fa;">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white mr-3"
+                                style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                            <div class="media-body">
+                                <small class="text-muted d-block"
+                                    style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Téléphone</small>
+                                <a href="tel:+237233000010" class="text-dark font-weight-bold text-decoration-none"
+                                    style="font-size:1rem;">
+                                    +237 694923568
+                                </a>
+                                <br>
+                                <a href="tel:+237233000011" class="text-muted text-decoration-none"
+                                    style="font-size:.85rem;">
+                                    +237 674111471
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Adresse e-mail -->
+                        <div class="media mb-3 p-3 rounded" style="background:#f8f9fa;">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-info text-white mr-3"
+                                style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="media-body">
+                                <small class="text-muted d-block"
+                                    style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">E-mail</small>
+                                <a href="mailto:dii@zenitheinsurance.com"
+                                    class="text-dark font-weight-bold text-decoration-none" style="font-size:.9rem;">
+                                    {{ 'dii@zenitheinsurance.com' }}
+                                </a>
+                                <br>
+                                <a href="mailto:info@zenitheinsurance.com" class="text-muted text-decoration-none"
+                                    style="font-size:.85rem;">
+                                    {{ 'info@zenitheinsurance.com' }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Adresse physique -->
+                        <div class="media mb-3 p-3 rounded" style="background:#f8f9fa;">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-warning text-white mr-3"
+                                style="width:40px;height:40px;min-width:40px;">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="media-body">
+                                <small class="text-muted d-block"
+                                    style="font-size:.7rem; text-transform:uppercase; letter-spacing:.05em;">Adresse</small>
+                                <span class="text-dark font-weight-bold" style="font-size:.9rem;">
+                                    Immeuble Zenithe, 4e étage — Aile Technique<br>
+                                    Avenue du Gouverneur, Bonanjo<br>
+                                    Douala, Cameroun
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- CTA WhatsApp -->
+                    <div class="card-footer border-0 px-4 pb-4 pt-2" style="background:transparent;">
+                        <a href="https://wa.me/237674111471?text=Bonjour%2C%20je%20contacte%20la%20DII%20de%20ZENITHE%20Insurance%20pour%20assistance%20technique"
+                            target="_blank" class="btn btn-block btn-lg text-white font-weight-bold"
+                            style="background:linear-gradient(135deg,#25D366,#128C7E); border:none; border-radius:12px; padding:.8rem; font-size:1rem; letter-spacing:.03em; box-shadow: 0 4px 15px rgba(37,211,102,.35);">
+                            <i class="fab fa-whatsapp mr-2" style="font-size:1.2rem;"></i>
+                            Contacter via WhatsApp
+                        </a>
+                        <p class="text-center mt-2 mb-0">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt mr-1 text-success"></i>
+                                <strong class="text-success">Appel pris en charge par ZENITHE Insurance</strong>
+                            </small>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+         BANDEAU APPEL VERT
+    =========================================== -->
+        <div class="row justify-content-center mt-2 animate__animated animate__fadeInUp">
+            <div class="col-md-10">
+                <div class="rounded-lg p-4 text-center text-white"
+                    style="background:linear-gradient(135deg,#1a8a3a,#25D366); border-radius:16px !important; box-shadow: 0 8px 30px rgba(37,211,102,.4);">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 mb-3 mb-md-0">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle"
+                                style="width:65px;height:65px;background:rgba(255,255,255,.2);">
+                                <i class="fas fa-phone-volume" style="font-size:1.8rem;"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-7 text-md-left mb-3 mb-md-0">
+                            <h5 class="font-weight-bold mb-1">Ligne d'assistance directe</h5>
+                            <p class="mb-1" style="opacity:.9; font-size:.95rem;">
+                                Joignez-nous directement pour toute urgence ou question prioritaire.
+                            </p>
+                            <div
+                                class="d-flex align-items-center justify-content-center justify-content-md-start flex-wrap">
+                                <span class="badge badge-light text-success font-weight-bold px-3 py-2 mr-2"
+                                    style="font-size:.95rem;">
+                                    +237 694923568
+                                </span>
+                                <small style="opacity:.85;">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    <strong>Appel entièrement pris en charge par ZENITHE Insurance</strong>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="tel:+237233000000" class="btn btn-light btn-lg font-weight-bold text-success px-4"
+                                style="border-radius:10px; box-shadow: 0 4px 12px rgba(0,0,0,.15);">
+                                <i class="fas fa-phone mr-2"></i>Appeler
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Retour login -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10 text-center">
+                <a [routerLink]="['/login']" class="text-muted">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    <small>Retour à la connexion</small>
+                </a>
+                <span class="mx-3 text-muted">|</span>
+                <small class="text-muted">&copy; 2008-{{ currentYear }}
+                    <a href="https://zenitheinsurance.com" target="_blank" class="text-muted">ZENITHE Insurance</a>
+                </small>
+            </div>
+        </div>
+
+    </div>
+</div>

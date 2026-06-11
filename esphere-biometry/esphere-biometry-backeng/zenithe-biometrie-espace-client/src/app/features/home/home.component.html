@@ -1,0 +1,122 @@
+<div class="home-wrapper">
+  <!-- Language Selector -->
+  <div class="content-langue">
+    <div class="dropdown">
+      <button class="btn btn-danger dropdown-toggle" 
+              type="button" 
+              id="languageDropdown" 
+              data-toggle="dropdown" 
+              aria-haspopup="true" 
+              aria-expanded="false">
+        {{ currentLanguage }} <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="languageDropdown">
+        <li>
+          <a class="dropdown-item" href="#" (click)="changeLanguage('English'); $event.preventDefault()">
+            English
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="content">
+    <div class="ctneur-btn accueil">
+      <a class="lien-accueil btn" href="https://zenitheinsurance.com/" target="_blank">Notre site web</a>
+    </div>
+    <div class="ctneur-btn blog">
+      <a class="lien-blog btn" href="https://zenitheinsurance.com/fr/centres-sante-agrees" target="_blank">Centres de santé agréés</a>
+    </div>
+    <div class="ctneur-btn einsurance">
+      <a class="lien-einsurance btn" href="https://zenitheinsurance.com/fr/agence/douala">Nos agences</a>
+    </div>
+    <div class="ctneur-btn sinistre">
+      <a class="lien-sinistre btn" routerLink="/sinistre">Contactez-nous</a>
+    </div>
+
+    <!-- Portrait Image Map -->
+    <div class="image_map_portrait" *ngIf="isPortrait">
+      <img id="image_portrait" 
+           src="../images/banniere-page-accueil-mobile-fr.jpg" 
+           usemap="#Image-Maps_6201305161140066" 
+           width="1024" 
+           height="1684" 
+           alt="Bannière page accueil" />
+      <map id="_Image-Maps_6201305161140066" name="Image-Maps_6201305161140066">
+        <area shape="rect" class="point1" coords="58,918,252,1044" 
+              title="Courtier" 
+              [routerLink]="['/fr/produit/39_fr_assurance-caution']" 
+              alt="Courtier" />
+        <area shape="rect" class="point2" coords="64,708,296,854" 
+              title="Service Sante" 
+              [routerLink]="['/fr/produit/25_fr_assurance-maladie-groupe']" 
+              alt="Service Sante" />
+        <area shape="rect" class="point3" coords="178,556,360,674" 
+              title="Assurance Auto" 
+              [routerLink]="['/fr/produit/5_assurance-auto']" 
+              alt="Assurance Auto" />
+        <area shape="rect" class="point4" coords="390,474,626,624" 
+              title="Responsabilité Civile" 
+              [routerLink]="['/fr/produit/11_responsabilite-civile-chef-de-famille']" 
+              alt="Responsabilité Civile" />
+        <area shape="rect" class="point5" coords="656,532,886,682" 
+              title="Zenithe Visio" 
+              [routerLink]="['/fr/produit/7_zenithe_visio']" 
+              alt="Zenithe Visio" />
+        <area shape="rect" class="point6" coords="790,712,968,828" 
+              title="Njang" 
+              [routerLink]="['/fr/produit/69_fr_njang']" 
+              alt="Njang" />
+      </map>
+    </div>
+
+    <!-- Landscape Image Map -->
+    <div class="image_map_paysage" *ngIf="!isPortrait">
+      <img id="image_paysage" 
+           src="../images/banniere-page-accueil-fr.jpg" 
+           usemap="#Image-Maps_6201305161140067" 
+           width="1450" 
+           height="906" 
+           alt="Bannière page accueil" />
+      <map id="_Image-Maps_6201305161140067" name="Image-Maps_6201305161140067">
+        <area shape="rect" class="point1" coords="244,310,406,408" 
+              title="Assurance Caution" 
+              [routerLink]="['/fr/produit/39_fr_assurance-caution']" 
+              alt="Assurance Caution" />
+        <area shape="rect" class="point2" coords="310,138,510,262" 
+              title="Assurance Maladie Groupe" 
+              [routerLink]="['/fr/produit/25_fr_assurance-maladie-groupe']" 
+              alt="Assurance Maladie" />
+        <area shape="rect" class="point3" coords="514,46,664,144" 
+              title="Assurance Auto" 
+              [routerLink]="['/fr/produit/5_assurance-auto']" 
+              alt="Assurance Auto" />
+        <area shape="rect" class="point4" coords="904,16,1102,130" 
+              title="Responsabilité Civile" 
+              [routerLink]="['/fr/produit/11_responsabilite-civile-chef-de-famille']" 
+              alt="Responsabilité Civile" />
+        <area shape="rect" class="point5" coords="1036,142,1220,270" 
+              title="Zenithe Visio" 
+              [routerLink]="['/produit/7_zenithe_visio']" 
+              alt="Zenithe Visio" />
+        <area shape="rect" class="point6" coords="1062,322,1214,412" 
+              title="Njang" 
+              [routerLink]="['/fr/produit/69_fr_njang']" 
+              alt="Njang" />
+      </map>
+    </div>
+  </div>
+
+  <!-- Footer Images -->
+  <img class="footer" 
+       id="footer-img" 
+       *ngIf="!isPortrait"
+       src="../images/footer-banniere-page-accueil-fr.jpg" 
+       alt="Footer" />
+  <img class="footer" 
+       id="footer-img-mobile" 
+       *ngIf="isPortrait"
+       src="../images/footer-banniere-page-accueil-mobile-fr.jpg" 
+       alt="Footer mobile" />
+</div>

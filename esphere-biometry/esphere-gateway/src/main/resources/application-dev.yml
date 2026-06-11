@@ -9,45 +9,80 @@ spring:
           uri: http://localhost:8081
           predicates:
             - Path=/auth/**
+
         - id: adherent
           uri: http://localhost:8082
           predicates:
-            - Path=/adherents/**,/ayants-droit/**
+            - Path=/adherents/**
+
         - id: prestataire
           uri: http://localhost:8083
           predicates:
             - Path=/prestataires/**
+
         - id: visite
           uri: http://localhost:8084
           predicates:
             - Path=/visites/**,/public/webservice/**
+
         - id: validation
           uri: http://localhost:8085
           predicates:
             - Path=/validations/**
+
         - id: bons-manuels
           uri: http://localhost:8086
           predicates:
             - Path=/bons-manuels/**
+
         - id: media
           uri: http://localhost:8087
           predicates:
             - Path=/medias/**,/capture/**
+
         - id: notification
           uri: http://localhost:8088
           predicates:
             - Path=/notifications/**
+
         - id: reporting
           uri: http://localhost:8089
           predicates:
             - Path=/reporting/**
+
+        # ── biometry-partenaire (:8090) ──────────────────────────────────
+        # IMPORTANT : /partenaire/adherents/** évite la collision avec adherent :8082
+        # Le filtre StripPrefix=1 supprime "/partenaire" avant transmission au service
+        - id: users-partenaire
+          uri: http://localhost:8180
+          predicates:
+            - Path=/users/**
+
+        - id: subscriber-partenaire
+          uri: http://localhost:8180
+          predicates:
+            - Path=/subscriber/**
+
+        - id: dashboard-partenaire
+          uri: http://localhost:8180
+          predicates:
+            - Path=/dashboard/**
+
+        - id: adherent-partenaire
+          uri: http://localhost:8180
+          predicates:
+            - Path=/partenaire/adherents/**
+          filters:
+            - StripPrefix=1
+
+      # CORS géré uniquement ici (CorsWebFilter Java supprimé pour éviter le doublon)
       globalcors:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
               - "http://localhost:4200"
               - "http://localhost:3000"
-            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS"]
+            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS","PATCH"]
             allowedHeaders: "*"
             allowCredentials: true
 

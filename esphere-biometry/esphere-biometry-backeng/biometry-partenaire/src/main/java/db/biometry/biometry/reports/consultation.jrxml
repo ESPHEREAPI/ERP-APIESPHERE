@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" language="groovy" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d1c5d9c5-c023-4af3-9a93-13805d0820a0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<field name="idConsultation" class="java.lang.Integer"/>
+	<field name="codePrestataire" class="java.lang.String"/>
+	<field name="codeAssurePrincipal" class="java.lang.String"/>
+	<field name="codeBeneficiaire" class="java.lang.String"/>
+	<field name="codeTypePrestation" class="java.lang.String"/>
+	<field name="montant" class="java.lang.Double"/>
+	<field name="tauxCouverture" class="java.lang.Double"/>
+	<field name="date" class="java.util.Date"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band height="35" splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="22" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="2" width="100" height="20" uuid="2096d213-4f85-44c8-85d4-2b7b634a68fa"/>
+				<text><![CDATA[idConsultation]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="100" y="2" width="100" height="20" uuid="d041d650-c835-4570-903e-dea0bf603091"/>
+				<text><![CDATA[codePrestataire]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="200" y="2" width="100" height="20" uuid="bd32bc28-1761-4503-a933-fbd0464b27b8"/>
+				<text><![CDATA[codeAssurePrincipal]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="2" width="100" height="20" uuid="7c9bb20f-0703-4dde-8591-d204e0fa84c9"/>
+				<text><![CDATA[codeBeneficiaire]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="2" width="100" height="20" uuid="ffe93b96-22f2-4995-82eb-10383c82fcf3"/>
+				<text><![CDATA[codeTypePrestation]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="500" y="2" width="55" height="20" uuid="64ac8890-07d5-4d03-8417-b2f8eb4c8f83"/>
+				<text><![CDATA[montant]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="100" height="20" uuid="0b8eded7-198e-48ce-ac8b-905fec6e2a09"/>
+				<textFieldExpression><![CDATA[$F{idConsultation}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="0" width="100" height="20" uuid="275f28f6-e321-4b8b-8b80-f71b3191e678"/>
+				<textFieldExpression><![CDATA[$F{codePrestataire}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="200" y="0" width="100" height="20" uuid="79cdc0ff-34d0-4993-8e14-2e714b8b26f9"/>
+				<textFieldExpression><![CDATA[$F{codeAssurePrincipal}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="300" y="0" width="100" height="20" uuid="f46aacaf-63bd-4b96-b8c7-209d6bd849e2"/>
+				<textFieldExpression><![CDATA[$F{codeBeneficiaire}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="400" y="0" width="100" height="20" uuid="8b87c0e8-2cec-47bf-994a-d791dcfa37ca"/>
+				<textFieldExpression><![CDATA[$F{codeTypePrestation}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="500" y="0" width="55" height="20" uuid="6b9fd4e8-acb6-40c6-97a9-cdf9308bb91f"/>
+				<textFieldExpression><![CDATA[$F{montant}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="54" splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

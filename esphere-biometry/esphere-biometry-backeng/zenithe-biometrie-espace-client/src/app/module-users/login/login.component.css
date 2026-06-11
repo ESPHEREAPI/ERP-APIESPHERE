@@ -1,0 +1,513 @@
+/* =========================================
+   STYLES PRINCIPAUX - LOGIN COMPONENT
+   ========================================= */
+
+/* Centrage vertical du contenu */
+.login-content {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+/* Container principal */
+.login-box-container {
+    animation: slideInUp 0.6s ease-out;
+    width: 100%;
+}
+
+/* Logo avec animation pulse */
+.logo-container {
+    animation-duration: 1s;
+    margin-bottom: 2rem;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    flex-wrap: wrap;
+}
+
+.brand-image {
+    margin-right: 15px;
+}
+
+.logo-pulse {
+    animation: pulse 2s ease-in-out infinite;
+    transition: transform 0.3s ease;
+}
+
+.logo-pulse:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Styles du texte de marque */
+.brand-text {
+    font-size: 1.5rem;
+    color: #343a40;
+}
+
+.brand-text .login-logo {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+}
+
+.brand-text b {
+    font-weight: bold;
+}
+
+/* Icône de cadenas en haut de la carte */
+.lock-icon-container {
+    width: 60px;
+    height: 60px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.lock-icon-container i {
+    font-size: 1.5rem;
+}
+
+/* Carte de login avec ombre élégante */
+.login-card {
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1), 
+                0 2px 8px rgba(0, 0, 0, 0.08),
+                0 0 1px rgba(0, 0, 0, 0.1);
+    border-top: 3px solid #007bff !important;
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    background: #ffffff !important;
+    animation-duration: 0.8s;
+    animation-delay: 0.2s;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                0 0 2px rgba(0, 123, 255, 0.3);
+}
+
+.login-card-body {
+    padding: 2.5rem;
+}
+
+/* Message de bienvenue */
+.login-box-msg {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    color: #6c757d;
+}
+
+/* =========================================
+   ANIMATIONS DES CHAMPS DE SAISIE
+   ========================================= */
+
+.input-animate {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.input-animate input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.input-animate input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+/* Animation au focus */
+.input-animate input:focus + .input-group-append .input-group-text {
+    border-color: #007bff;
+    background: #007bff !important;
+    color: white !important;
+}
+
+.input-animate input:focus + .input-group-append .input-group-text span {
+    color: white !important;
+    animation: iconBounce 0.5s ease;
+}
+
+.input-animate input:focus + .input-group-append button {
+    border-color: #007bff;
+}
+
+/* States de validation */
+.input-animate input.is-valid {
+    border-color: #28a745;
+    animation: slideInRight 0.4s ease;
+}
+
+.input-animate input.is-invalid {
+    border-color: #dc3545;
+    animation: shakeX 0.4s ease;
+}
+
+.input-group-text {
+    border: 2px solid #e0e0e0;
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    transition: all 0.3s ease;
+}
+
+/* Labels flottants */
+.form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+/* =========================================
+   BOUTON DE CONNEXION
+   ========================================= */
+
+.btn-login {
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    background: #007bff;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    min-width: 140px;
+}
+
+.btn-login::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-login:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+    background: #0069d9;
+}
+
+.btn-login:hover:not(:disabled)::before {
+    left: 100%;
+}
+
+.btn-login:active:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0, 123, 255, 0.4);
+}
+
+.btn-login:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-login.btn-loading {
+    pointer-events: none;
+}
+
+/* Animation du spinner */
+.spinner-border-sm {
+    animation: spin 1s linear infinite;
+}
+
+/* =========================================
+   CHECKBOX "SE SOUVENIR"
+   ========================================= */
+
+.icheck-primary {
+    display: flex;
+    align-items: center;
+}
+
+.icheck-primary input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    cursor: pointer;
+    accent-color: #007bff;
+}
+
+.icheck-primary label {
+    margin-bottom: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* =========================================
+   DIVIDER "OU"
+   ========================================= */
+
+.or-divider {
+    position: relative;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.or-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e0e0e0, transparent);
+}
+
+.or-text {
+    position: relative;
+    background: white;
+    padding: 0 1rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* =========================================
+   MESSAGES D'ERREUR
+   ========================================= */
+
+.alert {
+    border-radius: 10px;
+    border: none;
+    animation-duration: 0.5s;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.invalid-feedback {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    animation: slideInDown 0.3s ease;
+}
+
+/* =========================================
+   ANIMATIONS KEYFRAMES
+   ========================================= */
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px 10px rgba(102, 126, 234, 0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shakeX {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes iconBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+
+@media (max-width: 576px) {
+    .login-card-body {
+        padding: 1.5rem;
+    }
+    
+    .login-box-msg {
+        font-size: 0.9rem;
+    }
+    
+    .btn-login {
+        padding: 0.6rem 1rem;
+        font-size: 0.875rem;
+        min-width: 120px;
+    }
+    
+    .input-animate input {
+        font-size: 0.9rem;
+        padding: 0.6rem 0.9rem;
+    }
+    
+    .navbar-brand {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .brand-image {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .brand-text {
+        font-size: 1.2rem;
+    }
+    
+    .brand-text .login-logo {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .row.align-items-center {
+        flex-direction: column;
+    }
+    
+    .col-7, .col-5 {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
+    }
+    
+    .col-5.text-right {
+        text-align: left !important;
+        margin-top: 1rem;
+    }
+    
+    .btn-login {
+        width: 100%;
+    }
+    
+    .brand-text {
+        font-size: 1rem;
+    }
+    
+    .brand-text .login-logo {
+        font-size: 1.3rem;
+    }
+}
+
+/* =========================================
+   ACCESSIBILITÉ
+   ========================================= */
+
+.btn-login:focus,
+.input-animate input:focus {
+    outline: none;
+}
+
+.btn-login:focus-visible,
+.input-animate input:focus-visible {
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+}
+
+/* Dark mode support (optionnel) */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #1a1a1a !important;
+    }
+    
+    .login-card {
+        background: rgba(30, 30, 30, 0.95) !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 
+                    0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .or-text {
+        background: rgba(30, 30, 30, 0.95);
+    }
+    
+    .login-box-msg,
+    .form-label {
+        color: #b0b0b0;
+    }
+    
+    .brand-text {
+        color: #e0e0e0;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white !important;
+    }
+    
+    .login-card {
+        box-shadow: none !important;
+    }
+}

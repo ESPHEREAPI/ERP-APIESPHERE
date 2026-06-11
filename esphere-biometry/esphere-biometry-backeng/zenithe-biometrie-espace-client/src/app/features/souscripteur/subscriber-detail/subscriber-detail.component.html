@@ -1,0 +1,106 @@
+<!-- subscriber-detail.component.html -->
+<div *ngIf="isLoading" class="text-center py-5">
+  <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+  <p class="mt-2 text-muted">Chargement...</p>
+</div>
+
+<ng-container *ngIf="!isLoading && subscriber">
+  <!-- En-tête -->
+  <div class="card card-primary card-outline">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="fas fa-user-circle mr-2"></i>
+        {{ subscriber.fullName }}
+      </h3>
+      <div class="card-tools">
+        <button class="btn btn-sm btn-secondary mr-1" (click)="onBack()">
+          <i class="fas fa-arrow-left mr-1"></i>Retour
+        </button>
+        <button class="btn btn-sm btn-warning mr-1" (click)="onEdit()">
+          <i class="fas fa-edit mr-1"></i>Modifier
+        </button>
+        <button class="btn btn-sm btn-danger" (click)="showDeleteConfirm = true" *ngIf="!showDeleteConfirm">
+          <i class="fas fa-trash mr-1"></i>Supprimer
+        </button>
+        <span *ngIf="showDeleteConfirm">
+          <button class="btn btn-sm btn-danger mr-1" [disabled]="isDeleting" (click)="onDelete()">
+            <i class="fas" [class.fa-spinner]="isDeleting" [class.fa-spin]="isDeleting" [class.fa-check]="!isDeleting"></i>
+            Confirmer la suppression
+          </button>
+          <button class="btn btn-sm btn-secondary" (click)="showDeleteConfirm = false">Annuler</button>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="row">
+        <!-- Info principale -->
+        <div class="col-md-8">
+          <table class="table table-sm table-borderless">
+            <tbody>
+              <tr>
+                <th width="35%"><i class="fas fa-file-contract mr-2 text-muted"></i>Numéro de police</th>
+                <td><span class="badge badge-secondary">{{ subscriber.policyNumber }}</span></td>
+              </tr>
+              <tr>
+                <th><i class="fas fa-phone mr-2 text-muted"></i>Téléphone</th>
+                <td>{{ subscriber.phoneNumber }}</td>
+              </tr>
+              <tr>
+                <th><i class="fas fa-envelope mr-2 text-muted"></i>Email</th>
+                <td><a [href]="'mailto:' + subscriber.email">{{ subscriber.email }}</a></td>
+              </tr>
+              <tr>
+                <th><i class="fas fa-at mr-2 text-muted"></i>Titulaire du Compte</th>
+                <td><code>{{ subscriber.username }}</code></td>
+              </tr>
+              <tr>
+                <th><i class="fas fa-toggle-on mr-2 text-muted"></i>Statut</th>
+                <td>
+                  <span class="badge" [class.badge-success]="subscriber.active" [class.badge-secondary]="!subscriber.active">
+                    {{ subscriber.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th><i class="fas fa-key mr-2 text-muted"></i>Mode mot de passe</th>
+                <td>
+                  <span class="badge" [class.badge-primary]="subscriber.passwordMode === 'manual'" [class.badge-info]="subscriber.passwordMode === 'activation_link'">
+                    {{ subscriber.passwordMode === 'manual' ? 'Manuel' : 'Lien d\'activation' }}
+                  </span>
+                </td>
+              </tr>
+              <tr *ngIf="subscriber.activationSentAt">
+                <th><i class="fas fa-paper-plane mr-2 text-muted"></i>Lien d'activation envoyé</th>
+                <td>{{ subscriber.activationSentAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+              <tr *ngIf="subscriber.activationExpiry">
+                <th><i class="fas fa-clock mr-2 text-muted"></i>Expiration du lien</th>
+                <td>{{ subscriber.activationExpiry | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+              <tr>
+                <th><i class="fas fa-calendar-alt mr-2 text-muted"></i>Créé le</th>
+                <td>{{ subscriber.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Avatar / résumé -->
+        <div class="col-md-4 text-center">
+          <div class="user-block d-flex flex-column align-items-center pt-3">
+            <div
+              class="rounded-circle d-flex align-items-center justify-content-center text-white mb-3"
+              style="width:80px;height:80px;font-size:2rem;background:#007bff"
+            >
+              {{ subscriber.fullName | slice:0:1 }}
+            </div>
+            <h5>{{ subscriber.fullName }}</h5>
+            <p class="text-muted mb-0">{{ subscriber.username }}</p>
+            <p class="text-muted small">{{ subscriber.policyNumber }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

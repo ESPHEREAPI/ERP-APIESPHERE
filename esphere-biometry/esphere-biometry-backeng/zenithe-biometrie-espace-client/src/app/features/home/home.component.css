@@ -1,0 +1,602 @@
+.home-wrapper {
+  min-height: 100vh;
+  padding: 0;
+}
+
+p, h1 {
+  text-align: center;
+  position: relative;
+  text-shadow: 1px 1px #999;
+}
+
+
+@media all and (orientation: portrait) {
+  .image_map_portrait {
+    display: block;
+  }
+  .image_map_paysage {
+    display: none;
+  }
+  #footer-img {
+    display: none;
+  }
+  #footer-img-mobile {
+    display: block;
+  }
+}
+
+
+@media all and (orientation: landscape) {
+  .image_map_portrait {
+    display: none;
+  }
+  .image_map_paysage {
+    display: block;
+  }
+  #footer-img {
+    display: block;
+  }
+  #footer-img-mobile {
+    display: none;
+  }
+}
+
+
+.image_map_portrait {
+  width: 1024px;
+  height: 1684px;
+  transition: 0.5s;
+  overflow: hidden;
+  position: relative;
+}
+
+.image_map_paysage {
+  width: 1450px;
+  height: 906px;
+  transition: 0.5s;
+  overflow: hidden;
+  position: relative;
+}
+
+
+@media all and (max-width: 768px) and (orientation: portrait) {
+  .image_map_portrait {
+    width: 768px;
+    height: 1270.5px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0.5em white, 0 0 0 2000px rgba(100, 50, 0, 0.5);
+    transition: 0.5s;
+  }
+  
+  html {
+    transition: 0.5s;
+    font-size: 12px;
+  }
+  
+  .image_map_portrait img, 
+  .image_map_portrait map {
+    position: absolute;
+    transform: scale(0.75);
+    transform-origin: 0 0;
+  }
+}
+
+@media all and (max-width: 512px) and (orientation: portrait) {
+  .image_map_portrait {
+    width: 512px;
+    height: 847px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0.5em white, 0 0 0 2000px rgba(0, 100, 200, 0.5);
+    transition: 0.5s;
+  }
+  
+  html {
+    transition: 0.5s;
+    font-size: 8px;
+  }
+  
+  .image_map_portrait img,
+  .image_map_portrait map {
+    position: absolute;
+    transform: scale(0.5);
+    transform-origin: 0 2;
+  }
+}
+
+
+@media all and (min-width: 1500px) and (orientation: landscape) {
+  .image_map_paysage {
+    width: 1812px;
+    height: 1132px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0.5em white, 0 0 0 2000px rgba(100, 50, 0, 0.5);
+    transition: 0.5s;
+  }
+  
+  html {
+    transition: 0.5s;
+    font-size: 25px;
+  }
+  
+  .image_map_paysage img,
+  .image_map_paysage map {
+    position: absolute;
+    transform: scale(1.25);
+    transform-origin: 0 0;
+  }
+}
+
+@media all and (max-width: 1087.5px) and (orientation: landscape) {
+  .image_map_paysage {
+    width: 1087.5px;
+    height: 679.5px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0.5em white, 0 0 0 2000px rgba(100, 50, 0, 0.5);
+    transition: 0.5s;
+  }
+  
+  html {
+    transition: 0.5s;
+    font-size: 20px;
+  }
+  
+  .image_map_paysage img,
+  .image_map_paysage map {
+    position: absolute;
+    transform: scale(0.75);
+    transform-origin: 0 0;
+  }
+}
+
+@media all and (max-width: 725px) and (orientation: landscape) {
+  .image_map_paysage {
+    width: 725px;
+    height: 453px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 0.5em white, 0 0 0 2000px rgba(0, 100, 200, 0.5);
+    transition: 0.5s;
+  }
+  
+  html {
+    transition: 0.5s;
+    font-size: 15px;
+  }
+  
+  .image_map_paysage img,
+  .image_map_paysage map {
+    position: absolute;
+    transform: scale(0.5);
+    transform-origin: 0 2;
+  }
+}
+
+
+img {
+  vertical-align: top;
+}
+
+h1, p {
+  margin: 0;
+}
+
+map, area {
+  position: absolute;
+  display: block;
+  text-align: center;
+}
+
+map {
+  top: 0;
+  left: 0;
+  font-size: 2em;
+  border-radius: 1em;
+  
+  &:hover {
+    border: 1px solid;
+    border-radius: 1em;
+  }
+}
+
+
+.image_map_portrait {
+  .point1:hover {
+    left: 58px;
+    top: 918px;
+    width: 194px;
+    height: 126px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 126px;
+  }
+  
+  .point2:hover {
+    left: 64px;
+    top: 708px;
+    width: 232px;
+    height: 146px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 146px;
+  }
+  
+  .point3:hover {
+    left: 178px;
+    top: 556px;
+    width: 182px;
+    height: 118px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 118px;
+  }
+  
+  .point4:hover {
+    left: 390px;
+    top: 474px;
+    width: 236px;
+    height: 150px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 150px;
+  }
+  
+  .point5:hover {
+    left: 656px;
+    top: 532px;
+    width: 230px;
+    height: 150px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 150px;
+  }
+  
+  .point6:hover {
+    left: 790px;
+    top: 712px;
+    width: 178px;
+    height: 116px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 116px;
+  }
+}
+
+
+.image_map_paysage {
+  .point1:hover {
+    left: 244px;
+    top: 310px;
+    width: 162px;
+    height: 98px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 98px;
+  }
+  
+  .point2:hover {
+    left: 310px;
+    top: 138px;
+    width: 200px;
+    height: 124px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 124px;
+  }
+  
+  .point3:hover {
+    left: 514px;
+    top: 46px;
+    width: 150px;
+    height: 98px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 98px;
+  }
+  
+  .point4:hover {
+    left: 904px;
+    top: 16px;
+    width: 200px;
+    height: 114px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 114px;
+  }
+  
+  .point5:hover {
+    left: 1036px;
+    top: 142px;
+    width: 184px;
+    height: 128px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 128px;
+  }
+  
+  .point6:hover {
+    left: 1062px;
+    top: 322px;
+    width: 152px;
+    height: 90px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 1em;
+    line-height: 90px;
+  }
+}
+
+area:hover {
+  background: none;
+}
+
+
+.footer {
+  clear: both;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  color: white;
+}
+
+
+.content {
+  position: fixed;
+}
+
+.content-langue {
+  position: fixed;
+  right: 0;
+  z-index: 1000;
+  margin-top: 10px;
+}
+
+
+.ctneur-btn {
+  margin-bottom: 10px;
+  
+  a {
+    font-weight: bold;
+    display: inline-block;
+    color: white !important;
+    
+    &:hover {
+      opacity: 0.5;
+    }
+    
+    &.lien-accueil {
+      background-color: #0A51A1 !important;
+    }
+    
+    &.lien-blog {
+      background-color: #F5FA16 !important;
+      color: black !important;
+    }
+    
+    &.lien-einsurance {
+      background-color: #FF8000 !important;
+    }
+    
+    &.lien-sinistre {
+      background-color: #9DDCF9 !important;
+      color: black !important;
+    }
+  }
+}
+
+
+@media all and (orientation: landscape) {
+  .ctneur-btn {
+    position: fixed;
+    z-index: 1000;
+    left: 0px;
+    
+    &.accueil {
+      top: 210px;
+    }
+    
+    &.blog {
+      top: 270px;
+    }
+    
+    &.einsurance {
+      top: 330px;
+    }
+    
+    &.sinistre {
+      top: 390px;
+    }
+    
+    a {
+      padding: 15px 10px;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+      width: 210px;
+      font-size: 1em;
+      border: solid 4px #FFF;
+      border-left: 0;
+    }
+  }
+}
+
+@media all and (min-width: 1500px) and (orientation: landscape) {
+  .ctneur-btn {
+    &.accueil {
+      top: 250px;
+    }
+    
+    &.blog {
+      top: 310px;
+    }
+    
+    &.einsurance {
+      top: 370px;
+    }
+    
+    &.sinistre {
+      top: 430px;
+    }
+    
+    a {
+      width: 260px;
+    }
+  }
+}
+
+@media all and (max-width: 1087.5px) and (orientation: landscape) {
+  .ctneur-btn {
+    &.accueil {
+      top: 160px;
+    }
+    
+    &.blog {
+      top: 220px;
+    }
+    
+    &.einsurance {
+      top: 280px;
+    }
+    
+    &.sinistre {
+      top: 340px;
+    }
+    
+    a {
+      padding: 15px 10px;
+      border-top-right-radius: 15px;
+      border-bottom-right-radius: 15px;
+      width: 160px;
+      font-size: 0.8em;
+      border: solid 3px #FFF;
+      border-left: 0;
+    }
+  }
+}
+
+@media all and (max-width: 725px) and (orientation: landscape) {
+  .ctneur-btn {
+    &.accueil {
+      top: 110px;
+    }
+    
+    &.blog {
+      top: 160px;
+    }
+    
+    &.einsurance {
+      top: 210px;
+    }
+    
+    &.sinistre {
+      top: 260px;
+    }
+    
+    a {
+      padding: 15px 10px;
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+      width: 105px;
+      font-size: 0.6em;
+      border: solid 2px #FFF;
+      border-left: 0;
+    }
+  }
+}
+
+
+@media all and (orientation: portrait) {
+  .ctneur-btn {
+    position: fixed;
+    z-index: 1000;
+    right: 0px;
+    
+    &.accueil {
+      top: 210px;
+    }
+    
+    &.blog {
+      top: 280px;
+    }
+    
+    &.einsurance {
+      top: 350px;
+    }
+    
+    &.sinistre {
+      top: 420px;
+    }
+    
+    a {
+      padding: 15px 10px;
+      border-top-left-radius: 20px;
+      border-bottom-left-radius: 20px;
+      width: 200px;
+      font-size: 1.5em;
+      border: solid 4px #FFF;
+      border-right: 0;
+    }
+  }
+}
+
+@media all and (max-width: 768px) and (orientation: portrait) {
+  .ctneur-btn {
+    &.accueil {
+      top: 160px;
+    }
+    
+    &.blog {
+      top: 210px;
+    }
+    
+    &.einsurance {
+      top: 260px;
+    }
+    
+    &.sinistre {
+      top: 310px;
+    }
+    
+    a {
+      padding: 15px 10px;
+      border-top-left-radius: 15px;
+      border-bottom-left-radius: 15px;
+      width: 150px;
+      font-size: 1em;
+      border: solid 3px #FFF;
+      border-right: 0;
+    }
+  }
+}
+
+@media all and (max-width: 512px) and (orientation: portrait) {
+  .ctneur-btn {
+    &.accueil {
+      top: 80px;
+    }
+    
+    &.blog {
+      top: 130px;
+    }
+    
+    &.einsurance {
+      top: 180px;
+    }
+    
+    &.sinistre {
+      top: 230px;
+    }
+    
+    a {
+      padding: 15px 10px;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+      width: 100px;
+      font-size: 0.6em;
+      border: solid 2px #FFF;
+      border-right: 0;
+    }
+  }
+}

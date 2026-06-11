@@ -1,0 +1,154 @@
+<!-- email-confirm-dialog.component.html -->
+<!-- Bootstrap Modal AdminLTE — affiché programmatiquement via [visible] -->
+
+<div
+  class="modal fade"
+  [class.show]="visible"
+  [style.display]="visible ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="emailDiffModalLabel"
+  [attr.aria-hidden]="!visible"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg">
+
+      <!-- ── En-tête ────────────────────────────────────────────────────── -->
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title text-dark font-weight-bold" id="emailDiffModalLabel">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          Discordance d'adresse email
+        </h5>
+        <button
+          type="button"
+          class="close text-dark"
+          aria-label="Fermer"
+          (click)="cancel()"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <!-- ── Corps ─────────────────────────────────────────────────────── -->
+      <div class="modal-body pt-4 pb-2">
+
+        <!-- Message principal -->
+        <div class="callout callout-warning mb-4">
+          <p class="mb-0" style="font-size: .95rem;">
+            L'adresse email que vous avez saisie est <strong>différente</strong>
+            de l'adresse email enregistrée dans le système.
+          </p>
+        </div>
+
+        <!-- Tableau de comparaison -->
+        <table class="table table-bordered table-sm mb-4">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 45%">
+                <i class="fas fa-keyboard mr-1 text-primary"></i>Email saisi
+              </th>
+              <th style="width: 10%" class="text-center">vs</th>
+              <th style="width: 45%">
+                <i class="fas fa-database mr-1 text-success"></i>Email enregistré
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <!-- Email saisi (affiché en clair car vient de l'utilisateur) -->
+              <td>
+                <span class="badge badge-primary px-2 py-1"
+                      style="font-size: .85rem; font-weight: 500; letter-spacing: .3px;">
+                  {{ emailSaisieStr || '—' }}
+                </span>
+              </td>
+
+              <!-- Icône différence -->
+              <td class="text-center align-middle">
+                <i class="fas fa-arrows-alt-h text-danger"></i>
+              </td>
+
+              <!-- Email confirmé masqué partiellement -->
+              <td>
+                <span
+                  class="badge badge-success px-2 py-1"
+                  style="font-size: .85rem; font-weight: 500; letter-spacing: .3px;"
+                  [title]="'Email enregistré (masqué pour confidentialité)'"
+                >
+                  {{ maskedConfirm || '—' }}
+                </span>
+                <br/>
+                <small class="text-muted">
+                  <i class="fas fa-eye-slash mr-1"></i>partiellement masqué
+                </small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Aide contextuelle -->
+        <div class="alert alert-light border mb-0" style="font-size: .88rem;">
+          <i class="fas fa-info-circle text-info mr-2"></i>
+          Vous ne pouvez plus  Continuer!!!
+          <ul class="mb-0 mt-2 pl-4">
+            <li>
+              <strong>Ressayer a nouveau </strong> — utiliser
+              <code>{{ maskedConfirm }}</code> comme  adresse.
+            </li>
+            <li>
+              <strong>Utiliser l'email enregistré</strong> — revenir à
+              l'adresse déjà connue du système (<em>{{ maskedConfirm }}</em>).
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- ── Pied ───────────────────────────────────────────────────────── -->
+      <div class="modal-footer d-flex justify-content-between">
+
+        <!-- Annuler -->
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          (click)="cancel()"
+        >
+          <i class="fas fa-times mr-1"></i>Annuler
+        </button>
+
+        <div class="d-flex gap-2" *ngIf="false">
+          <!-- Utiliser l'email enregistré -->
+          <button
+            type="button"
+            class="btn btn-success btn-sm mr-2"
+            (click)="useConfirm()"
+            title="Remplacer le champ par l'email enregistré"
+          >
+            <i class="fas fa-database mr-1"></i>
+            Utiliser l'email enregistré
+          </button>
+
+          <!-- Garder l'email saisi -->
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            (click)="keepSaisie()"
+            title="Conserver ce que vous avez tapé"
+          >
+            <i class="fas fa-check mr-1"></i>
+            Garder mon email saisi
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop Bootstrap -->
+<div
+  class="modal-backdrop fade"
+  [class.show]="visible"
+  *ngIf="visible"
+  (click)="cancel()"
+></div>

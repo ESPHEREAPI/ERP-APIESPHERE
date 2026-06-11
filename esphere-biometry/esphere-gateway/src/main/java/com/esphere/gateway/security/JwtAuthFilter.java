@@ -22,44 +22,90 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
 
     private final JwtProvider jwtProvider;
 
-private static final List<String> ENDPOINTS_PUBLICS = List.of(
-    "/auth/login",
-    "/auth/otp",
-    "/auth/validate-otp",
-    "/auth/refresh-token",
-    "/public/webservice/",
-    "/validations/consommation/visite/",   // ← pré-remplissage formulaire
-    "/validations/dashboard/",
-    "/capture/",
-    "/actuator",
-    "/auth/health"
-);
+    // ⚠️ Règle : préfixes exacts, pas de "/**".
+    // Chaque entrée doit être aussi précise que possible — un préfixe trop court
+    // ouvre involontairement des routes protégées (ex: "/subscriber" couvre tout le CRUD).
+    private static final List<String> ENDPOINTS_PUBLICS = List.of(
+            // ── Service auth ────────────────────────────────────────────
+            "/auth/login",
+            "/auth/otp",
+            "/auth/validate-otp",
+            "/auth/refresh-token",
+            "/auth/health",
+
+            // ── biometry-partenaire : login uniquement (pas de CRUD) ───
+            "/users/login",
+            "/users/compagnie/login",
+            "/users/adherent/login",
+            "/users/logout",
+
+            // ── biometry-partenaire : activation compte (lien email) ───
+            // UNIQUEMENT /subscriber/activate — pas tout /subscriber
+            "/subscriber/activate",
+
+            // ── Routes publiques métier ──────────────────────────────────
+            "/public/webservice/",
+            "/validations/consommation/visite/",
+            "/capture/",
+
+            // ── Monitoring / docs techniques ────────────────────────────
+            "/actuator",
+            "/v3/api-docs",
+            "/swagger-ui"
+
+            // ❌ RETIRÉ : "/dashboard/"     → données sensibles, JWT requis
+            // ❌ RETIRÉ : "/subscriber"      → couvrait tout le CRUD souscripteur
+            // ❌ RETIRÉ : "/adherents"       → données assurés, JWT requis
+            // ❌ RETIRÉ : "/validations/dashboard/" → stats métier, JWT requis
+    );
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
+        String method = exchange.getRequest().getMethod().name();
+
+        // Route publique → laisser passer sans vérification
         if (ENDPOINTS_PUBLICS.stream().anyMatch(path::startsWith)) {
+            log.debug("[Gateway] Route publique autorisée : {} {}", method, path);
             return chain.filter(exchange);
         }
+
         String authHeader = exchange.getRequest().getHeaders()
                 .getFirst(HttpHeaders.AUTHORIZATION);
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.warn("[Gateway] Accès refusé (token manquant) : {} {}", method, path);
             return rejeter(exchange, "Token JWT manquant.");
         }
+
         String token = authHeader.substring(7);
         if (!jwtProvider.validerToken(token)) {
-            return rejeter(exchange, "Token JWT invalide ou expire.");
+            log.warn("[Gateway] Accès refusé (token invalide) : {} {}", method, path);
+            return rejeter(exchange, "Token JWT invalide ou expiré.");
         }
+
         try {
             Claims claims = jwtProvider.getClaims(token);
+
+            String userId     = String.valueOf(claims.get("userId", Integer.class));
+            String userLogin  = claims.getSubject();
+            String profilCode = claims.get("profilCode", String.class);
+            String prestId    = claims.get("prestId", String.class);
+
+            log.debug("[Gateway] Accès autorisé : {} {} | user={} profil={}",
+                    method, path, userLogin, profilCode);
+
             ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                    .header("X-User-Id", claims.get("userId", Integer.class).toString())
-                    .header("X-User-Login", claims.getSubject())
-                    .header("X-Profil-Code", claims.get("profilCode", String.class))
-                    .header("X-Prestataire-Id", claims.get("prestId", String.class))
+                    .header("X-User-Id",        userId)
+                    .header("X-User-Login",     userLogin)
+                    .header("X-Profil-Code",    profilCode != null ? profilCode : "")
+                    .header("X-Prestataire-Id", prestId    != null ? prestId    : "")
                     .build();
+
             return chain.filter(exchange.mutate().request(mutatedRequest).build());
+
         } catch (Exception e) {
+            log.error("[Gateway] Erreur traitement token pour {} {} : {}", method, path, e.getMessage());
             return rejeter(exchange, "Erreur de traitement du token.");
         }
     }
@@ -74,5 +120,7 @@ private static final List<String> ENDPOINTS_PUBLICS = List.of(
     }
 
     @Override
-    public int getOrder() { return -1; }
+    public int getOrder() {
+        return -1;
+    }
 }

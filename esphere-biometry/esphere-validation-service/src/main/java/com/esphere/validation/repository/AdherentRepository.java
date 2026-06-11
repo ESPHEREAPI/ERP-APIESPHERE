@@ -16,6 +16,9 @@ public interface AdherentRepository
     @Query("SELECT a FROM Adherent a " +
            "WHERE a.codeAdherent = :code AND a.statut = '1'")
     Optional<Adherent> findActiveByCode(@Param("code") String code);
+    @Query("SELECT a FROM Adherent a " +
+           "WHERE a.codeAdherent = :code AND a.statut = '-1'")
+    Optional<Adherent> findNotActiveByCode(@Param("code") String code);
     
     // ── AdherentRepository.java  (ajouter cette méthode) ──────────────────
 @Modifying

@@ -24,4 +24,5 @@ public class PrestationResponse {
     private long          nbreLignesEnAttente;
     private String        etatGlobal; // attente_validation | partiellement_valide | valide | encaisse
     private String nomPrestataire; // ← ajoutez ce champ
+    private String statutAdherent;
 }

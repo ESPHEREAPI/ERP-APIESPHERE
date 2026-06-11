@@ -15,44 +15,76 @@ spring:
           uri: http://${ESPHERE_HOST:109.228.49.89}:8081
           predicates:
             - Path=/auth/**
+
         - id: adherent
           uri: http://${ESPHERE_HOST:109.228.49.89}:8082
           predicates:
-            - Path=/adherents/**,/ayants-droit/**
+            - Path=/adherents/**
+
         - id: prestataire
           uri: http://${ESPHERE_HOST:109.228.49.89}:8083
           predicates:
             - Path=/prestataires/**
+
         - id: visite
           uri: http://${ESPHERE_HOST:109.228.49.89}:8084
           predicates:
             - Path=/visites/**,/public/webservice/**
+
         - id: validation
           uri: http://${ESPHERE_HOST:109.228.49.89}:8085
           predicates:
             - Path=/validations/**
+
         - id: bons-manuels
           uri: http://${ESPHERE_HOST:109.228.49.89}:8086
           predicates:
             - Path=/bons-manuels/**
+
         - id: media
           uri: http://${ESPHERE_HOST:109.228.49.89}:8087
           predicates:
             - Path=/medias/**,/capture/**
+
         - id: notification
           uri: http://${ESPHERE_HOST:109.228.49.89}:8088
           predicates:
             - Path=/notifications/**
+
         - id: reporting
           uri: http://${ESPHERE_HOST:109.228.49.89}:8089
           predicates:
             - Path=/reporting/**
+
+        # ── biometry-partenaire (:8090) ──────────────────────────────────
+        - id: users-partenaire
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8180
+          predicates:
+            - Path=/users/**
+
+        - id: subscriber-partenaire
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8180
+          predicates:
+            - Path=/subscriber/**
+
+        - id: dashboard-partenaire
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8180
+          predicates:
+            - Path=/dashboard/**
+
+        - id: adherent-partenaire
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8180
+          predicates:
+            - Path=/partenaire/adherents/**
+          filters:
+            - StripPrefix=1
+
       globalcors:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
               - "https://zenbio.zenitheinsurance.com"
-            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS"]
+            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS","PATCH"]
             allowedHeaders: "Authorization,Content-Type,X-Requested-With"
             allowCredentials: true
 

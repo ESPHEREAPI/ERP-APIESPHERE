@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.*;
 
 @Repository
 public interface LignePrestationRepository extends JpaRepository<LignePrestation, Integer> {
@@ -79,4 +79,69 @@ List<ExamenDTO> listeExamen(@Param("annee") int currentyear);
     long countExamensValidesByPrestataire(
         @Param("prestataireId") String prestataireId,
         @Param("etat")          String etat);
+    
+    
+    
+    // ✅ Requête 1 : Dernière prestation de l'ADHÉRENT PRINCIPAL
+    @Query(value = """
+        SELECT
+            a.police,
+            v.code_adherent,
+            NULL              AS code_ayant_droit,
+            lp.taux,
+            lp.etat,
+            lp.date,
+            lp.id             AS ligne_prestation_id,
+            p.id              AS prestation_id
+        FROM dbx45ty_ligne_prestation  lp
+        JOIN dbx45ty_prestation         p  ON p.id           = lp.prestation_id
+        JOIN dbx45ty_visite             v  ON v.id            = p.visite_id
+        JOIN dbx45ty_adherent           a  ON a.code_adherent = v.code_adherent
+        WHERE
+            a.police            = :police
+            AND v.code_adherent = :codeAdherent
+            AND v.code_ayant_droit IS NULL         
+            AND lp.etat IN ('valide', 'encaisse')
+            AND lp.taux IS NOT NULL
+            AND lp.taux > 0
+            AND lp.date >= DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
+        ORDER BY lp.date DESC, lp.id DESC
+        LIMIT 1
+        """, nativeQuery = true)
+    Optional<DernierePrestationProjection> findDernierePrestationAdherent(
+        @Param("police")        String police,
+        @Param("codeAdherent")  String codeAdherent
+    );
+
+
+    // ✅ Requête 2 : Dernière prestation d'un AYANT DROIT
+    @Query(value = """
+        SELECT
+            a.police,
+            v.code_adherent,
+            v.code_ayant_droit,
+            lp.taux,
+            lp.etat,
+            lp.date,
+            lp.id              AS ligne_prestation_id,
+            p.id               AS prestation_id
+        FROM dbx45ty_ligne_prestation  lp
+        JOIN dbx45ty_prestation         p  ON p.id                = lp.prestation_id
+        JOIN dbx45ty_visite             v  ON v.id                 = p.visite_id
+        JOIN dbx45ty_adherent           a  ON a.code_adherent      = v.code_adherent
+        JOIN dbx45ty_ayant_droit        ad ON ad.code_ayant_droit  = v.code_ayant_droit
+        WHERE
+            a.police               = :police
+            AND v.code_ayant_droit = :codeAyantDroit
+            AND lp.etat IN ('valide', 'encaisse')
+            AND lp.taux IS NOT NULL
+            AND lp.taux > 0
+            AND lp.date >= DATE_SUB(CURDATE(), INTERVAL 2 YEAR)
+        ORDER BY lp.date DESC, lp.id DESC
+        LIMIT 1
+        """, nativeQuery = true)
+    Optional<DernierePrestationProjection> findDernierePrestationAyantDroit(
+        @Param("police")          String police,
+        @Param("codeAyantDroit")  String codeAyantDroit
+    );
 }

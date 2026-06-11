@@ -1,0 +1,342 @@
+
+  <!-- En-tête du contenu -->
+  <div class="content-header">
+    <div class="container-fluid">
+      <div class="row mb-2">
+        <div class="col-sm-6">
+          <h1 class="m-0">Détail de Consommation Adhérent</h1>
+        </div>
+        <div class="col-sm-6">
+          <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Accueil</a></li>
+            <li class="breadcrumb-item active">Consommations</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="content">
+    <div class="container-fluid">
+      <!-- Carte de recherche et filtrage -->
+      <div class="card card-primary card-outline">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-search mr-2"></i>Paramètres de Recherche
+          </h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="row">
+            <!-- Sélection du souscripteur -->
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="souscripteurDropdown" class="form-label fw-bold">
+                  <i class="fas fa-user mr-2 text-primary"></i>Adherent
+                </label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="fas fa-users"></i>
+                    </span>
+                  </div>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Sélectionner un souscripteur"
+                    [value]="selectedAdherent?.assurePrincipal || ''"
+                    (click)="toggleDropdown()"
+                    readonly
+                  >
+                  <div class="input-group-append">
+                    <button 
+                      class="btn btn-outline-secondary" 
+                      type="button"
+                      (click)="toggleDropdown()"
+                    >
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Dropdown de souscripteurs -->
+                <div *ngIf="showDropdown" class="dropdown-menu show w-100 mt-1">
+                  <div class="px-3 py-2 border-bottom">
+                    <input 
+                      type="text" 
+                      class="form-control form-control-sm"
+                      placeholder="Rechercher..."
+                      [(ngModel)]="searchdherent"
+                      #searchInput
+                    >
+                  </div>
+                  <div class="overflow-auto" style="max-height: 250px;">
+                    <a 
+                      *ngFor="let souscripteur of getFilteredSouscripteurs()" 
+                      href="javascript:void(0)"
+                      class="dropdown-item"
+                      (click)="selectSouscripteur(souscripteur)"
+                    >
+                      <strong>{{ souscripteur.assurePrincipal }}</strong>
+                      <br>
+                      <small class="text-muted">Code: {{ souscripteur.codeAdherent }}</small>
+                    </a>
+                    <div 
+                      *ngIf="getFilteredSouscripteurs().length === 0" 
+                      class="dropdown-item text-center text-muted"
+                    >
+                      Aucun résultat
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Date de début -->
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="dateDebut" class="form-label fw-bold">
+                  <i class="fas fa-calendar-alt mr-2 text-primary"></i>Date de Début
+                </label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="fas fa-calendar"></i>
+                    </span>
+                  </div>
+                  <input 
+                    type="date" 
+                    class="form-control"
+                    [(ngModel)]="dateDebut"
+                    id="dateDebut"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Date de fin -->
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="dateFin" class="form-label fw-bold">
+                  <i class="fas fa-calendar-alt mr-2 text-primary"></i>Date de Fin
+                </label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">
+                      <i class="fas fa-calendar"></i>
+                    </span>
+                  </div>
+                  <input 
+                    type="date" 
+                    class="form-control"
+                    [(ngModel)]="dateFin"
+                    id="dateFin"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Boutons d'action -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <button 
+                class="btn btn-primary mr-2"
+                (click)="handleSearch()"
+                [disabled]="isLoading"
+              >
+                <i class="fas fa-search mr-2"></i>
+                <span *ngIf="!isLoading">Rechercher</span>
+                <span *ngIf="isLoading">
+                  <span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>
+                  Chargement...
+                </span>
+              </button>
+              <button 
+                class="btn btn-secondary"
+                (click)="handleReset()"
+              >
+                <i class="fas fa-redo mr-2"></i>Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Message d'erreur -->
+      <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          <div>
+            <strong>Erreur !</strong>
+            {{ errorMessage }}
+          </div>
+        </div>
+        <button type="button" class="close" (click)="clearError()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <!-- Tableau des résultats -->
+      <div class="card mt-4" *ngIf="filteredData.length > 0">
+        <div class="card-header bg-primary">
+          <h3 class="card-title">
+            <i class="fas fa-table mr-2"></i>Résultats de Recherche
+          </h3>
+          <div class="card-tools">
+            <button 
+              class="btn btn-sm btn-light"
+              (click)="exportToExcel()"
+              title="Exporter en Excel"
+            >
+              <i class="fas fa-file-excel"></i> Exporter
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover table-striped mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th style="width: 5%">#</th>
+                <th>Date</th>
+                <th>Nature Service</th>
+                <th>Montant</th>
+                <th>Prise en Charge</th>
+                <th>Ayant Droit</th>
+                <th>État</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of getPaginatedData(); let i = index">
+                <td>{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
+                <td>
+                  <small class="text-muted">
+                    {{ formatDate(item.date) }}
+                  </small>
+                </td>
+                <td>{{ item.prestation }}</td>
+                <td>
+                  <span class="badge badge-info">
+                    {{ formatCurrency(item.montant) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-success">
+                    {{ formatCurrency(item.montantPriseEnCharge) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-warning">
+                    {{ formatCurrency(item.montantAyantDroit) }}
+                  </span>
+                </td>
+                <td>
+                  <span 
+                    class="badge border"
+                    [ngClass]="getEtatBadge(item.etat)"
+                  >
+                    {{ item.etat }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totaux -->
+        <div class="card-footer bg-light">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="info-box bg-info">
+                <span class="info-box-icon"><i class="fas fa-money-bill-wave"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Montant Total</span>
+                  <span class="info-box-number text-white">
+                    {{ formatCurrency(calculateTotals().totalMontant) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-success">
+                <span class="info-box-icon"><i class="fas fa-hand-holding-usd"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Prise en Charge</span>
+                  <span class="info-box-number text-white">
+                    {{ formatCurrency(calculateTotals().totalPriseEnCharge) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-warning">
+                <span class="info-box-icon"><i class="fas fa-user-tie"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Ayant Droit</span>
+                  <span class="info-box-number text-white">
+                    {{ formatCurrency(calculateTotals().totalAyantDroit) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box bg-secondary">
+                <span class="info-box-icon"><i class="fas fa-list"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">Enregistrements</span>
+                  <span class="info-box-number text-white">
+                    {{ filteredData.length }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="card-footer">
+          <nav>
+            <ul class="pagination pagination-sm m-0 justify-content-center">
+              <li class="page-item" [ngClass]="{ disabled: currentPage === 1 }">
+                <a class="page-link" href="javascript:void(0)" (click)="previousPage()">
+                  <i class="fas fa-chevron-left"></i> Précédent
+                </a>
+              </li>
+              <li *ngFor="let page of [].constructor(getTotalPages()); let i = index" 
+                  class="page-item" 
+                  [ngClass]="{ active: currentPage === i + 1 }">
+                <a class="page-link" href="javascript:void(0)" (click)="currentPage = i + 1">
+                  {{ i + 1 }}
+                </a>
+              </li>
+              <li class="page-item" [ngClass]="{ disabled: currentPage === getTotalPages() }">
+                <a class="page-link" href="javascript:void(0)" (click)="nextPage()">
+                  Suivant <i class="fas fa-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+          <div class="text-center text-muted mt-2">
+            Page {{ currentPage }} sur {{ getTotalPages() }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Message vide -->
+      <div *ngIf="filteredData.length === 0 && !isLoading" class="alert alert-info mt-4">
+        <div class="text-center py-4">
+          <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+          <p class="text-muted">
+            Veuillez remplir les critères de recherche et cliquer sur "Rechercher" pour afficher les résultats.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>

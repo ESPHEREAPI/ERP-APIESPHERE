@@ -41,10 +41,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 String login      = jwtProvider.getLogin(token);
                 String profilCode = jwtProvider.getProfilCode(token);
 
-                // L'autorité Spring Security = ROLE_ + code du profil
-                // ex: ROLE_SUP_ADMIN, ROLE_SERVICE_SANTE, ROLE_PHARMACIE
+                // Autorité = code du profil directement (sans préfixe ROLE_)
+                // Compatible avec @PreAuthorize("hasAuthority('SUP_ADMIN')")
+                // ex: SUP_ADMIN, SERVICE_SANTE, PHARMACIE, LABORATOIRE
                 List<SimpleGrantedAuthority> authorities = List.of(
-                        new SimpleGrantedAuthority("ROLE_" + profilCode)
+                        new SimpleGrantedAuthority(profilCode)
                 );
 
                 UsernamePasswordAuthenticationToken auth =

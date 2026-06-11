@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Activation de votre compte</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #f0f4f8; font-family: 'Segoe UI', Arial, sans-serif; color: #2d3748; }
+    .wrapper { max-width: 600px; margin: 40px auto; background: #fff;
+               border-radius: 12px; overflow: hidden;
+               box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+    .header  { background: linear-gradient(135deg, #1a56db 0%, #0e3fa5 100%);
+               padding: 40px 32px; text-align: center; }
+    .header h1 { color: #fff; font-size: 24px; font-weight: 700; margin-top: 12px; }
+    .header .logo { font-size: 40px; }
+    .body    { padding: 36px 32px; }
+    .body p  { line-height: 1.7; margin-bottom: 16px; font-size: 15px; }
+    .name    { font-weight: 700; color: #1a56db; }
+    .cta-wrap { text-align: center; margin: 32px 0; }
+    .cta-btn { display: inline-block; background: #1a56db; color: #fff !important;
+               text-decoration: none; padding: 14px 40px; border-radius: 8px;
+               font-size: 16px; font-weight: 700; letter-spacing: .3px; }
+    .cta-btn:hover { background: #1446c2; }
+    .badge-expiry { display: inline-flex; align-items: center; gap: 8px;
+                    background: #fff7ed; border: 1px solid #fed7aa;
+                    color: #c2410c; border-radius: 8px;
+                    padding: 10px 18px; font-size: 14px; margin: 8px 0; }
+    .url-fallback { background: #f8fafc; border: 1px dashed #cbd5e0;
+                    border-radius: 6px; padding: 12px 16px;
+                    font-size: 12px; color: #718096; word-break: break-all;
+                    margin-top: 24px; }
+    .footer  { background: #f8fafc; border-top: 1px solid #e2e8f0;
+               padding: 24px 32px; text-align: center;
+               font-size: 12px; color: #a0aec0; }
+    .footer a { color: #1a56db; text-decoration: none; }
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- En-tête -->
+  <div class="header">
+    <div class="logo">🔐</div>
+    <h1 th:text="${fromName}">AssurAdmin</h1>
+  </div>
+
+  <!-- Corps -->
+  <div class="body">
+    <p>Bonjour <span class="name" th:text="${recipientName}">Nom du souscripteur</span>,</p>
+
+    <p>
+      Un compte a été créé pour vous sur la plateforme
+      <strong th:text="${fromName}">AssurAdmin</strong>.
+      Pour finaliser votre inscription et définir votre mot de passe,
+      veuillez cliquer sur le bouton ci-dessous.
+    </p>
+
+    <div class="cta-wrap">
+      <a th:href="${activationUrl}" class="cta-btn">
+        ✅ Activer mon compte
+      </a>
+    </div>
+
+    <!-- Badge expiration -->
+    <div style="text-align:center">
+      <div class="badge-expiry">
+        ⏰ &nbsp;Ce lien est valide pendant
+        <strong th:text="${durationHours + ' heure' + (durationHours > 1 ? 's' : '')}">48 heures</strong>
+        — expire le <strong th:text="${expiryFormatted}">01/01/2025 à 18:00</strong>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <p style="font-size:13px; color:#718096;">
+      Si vous ne parvenez pas à cliquer sur le bouton, copiez-collez ce lien dans votre navigateur :
+    </p>
+    <div class="url-fallback" th:text="${activationUrl}">https://app.assur.com/activate?token=xxx</div>
+
+    <hr class="divider"/>
+
+    <p style="font-size:13px; color:#718096;">
+      Si vous n'avez pas demandé la création de ce compte, vous pouvez ignorer cet email en toute sécurité.
+    </p>
+  </div>
+
+  <!-- Pied de page -->
+  <div class="footer">
+    <p>© <span th:text="${#temporals.format(#temporals.createNow(), 'yyyy')}">2025</span>
+       <span th:text="${fromName}">AssurAdmin</span> — Tous droits réservés</p>
+    <p style="margin-top:6px">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+  </div>
+
+</div>
+</body>
+</html>

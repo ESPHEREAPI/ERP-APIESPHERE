@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="report name" pageWidth="595" pageHeight="842" whenNoDataType="BlankPage" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="90b6e07c-797e-4417-be80-709119ba4fc2">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="12"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<queryString language="SQL">
+		<![CDATA[]]>
+	</queryString>
+	<field name="prestation_number" class="java.lang.String"/>
+	<field name="assure" class="java.lang.String"/>
+	<field name="malade" class="java.lang.String"/>
+	<field name="souscripteur" class="java.lang.String"/>
+	<field name="taux" class="java.lang.String"/>
+	<field name="type_prestation" class="java.lang.String"/>
+	<field name="montant_valide" class="java.lang.Integer"/>
+	<field name="part_zenithe" class="java.lang.Integer"/>
+	<field name="part_assure" class="java.lang.Integer"/>
+	<field name="date" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
+	<field name="prestataire" class="java.lang.String"/>
+	<group name="visite">
+		<groupExpression><![CDATA[$F{prestation_number}]]></groupExpression>
+		<groupHeader>
+			<band height="29">
+				<textField>
+					<reportElement x="0" y="0" width="555" height="20" uuid="a095ddf9-80c1-404e-8f2b-0e170df2ef89"/>
+					<textElement>
+						<font size="14" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{prestataire}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement x="353" y="0" width="202" height="20" uuid="3d3756be-f0a8-4dbc-85c4-67bc870ad22b"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Date heure "+ $F{date}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="116">
+				<staticText>
+					<reportElement x="249" y="26" width="229" height="20" uuid="beb6383e-1bd2-439f-9dfc-62a50b92b66b"/>
+					<textElement>
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Montant valide]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="249" y="58" width="229" height="20" uuid="a64f7037-1001-4d39-844a-b4b9c34242a5"/>
+					<textElement>
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Part  ZENITHE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="249" y="96" width="229" height="20" uuid="1bd39e78-7a1f-4e80-874f-c5046758fc59"/>
+					<textElement>
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Part Assure]]></text>
+				</staticText>
+				<textField pattern="#,##0">
+					<reportElement x="401" y="26" width="154" height="20" uuid="8e8294c6-1bf9-4759-ab72-ad3e2725ab22"/>
+					<textElement textAlignment="Right">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{montant_valide}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0">
+					<reportElement x="403" y="58" width="154" height="20" uuid="e2c51d98-d994-42ef-a3af-9945848be0f2"/>
+					<textElement textAlignment="Right">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{part_zenithe}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0">
+					<reportElement x="403" y="96" width="154" height="20" uuid="20dce4ba-1cf8-4af0-a490-a7e6036e8364"/>
+					<textElement textAlignment="Right">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{part_assure}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="91" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="148" height="22" uuid="5c69b6ce-a83a-488a-bdbc-032f54c70367"/>
+				<textElement>
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[ZENITHE Insurance]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="22" width="249" height="22" uuid="05d79210-9aaa-49b5-8271-446ac611e8da"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[Adresse : 1540 rue Koumassi , Bali, Douala]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="44" width="148" height="22" uuid="4a6198df-09ee-4e86-b68f-d8b50f6c5c8c"/>
+				<textElement>
+					<font fontName="Arial" size="12"/>
+				</textElement>
+				<text><![CDATA[Tel : (237)233 43 41 32]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="336" y="0" width="219" height="22" uuid="8172630e-33c9-4327-b9cb-d3d6e6ff01a9"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[REPUBLIQUE DU CAMEROUN]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="403" y="22" width="152" height="22" uuid="65073a51-35ee-4928-8915-f4b8cf84c3ec"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="14"/>
+				</textElement>
+				<text><![CDATA[Paix-Travail-Patrie]]></text>
+			</staticText>
+			<image>
+				<reportElement mode="Opaque" x="249" y="0" width="104" height="91" uuid="fc396491-7b56-4025-aad5-ecc7263afe14"/>
+				<imageExpression><![CDATA["E:\\zenithe\\Biometrie\\SpringBoot\\biometry\\biometry\\src\\main\\java\\db\\biometry\\biometry\\reports\\logoZenithe.png"]]></imageExpression>
+			</image>
+		</band>
+	</pageHeader>
+	<columnHeader>
+		<band height="40" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="13" width="555" height="27" uuid="030c844e-24e7-46a6-a0dc-c01c21d8f7e7"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<text><![CDATA[BON DE PRISE EN CHARGE CONSULTATION]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="134" splitType="Stretch">
+			<textField>
+				<reportElement x="254" y="14" width="286" height="20" uuid="e2ad0713-c639-4bba-9395-179c04f8230f"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{prestation_number}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="14" width="229" height="20" uuid="217ca978-dea2-4252-934b-ff6686f1e62d"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Prestation n°]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="34" width="229" height="20" uuid="0b743534-dd08-4dd5-9232-a0a28d175c7a"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Assure]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="54" width="229" height="20" uuid="cf711257-5f1d-4ee5-a360-ba849f6fbeb4"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Malade]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="74" width="229" height="20" uuid="984e8d70-38e3-41c0-9903-451916b324de"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Souscripteur]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="94" width="229" height="20" uuid="70b3188e-7105-4274-9228-75c48891a96b"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Taux de couverture]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="114" width="229" height="20" uuid="b8e395fe-59cd-4a9b-9d9a-80cd61b1576e"/>
+				<textElement>
+					<font size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Type de consultation]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="254" y="34" width="286" height="20" uuid="cc4ffe43-feb2-4735-b0a5-81967df2b16e"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{assure}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="254" y="54" width="286" height="20" uuid="d5ea6f6d-1fad-4eff-b6c8-0e085feac5b5"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{malade}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="254" y="74" width="286" height="20" uuid="af467750-c027-4e70-9f63-a0eaeac10029"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{souscripteur}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="254" y="94" width="286" height="20" uuid="d433594f-e0b3-47d9-bdae-60959d3f1058"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{taux}+"%"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="254" y="114" width="286" height="20" uuid="b1fa1926-b064-48e8-b0ef-c95133060245"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{type_prestation}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="45" splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band height="78" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="10" width="182" height="20" uuid="8ad63c81-618e-48c0-9aa2-eec4657bb471"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[L assure]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="373" y="10" width="182" height="20" uuid="b6973408-7b3f-414d-a653-81e28f4c6452"/>
+				<textElement textAlignment="Right">
+					<font size="12"/>
+				</textElement>
+				<text><![CDATA[Le prestataire]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="435" y="58" width="80" height="20" uuid="66800c1a-74a0-442f-b5a1-798bfd5eb552"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="515" y="58" width="40" height="20" uuid="1f9a5275-33b6-471a-a04c-b6adfabe2592"/>
+				<textFieldExpression><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+	<summary>
+		<band height="42" splitType="Stretch"/>
+	</summary>
+</jasperReport>

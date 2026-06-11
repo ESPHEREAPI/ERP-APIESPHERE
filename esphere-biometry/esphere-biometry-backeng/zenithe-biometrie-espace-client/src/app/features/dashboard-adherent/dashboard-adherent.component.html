@@ -1,0 +1,641 @@
+<!-- Sélecteur de vue DII / Service Santé -->
+<div *ngIf="isDIIOrServiceSante()" class="container-fluid pt-3 pb-0">
+  <div class="btn-group w-100" role="group">
+    <button type="button" class="btn btn-outline-primary" (click)="goToSouscripteurDashboard()">
+      <i class="fas fa-building mr-1"></i> Vue Souscripteur
+    </button>
+    <button type="button" class="btn btn-primary" style="pointer-events:none;">
+      <i class="fas fa-user mr-1"></i> Vue Adhérent
+    </button>
+  </div>
+</div>
+
+<!-- Dashboard Adhérent -->
+<div class="container-fluid py-3">
+
+  <!-- Erreur -->
+  <div *ngIf="error" class="alert alert-danger alert-dismissible">
+    <button type="button" class="close" (click)="error = null"><span>&times;</span></button>
+    <i class="fas fa-exclamation-triangle mr-2"></i>{{ error }}
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading && !data" class="text-center py-5">
+    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+    <p class="mt-2 text-muted">Chargement du tableau de bord…</p>
+  </div>
+
+  <!-- Sélecteurs superviseur (DII / Service Santé uniquement) -->
+  <div *ngIf="isDIIOrServiceSante()" class="card card-outline card-secondary mb-3">
+    <div class="card-header py-2">
+      <h3 class="card-title"><i class="fas fa-filter mr-1"></i>Sélection adhérent</h3>
+    </div>
+    <div class="card-body py-2">
+      <div class="row align-items-end">
+
+        <!-- 1. Souscripteur -->
+        <div class="col-md-5">
+          <label><i class="fas fa-building mr-1"></i>Souscripteur</label>
+          <select class="form-control form-control-sm"
+                  [(ngModel)]="selectedSouscripteur"
+                  (change)="onSouscripteurChange()">
+            <option [ngValue]="null" disabled>-- Sélectionner un souscripteur --</option>
+            <option *ngFor="let s of souscripteursActifs" [ngValue]="s">
+              {{ s.souscripteur }} ({{ s.police }})
+            </option>
+          </select>
+        </div>
+
+        <!-- 2. Adhérent (chargé après sélection du souscripteur) -->
+        <div class="col-md-5">
+          <label><i class="fas fa-user mr-1"></i>Adhérent</label>
+          <select class="form-control form-control-sm"
+                  [(ngModel)]="selectedAdherent"
+                  (change)="onAdherentChange()"
+                  [disabled]="adherentsList.length === 0">
+            <option [ngValue]="null" disabled>-- Sélectionner un adhérent --</option>
+            <option *ngFor="let a of adherentsList" [ngValue]="a">
+              {{ a.nom }} ({{ a.matricule }})
+            </option>
+          </select>
+        </div>
+
+        <!-- 3. Recherche manuelle par code -->
+        <div class="col-md-2">
+          <label>&nbsp;</label>
+          <div class="input-group input-group-sm">
+            <input type="text" class="form-control"
+                   placeholder="Code…"
+                   [(ngModel)]="codeRecherche"
+                   (keyup.enter)="rechercher()"/>
+            <div class="input-group-append">
+              <button class="btn btn-primary" (click)="rechercher()">
+                <i class="fas fa-search"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <ng-container *ngIf="data">
+
+    <!-- ── LIGNE 1 : Identité + Alerte échéance ─────────────────────────── -->
+    <div class="row">
+
+      <!-- Carte identité -->
+      <div class="col-md-8">
+        <div class="card card-primary card-outline">
+          <div class="card-body">
+            <div class="d-flex align-items-center">
+              <div class="mr-3">
+                <span class="fa-stack fa-2x">
+                  <i class="fas fa-circle fa-stack-2x text-primary"></i>
+                  <i class="fas fa-user fa-stack-1x fa-inverse"></i>
+                </span>
+              </div>
+              <div class="flex-grow-1">
+                <h4 class="mb-0 font-weight-bold">{{ data.nom }}</h4>
+                <small class="text-muted">
+                  {{ data.codeAdherent }} &bull;
+                  {{ data.sexe === 'M' ? 'Masculin' : 'Féminin' }} &bull;
+                  Police : {{ data.police }}
+                </small>
+              </div>
+              <div class="ml-auto text-right">
+                <span class="badge badge-lg"
+                      [ngClass]="data.statut === 'ACTIF' ? 'badge-success' :
+                                 data.statut === 'SUSPENDU' ? 'badge-warning' : 'badge-danger'">
+                  {{ data.statut }}
+                </span>
+                <br/>
+                <small class="text-muted">
+                  Enrôlé le {{ formatDate(data.naissance) }}
+                </small>
+              </div>
+            </div>
+
+            <hr class="my-2"/>
+
+            <div class="row text-sm">
+              <div class="col-sm-4">
+                <i class="fas fa-phone mr-1 text-muted"></i>{{ data.telephone || '—' }}
+              </div>
+              <div class="col-sm-4">
+                <i class="fas fa-id-card mr-1 text-muted"></i>{{ data.matricule || '—' }}
+              </div>
+              <div class="col-sm-4">
+                <i class="fas fa-building mr-1 text-muted"></i>{{ data.souscripteur }}
+              </div>
+            </div>
+            <div class="row text-sm mt-1">
+              <div class="col-sm-4">
+                <i class="fas fa-layer-group mr-1 text-muted"></i>
+                Groupe :
+                <strong>{{ data.groupe != null ? data.groupe : '—' }}</strong>
+              </div>
+              <div class="col-sm-4">
+                <i class="fas fa-percent mr-1 text-muted"></i>
+                Taux :
+                <strong [ngClass]="getTauxTextClass(data.taux)">
+                  {{ data.taux != null ? data.taux + ' %' : '—' }}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerte échéance -->
+      <div class="col-md-4">
+        <div class="card card-outline"
+             [ngClass]="data.niveauAlertEcheance === 'DANGER' || data.niveauAlertEcheance === 'EXPIRE' ? 'card-danger' :
+                        data.niveauAlertEcheance === 'WARNING' ? 'card-warning' : 'card-success'">
+          <div class="card-body text-center py-3">
+            <i class="fas fa-calendar-alt fa-2x mb-2"
+               [ngClass]="getEcheanceClass()"></i>
+            <h5 class="font-weight-bold" [ngClass]="getEcheanceClass()">
+              {{ getEcheanceLabel() }}
+            </h5>
+            <small class="text-muted">
+              Effet : {{ formatDate(data.effetPolice) }}<br/>
+              Échéance : {{ formatDate(data.echeancePolice) }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /ligne 1 -->
+
+    <!-- ── LIGNE 2 : KPIs totaux ─────────────────────────────────────────── -->
+    <div class="row">
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-info"><i class="fas fa-hand-holding-medical"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Total PEC</span>
+            <span class="info-box-number">
+              {{ service.formatCurrency(data.consommation.montantTotalPriseEnCharge) }}
+            </span>
+            <span class="progress-description">Prise en charge totale</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-warning"><i class="fas fa-receipt"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Total ticket modérateur</span>
+            <span class="info-box-number">
+              {{ service.formatCurrency(data.consommation.montantTotalTicketModerateur) }}
+            </span>
+            <span class="progress-description">Part à votre charge</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-danger"><i class="fas fa-coins"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Total dépenses</span>
+            <span class="info-box-number">
+              {{ service.formatCurrency(data.consommation.montantTotalDepense) }}
+            </span>
+            <span class="progress-description">PEC + ticket modérateur</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-lg-3">
+        <div class="info-box shadow-sm">
+          <span class="info-box-icon bg-primary"><i class="fas fa-users"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">Ayants droit</span>
+            <span class="info-box-number">{{ data.nombreAyantsDroits }}</span>
+            <span class="progress-description">
+              {{ service.formatCurrency(data.consommation.montantAyantsDroits) }} consommés
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /ligne 2 KPIs totaux -->
+
+    <!-- ── LIGNE 2b : Consommation détaillée par type ──────────────────── -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-outline card-primary">
+          <div class="card-header py-2">
+            <h3 class="card-title">
+              <i class="fas fa-chart-pie mr-1"></i>Consommation par type de prestation
+            </h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>Type</th>
+                  <th class="text-center">Nombre</th>
+                  <th class="text-right">Prise en charge (PEC)</th>
+                  <th class="text-right">Ticket modérateur (TM)</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Consultation -->
+                <tr>
+                  <td>
+                    <i class="fas fa-stethoscope mr-1 text-info"></i>
+                    <strong>Consultation</strong>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-info">
+                      {{ data.consommation.nombreConsultations }}
+                    </span>
+                  </td>
+                  <td class="text-right text-success font-weight-bold">
+                    {{ service.formatCurrency(data.consommation.pecConsultation) }}
+                  </td>
+                  <td class="text-right text-warning">
+                    {{ service.formatCurrency(data.consommation.tmConsultation) }}
+                  </td>
+                  <td class="text-right font-weight-bold">
+                    {{ service.formatCurrency((data.consommation.pecConsultation || 0) + (data.consommation.tmConsultation || 0)) }}
+                  </td>
+                </tr>
+                <!-- Examen -->
+                <tr>
+                  <td>
+                    <i class="fas fa-microscope mr-1 text-success"></i>
+                    <strong>Examen</strong>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-success">
+                      {{ data.consommation.nombreExamens }}
+                    </span>
+                  </td>
+                  <td class="text-right text-success font-weight-bold">
+                    {{ service.formatCurrency(data.consommation.pecExamen) }}
+                  </td>
+                  <td class="text-right text-warning">
+                    {{ service.formatCurrency(data.consommation.tmExamen) }}
+                  </td>
+                  <td class="text-right font-weight-bold">
+                    {{ service.formatCurrency((data.consommation.pecExamen || 0) + (data.consommation.tmExamen || 0)) }}
+                  </td>
+                </tr>
+                <!-- Ordonnance -->
+                <tr>
+                  <td>
+                    <i class="fas fa-pills mr-1 text-warning"></i>
+                    <strong>Ordonnance</strong>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-warning">
+                      {{ data.consommation.nombreOrdonnances }}
+                    </span>
+                  </td>
+                  <td class="text-right text-success font-weight-bold">
+                    {{ service.formatCurrency(data.consommation.pecOrdonnance) }}
+                  </td>
+                  <td class="text-right text-warning">
+                    {{ service.formatCurrency(data.consommation.tmOrdonnance) }}
+                  </td>
+                  <td class="text-right font-weight-bold">
+                    {{ service.formatCurrency((data.consommation.pecOrdonnance || 0) + (data.consommation.tmOrdonnance || 0)) }}
+                  </td>
+                </tr>
+                <!-- Total ligne -->
+                <tr class="thead-light font-weight-bold">
+                  <td><i class="fas fa-sigma mr-1"></i>TOTAL</td>
+                  <td class="text-center">
+                    {{ (data.consommation.nombreConsultations || 0)
+                     + (data.consommation.nombreExamens || 0)
+                     + (data.consommation.nombreOrdonnances || 0) }}
+                  </td>
+                  <td class="text-right text-success">
+                    {{ service.formatCurrency(data.consommation.montantTotalPriseEnCharge) }}
+                  </td>
+                  <td class="text-right text-warning">
+                    {{ service.formatCurrency(data.consommation.montantTotalTicketModerateur) }}
+                  </td>
+                  <td class="text-right text-danger">
+                    {{ service.formatCurrency(data.consommation.montantTotalDepense) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div><!-- /ligne 2b -->
+
+    <!-- ── LIGNE 3 : Plafond + Ayants droit ─────────────────────────────── -->
+    <div class="row">
+
+      <!-- Jauge plafond -->
+      <div class="col-md-5">
+        <div class="card card-outline card-primary">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-tachometer-alt mr-1"></i>Plafond de couverture
+            </h3>
+            <div class="card-tools">
+              <button class="btn btn-tool" (click)="refresh()" [disabled]="loading">
+                <i class="fas fa-sync-alt" [ngClass]="{'fa-spin': loading}"></i>
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+
+            <ng-container *ngIf="data.plafond.plafondGlobal > 0; else pasPlafond">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted small">Consommé</span>
+                <span class="font-weight-bold small"
+                      [ngClass]="data.plafond.niveau === 'DANGER' ? 'text-danger' :
+                                 data.plafond.niveau === 'WARNING' ? 'text-warning' : 'text-success'">
+                  {{ data.plafond.pourcentageConsomme | number:'1.1-1' }} %
+                </span>
+              </div>
+              <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar progress-bar-striped"
+                     [ngClass]="getPlafondBarClass()"
+                     [style.width]="getPlafondBarWidth()"
+                     role="progressbar">
+                  {{ data.plafond.pourcentageConsomme | number:'1.0-0' }}%
+                </div>
+              </div>
+
+              <div class="row text-center">
+                <div class="col-4 border-right">
+                  <div class="text-muted small">Plafond</div>
+                  <div class="font-weight-bold">
+                    {{ service.formatCurrency(data.plafond.plafondGlobal) }}
+                  </div>
+                </div>
+                <div class="col-4 border-right">
+                  <div class="text-muted small">Consommé</div>
+                  <div class="font-weight-bold"
+                       [ngClass]="data.plafond.niveau === 'DANGER' ? 'text-danger' : ''">
+                    {{ service.formatCurrency(data.plafond.montantConsomme) }}
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="text-muted small">Restant</div>
+                  <div class="font-weight-bold text-success">
+                    {{ service.formatCurrency(data.plafond.montantRestant) }}
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-template #pasPlafond>
+              <div class="text-center text-muted py-3">
+                <i class="fas fa-info-circle mr-1"></i>
+                Plafond non défini pour cette police.
+              </div>
+            </ng-template>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Ayants droit -->
+      <div class="col-md-7">
+        <div class="card card-outline card-success">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-users mr-1"></i>Ayants droit
+            </h3>
+          </div>
+          <div class="card-body p-0">
+            <div *ngIf="data.ayantsDroits.length === 0" class="text-center text-muted py-3">
+              Aucun ayant droit enregistré.
+            </div>
+            <table *ngIf="data.ayantsDroits.length > 0" class="table table-sm table-hover mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>Nom</th>
+                  <th>Lien</th>
+                  <th>Statut</th>
+                  <th class="text-right">Consommation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let ad of data.ayantsDroits">
+                  <td>
+                    <i class="fas fa-user-circle mr-1 text-muted"></i>
+                    {{ ad.nom }}
+                    <small class="text-muted d-block">{{ formatDate(ad.naissance) }}</small>
+                  </td>
+                  <td>
+                    <span class="badge badge-light border">{{ ad.lienpare }}</span>
+                  </td>
+                  <td>
+                    <span class="badge"
+                          [ngClass]="ad.statut === 'ACTIF' ? 'badge-success' : 'badge-secondary'">
+                      {{ ad.statut }}
+                    </span>
+                  </td>
+                  <td class="text-right font-weight-bold">
+                    {{ service.formatCurrency(ad.montantConsomme) }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /ligne 3 -->
+
+    <!-- ── LIGNE 4 : Historique des visites paginé ──────────────────────── -->
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-outline card-info">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-history mr-1"></i>Historique des visites
+              <span class="badge badge-secondary ml-2">{{ totalVisites }} au total</span>
+              <span *ngIf="filtresActifs" class="badge badge-warning ml-1">
+                <i class="fas fa-filter mr-1"></i>Filtres actifs
+              </span>
+            </h3>
+            <div class="card-tools">
+              <button class="btn btn-tool" (click)="refresh()" [disabled]="loading">
+                <i class="fas fa-sync-alt" [ngClass]="{'fa-spin': loading}"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Panneau de filtres -->
+          <div class="card-body border-bottom py-2 bg-light">
+            <div class="row align-items-end g-2">
+              <div class="col-md-3">
+                <label class="small mb-0"><i class="fas fa-hospital mr-1"></i>Prestataire</label>
+                <input type="text" class="form-control form-control-sm"
+                       placeholder="Code ou nom…"
+                       [(ngModel)]="filtrePrestataire"
+                       (keyup.enter)="appliquerFiltres()"/>
+              </div>
+              <div class="col-md-2">
+                <label class="small mb-0"><i class="fas fa-calendar-alt mr-1"></i>Date début</label>
+                <input type="date" class="form-control form-control-sm"
+                       [(ngModel)]="filtreDateDebut"/>
+              </div>
+              <div class="col-md-2">
+                <label class="small mb-0"><i class="fas fa-calendar-alt mr-1"></i>Date fin</label>
+                <input type="date" class="form-control form-control-sm"
+                       [(ngModel)]="filtreDateFin"/>
+              </div>
+              <div class="col-md-2">
+                <label class="small mb-0"><i class="fas fa-tag mr-1"></i>Type</label>
+                <select class="form-control form-control-sm" [(ngModel)]="filtreType">
+                  <option value="">Tous</option>
+                  <option value="consultation">Consultation</option>
+                  <option value="examen">Examen</option>
+                  <option value="ordonnance">Ordonnance</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="small mb-0"><i class="fas fa-user-friends mr-1"></i>Bénéficiaire (code AD)</label>
+                <input type="text" class="form-control form-control-sm"
+                       placeholder="Code ayant droit…"
+                       [(ngModel)]="filtreAyantDroit"
+                       (keyup.enter)="appliquerFiltres()"/>
+              </div>
+              <div class="col-md-1 d-flex flex-column">
+                <label class="small mb-0">&nbsp;</label>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-primary" (click)="appliquerFiltres()" title="Appliquer les filtres">
+                    <i class="fas fa-search"></i>
+                  </button>
+                  <button class="btn btn-outline-secondary" (click)="reinitialiserFiltres()" title="Réinitialiser">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-body p-0">
+
+            <div *ngIf="data.dernieresVisites.length === 0" class="text-center text-muted py-3">
+              Aucune visite enregistrée.
+            </div>
+
+            <table *ngIf="data.dernieresVisites.length > 0"
+                   class="table table-sm table-hover table-striped mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Bénéficiaire</th>
+                  <th>Prestataire</th>
+                  <th>Type</th>
+                  <th class="text-right">Montant base</th>
+                  <th class="text-center">Taux</th>
+                  <th class="text-right text-success">PEC</th>
+                  <th class="text-right text-warning">TM</th>
+                  <th>État</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let v of data.dernieresVisites">
+                  <td class="text-nowrap">{{ formatDate(v.date) }}</td>
+                  <td>
+                    <span *ngIf="v.ayantDroit" class="badge badge-secondary mr-1"
+                          title="Ayant droit">AD</span>
+                    {{ v.nomBeneficiaire }}
+                  </td>
+                  <td>
+                    <span [title]="v.prestataireId">{{ v.nomPrestataire || v.prestataireId || '—' }}</span>
+                  </td>
+                  <td>
+                    <span class="badge"
+                          [ngClass]="v.typePrestation === 'consultation' ? 'badge-info'
+                                   : v.typePrestation === 'examen'       ? 'badge-success'
+                                   : v.typePrestation === 'ordonnance'   ? 'badge-warning'
+                                   : 'badge-secondary'">
+                      {{ v.typePrestation }}
+                    </span>
+                  </td>
+                  <td class="text-right">{{ service.formatCurrency(v.montant) }}</td>
+                  <td class="text-center">
+                    <span class="badge"
+                          [ngClass]="getTauxBadgeClass(v.taux)">
+                      {{ v.taux != null ? v.taux + '%' : '—' }}
+                    </span>
+                  </td>
+                  <td class="text-right text-success font-weight-bold">
+                    {{ service.formatCurrency(v.montantPriseEnCharge) }}
+                  </td>
+                  <td class="text-right text-warning">
+                    {{ service.formatCurrency(v.montantTicketModerateur) }}
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getEtatBadgeClass(v.etat)">
+                      {{ v.etat }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+          </div><!-- /card-body table -->
+
+          <!-- Footer : pagination + totaux filtrés (sibling de card-body, pas dedans) -->
+          <div class="card-footer clearfix py-2">
+
+            <!-- Totaux filtrés -->
+            <div class="d-flex flex-wrap align-items-center mb-1">
+              <span class="text-muted small mr-3">
+                <i class="fas fa-calculator mr-1"></i>
+                <strong>{{ totalVisites }}</strong> visite(s)
+                <span *ngIf="filtresActifs" class="text-warning ml-1">(filtrées)</span>
+              </span>
+              <span class="text-muted small mr-3">
+                Montant base :
+                <strong>{{ service.formatCurrency(data.filteredTotalMontantBase) }}</strong>
+              </span>
+              <span class="text-muted small">
+                PEC totale :
+                <strong class="text-success">{{ service.formatCurrency(data.filteredTotalMontantPEC) }}</strong>
+              </span>
+            </div>
+
+            <!-- Pagination si plusieurs pages -->
+            <ng-container *ngIf="totalPages > 1">
+              <ul class="pagination pagination-sm m-0 float-right">
+                <li class="page-item" [class.disabled]="pageVisites === 0">
+                  <a class="page-link" (click)="goToPage(pageVisites - 1)" href="javascript:void(0)">
+                    <i class="fas fa-chevron-left"></i>
+                  </a>
+                </li>
+                <li *ngFor="let p of pages" class="page-item" [class.active]="p === pageVisites">
+                  <a class="page-link" (click)="goToPage(p)" href="javascript:void(0)">{{ p + 1 }}</a>
+                </li>
+                <li class="page-item" [class.disabled]="pageVisites >= totalPages - 1">
+                  <a class="page-link" (click)="goToPage(pageVisites + 1)" href="javascript:void(0)">
+                    <i class="fas fa-chevron-right"></i>
+                  </a>
+                </li>
+              </ul>
+              <span class="float-left text-muted small pt-1">
+                Page {{ pageVisites + 1 }} / {{ totalPages }}
+              </span>
+            </ng-container>
+
+          </div><!-- /card-footer -->
+
+        </div><!-- /card -->
+      </div>
+    </div><!-- /ligne 4 -->
+
+  </ng-container><!-- /data -->
+
+</div>

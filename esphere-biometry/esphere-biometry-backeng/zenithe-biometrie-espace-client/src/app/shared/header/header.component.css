@@ -1,0 +1,185 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   header.component.css — AdminLTE 3 / Angular 18
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Transitions dropdowns ───────────────────────────────────────────────── */
+.dropdown-menu {
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s;
+  pointer-events: none;
+}
+.dropdown-menu.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* ── Avatar circulaire ───────────────────────────────────────────────────── */
+.img-circle {
+  border-radius: 50% !important;
+  box-sizing: border-box;
+}
+
+/* ── Hover lignes info dropdown ──────────────────────────────────────────── */
+.hover-row:hover {
+  background: #f8f9fa;
+  border-radius: 4px;
+  transition: background .15s;
+}
+
+/* ── Badge statut nav ────────────────────────────────────────────────────── */
+.nav-link .badge {
+  font-size: .65rem;
+  vertical-align: middle;
+}
+
+/* ── Barre progression police ────────────────────────────────────────────── */
+.progress-bar {
+  transition: width .4s ease;
+}
+
+/* ── Bouton déconnexion hover ────────────────────────────────────────────── */
+.dropdown-item.text-danger:hover {
+  background-color: #fff5f5;
+  color: #c53030 !important;
+}
+
+/* ── Ellipsis noms longs navbar ──────────────────────────────────────────── */
+.nav-link .flex-column span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS D'ALERTE POLICE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Clignotement du badge "Expirée" dans la navbar ───────────────────────
+   Alterne opacité 1 ↔ 0.15 toutes les 0.8s — attire l'œil sans agresser */
+@keyframes blink-expired {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.15; transform: scale(0.92); }
+}
+
+/* ── 2. Pulsation du badge "Expire bientôt" ──────────────────────────────────
+   Légère montée/descente en opacité, plus douce que le clignotement */
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.05); }
+}
+
+/* ── 3. Halo rouge autour de l'avatar si police expirée ─────────────────────
+   Box-shadow animé qui "respire" pour signaler l'urgence */
+@keyframes glow-expired {
+  0%, 100% { box-shadow: 0 0 0   2px rgba(220, 53,  69, 0);   }
+  50%       { box-shadow: 0 0 12px 4px rgba(220, 53,  69, 0.7); }
+}
+
+/* ── 4. Halo orange autour de l'avatar si police avertissement ───────────── */
+@keyframes glow-warning {
+  0%, 100% { box-shadow: 0 0 0   2px rgba(255, 193, 7,  0);   }
+  50%       { box-shadow: 0 0 10px 3px rgba(255, 193, 7,  0.6); }
+}
+
+/* ── 5. Vibration horizontale (appelée une seule fois au chargement) ─────────
+   Simuler une vibration de téléphone pour l'alerte initiale */
+@keyframes shake-alert {
+  0%        { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80%      { transform: translateX( 4px); }
+  100%      { transform: translateX(0); }
+}
+
+/* ── Classes appliquées dynamiquement via [class.xxx] dans le template ─────── */
+
+/* Badge clignote en rouge — police expirée */
+.badge-blink-expired {
+  animation: blink-expired 0.8s ease-in-out infinite;
+}
+
+/* Badge pulse en orange — police expire bientôt */
+.badge-pulse-warning {
+  animation: pulse-warning 1.9s ease-in-out infinite;
+}
+
+/* Avatar avec halo rouge pulsant */
+.avatar-glow-expired {
+  animation: glow-expired 1.2s ease-in-out infinite;
+}
+
+/* Avatar avec halo orange pulsant */
+.avatar-glow-warning {
+  animation: glow-warning 1.8s ease-in-out infinite;
+}
+
+/* Vibration initiale (jouée une fois, non répétée) */
+.shake-once {
+  animation: shake-alert 0.6s ease-in-out 1;
+}
+
+/* ── Bannière d'alerte fixe en bas de la navbar (police expirée) ─────────────
+   Bande rouge persistante sous le header pour rappel visuel constant */
+.alert-banner-expired {
+  position: fixed;
+  top: 57px;           /* hauteur du header AdminLTE */
+  left: 0;
+  right: 0;
+  z-index: 1029;       /* juste sous la navbar AdminLTE (z-index 1030) */
+  background: linear-gradient(90deg, #dc3545 0%, #b02a37 50%, #dc3545 100%);
+  background-size: 200% 100%;
+  animation: banner-slide 3s linear infinite;
+  color: #fff;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 5px 16px;
+  text-align: center;
+  letter-spacing: .4px;
+  box-shadow: 0 2px 8px rgba(220,53,69,.4);
+}
+
+/* ── Bannière avertissement orange ───────────────────────────────────────── */
+.alert-banner-warning {
+  position: fixed;
+  top: 57px;
+  left: 0;
+  right: 0;
+  z-index: 1029;
+  background: linear-gradient(90deg, #ffc107 0%, #e0a800 50%, #ffc107 100%);
+  background-size: 200% 100%;
+  animation: banner-slide 4s linear infinite;
+  color: #212529;
+  font-size: .8rem;
+  font-weight: 600;
+  padding: 5px 16px;
+  text-align: center;
+  letter-spacing: .4px;
+  box-shadow: 0 2px 6px rgba(255,193,7,.4);
+}
+
+/* Défilement du dégradé de la bannière (effet ruban) */
+@keyframes banner-slide {
+  0%   { background-position: 0%   50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* Bouton fermer la bannière */
+.alert-banner-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: .8;
+  font-size: .9rem;
+  padding: 0 4px;
+}
+.alert-banner-close:hover { opacity: 1; }
