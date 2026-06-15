@@ -261,7 +261,9 @@
         <tbody>
           <tr *ngFor="let p of prestations; trackBy: trackById"
               [class.consultation-attente]="
-                p.etatGlobal === 'attente_validation'">
+                p.etatGlobal === 'attente_validation'"
+                  [class.adherent-inactif]="p.statutAdherent === '-1'"
+                   [class.ligne-desactivee]="p.statutAdherent === '-1' && p.etatGlobal === 'attente_validation'">
 
             <td>{{ p.nomPrestataire || p.prestataireId }}</td>
             <td>{{ p.souscripteur || '-' }}</td>

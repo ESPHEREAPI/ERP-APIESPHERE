@@ -1,0 +1,12 @@
+/* dans le fichier .css du composant */
+.adherent-inactif {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.ligne-desactivee {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+  opacity: 0.6;
+  pointer-events: none; /* désactive les clics sur la ligne */
+}

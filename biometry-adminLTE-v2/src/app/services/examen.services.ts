@@ -19,6 +19,7 @@ export interface PrestationExamenResponse {
   nbreLignes:          number;
   nbreLignesEnAttente: number;
   etatGlobal:          string;
+  statutAdherent:      string;
 }
 
 export interface PageExamenResponse {
@@ -62,6 +63,7 @@ export interface LigneExamen {
   tauxLocal?:            number;
   observationsLocal?:    string;
   decisionLocale?:       'valide' | 'rejete' | null;
+  statutAdherent :        string;
 }
 
 export interface ValidationLigneExamenRequest {

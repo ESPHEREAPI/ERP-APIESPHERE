@@ -229,7 +229,8 @@
           <tr *ngFor="let l of lignes; trackBy: trackById"
             [class.ligne-attente]="isEnAttente(l.etat)"
             [class.ligne-valide]="l.decisionLocale === 'valide'"
-            [class.ligne-rejete]="l.decisionLocale === 'rejete'">
+            [class.ligne-rejete]="l.decisionLocale === 'rejete'"
+             [class.ligne-desactivee]="l.statutAdherent === '-1'">
 
             <!-- Prestataire -->
             <td>{{ l.nomPrestataire || l.prestataireId }}</td>

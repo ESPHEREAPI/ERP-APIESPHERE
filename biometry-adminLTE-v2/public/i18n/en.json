@@ -374,6 +374,12 @@
   "confirmation_soumission": "Submission confirmation",
   "attention": "Warning!",
   "consomme": "consumed",
-  "consommation": "Consumption"
+   "encaisse_fcfa":              "Collected",
+  "en_cours_fcfa":              "Pending",
+  "total_projete":              "Projected",
+  "solde_apres_encaissements":  "Balance",
+  "solde_projete":              "Proj. balance",
+  "consommation":               "Consumption",
+  "bons_manuels": "Manual vouchers"
  
 }

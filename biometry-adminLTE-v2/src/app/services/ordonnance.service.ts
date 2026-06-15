@@ -19,6 +19,7 @@ export interface PrestationResponse {
   nbreLignes:          number;
   nbreLignesEnAttente: number;
   etatGlobal:          string;
+  statutAdherent:      string
 }
 
 export interface PagePrestationResponse {
@@ -61,6 +62,7 @@ export interface LigneOrdonnance {
   tauxLocal?:           number;
   observationsLocal?:   string;
   decisionLocale?:      'valide' | 'rejete' | null;
+    statutAdherent :        string;
 }
 
 export interface ValidationLigneRequest {

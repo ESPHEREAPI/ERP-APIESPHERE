@@ -378,7 +378,14 @@
   "confirmation_soumission": "Confirmation de soumission",
   "attention": "Attention !",
   "consomme": "consommé",
-  "consommation": "Consommation"
+  "encaisse_fcfa": "Encaissé",
+  "en_cours_fcfa": "En cours",
+  "total_projete": "Total projeté",
+  "solde_apres_encaissements":  "Solde encaissé",
+  "solde_projete":  "Solde projeté",
+  "consommation":    "Consommation",
+  "bons_manuels": "Bons manuels"
+ 
 }
 
 

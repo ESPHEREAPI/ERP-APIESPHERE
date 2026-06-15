@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/biometry-admin-lte-v2",
+            "outputPath": "dist/biometry",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "baseHref": "/biometry/",

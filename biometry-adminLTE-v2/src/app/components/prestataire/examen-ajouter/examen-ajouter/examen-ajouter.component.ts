@@ -358,7 +358,7 @@ if (!this.police) {
           this.police,
           this.groupeNum,
           typeExamen,
-          this.codeAdherent
+          this.codeVisite
         ).pipe(
           catchError(() => of({ taux: 0 }))
         )
@@ -541,7 +541,7 @@ if (!this.police) {
         this.police,
         this.groupeNum,
         typePrestation,
-        this.codeAdherent)
+        this.codeVisite)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: r => { this.taux = r.taux || 0; },
