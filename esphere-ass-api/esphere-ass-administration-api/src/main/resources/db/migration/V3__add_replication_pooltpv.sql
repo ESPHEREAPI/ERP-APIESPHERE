@@ -1,0 +1,18 @@
+/* 
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Other/SQLTemplate.sql to edit this template
+ */
+/**
+ * Author:  USER01
+ * Created: Mar 13, 2026
+ */
+
+ALTER TABLE POOLTPV_CATEGORIE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_CIVILITE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_DUREE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_ENERGIE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_GARANTIE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_GENRE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_POLICE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_RISQUE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;
+ALTER TABLE POOLTPV_QUITTANCE ADD replication NUMBER(1) DEFAULT 0 NOT NULL;

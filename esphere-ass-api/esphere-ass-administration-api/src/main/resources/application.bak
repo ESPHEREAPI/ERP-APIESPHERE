@@ -1,0 +1,218 @@
+spring.application.name=esphere-ass-microservice-admin
+#spring.cloud.config.uri=http://config-server:9101
+spring.cloud.config.uri=http://localhost:8888
+server.port=8083
+
+# Configuration du service administration
+administration.service.batch-size=1000
+administration.service.cache.ttl=3600
+mes-configs.limitDeProduits=6
+
+# D\u00e9fini l'encodage pour data.sql
+spring.datasource.sql-script-encoding=UTF-8
+
+# Eureka client
+eureka.client.enabled=true
+#eureka.client.serviceUrl.defaultZone=http://77.68.94.193:8762/eureka/
+#eureka.client.serviceUrl.defaultZone=http://127.0.0.1:8762/eureka/
+eureka.client.fetch-registry=true
+eureka.client.register-with-eureka=true
+#
+## Configuration instance
+eureka.instance.hostname=77.68.94.193
+eureka.instance.ip-address=77.68.94.193
+eureka.instance.prefer-ip-address=true
+eureka.instance.instance-id=${spring.application.name}:${server.port}
+#eureka.instance.prefer-ip-address=true
+#eureka.instance.prefer-ip-address=false
+eureka.instance.lease-renewal-interval-in-seconds=10
+
+##localhost
+
+#eureka.instance.hostname=127.0.0.1
+#eureka.instance.ip-address=127.0.0.1
+#eureka.instance.prefer-ip-address=true
+#eureka.instance.instance-id=${spring.application.name}:${server.port}
+##eureka.instance.prefer-ip-address=true
+eureka.instance.prefer-ip-address=false
+eureka.instance.lease-renewal-interval-in-seconds=10
+# Tracing Sleuth 
+spring.cloud.compatibility-verifier.enabled=false
+
+# Configuration de tra\u00e7age
+management.tracing.sampling.probability=1.0
+#management.zipkin.tracing.endpoint=http://77.68.94.193:9411/api/v2/spans
+#management.zipkin.tracing.endpoint=http://127.0.0.1:9411/api/v2/spans
+
+# Exposer endpoints actuator
+management.endpoints.web.exposure.include=*
+
+# JWT
+app.jwtExpirationMs=86400000
+
+# ============================================
+# CONFIGURATION ORACLE 11g
+# ============================================
+
+# Configuration de base Oracle 11g avec SID
+spring.datasource.url=${ORACLE_URL}
+spring.datasource.username=${ORACLE_USER}
+spring.datasource.password=${ORACLE_PASSWORD}
+spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
+
+# ============================================
+# HIKARICP - OPTIMIS\u00c9 R\u00c9SEAU DISTANT
+# ============================================
+
+spring.datasource.hikari.connection-timeout=120000
+spring.datasource.hikari.initialization-fail-timeout=60000
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.idle-timeout=300000
+
+spring.datasource.hikari.keepalive-time=60000
+spring.datasource.hikari.validation-timeout=5000
+
+spring.datasource.hikari.max-lifetime=600000
+spring.datasource.hikari.idle-timeout=120000
+spring.datasource.hikari.connection-test-query=SELECT 1 FROM DUAL
+spring.datasource.hikari.connection-init-sql=ALTER SESSION SET NLS_DATE_FORMAT='DD/MM/YYYY' NLS_TIMESTAMP_FORMAT='DD/MM/YYYY HH24:MI:SS'
+
+spring.jpa.properties.jakarta.persistence.query.timeout=120000
+
+
+# Timeouts Oracle driver
+spring.datasource.hikari.data-source-properties.oracle.net.CONNECT_TIMEOUT=15000
+spring.datasource.hikari.data-source-properties.oracle.net.READ_TIMEOUT=300000
+spring.datasource.hikari.data-source-properties.oracle.jdbc.ReadTimeout=300000
+
+# \u26a0\ufe0f TOUTES LES LIGNES data-source-properties SUPPRIM\u00c9ES
+# Ces propri\u00e9t\u00e9s causent l'erreur "pool is sealed"
+
+# Configuration JPA/Hibernate pour Oracle 11g
+#spring.jpa.database-platform=org.hibernate.dialect.Oracle12cDialect
+spring.jpa.database-platform=org.hibernate.dialect.OracleDialect
+#spring.jpa.database-platform=org.hibernate.dialect.Oracle10gDialect
+#spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.use_sql_comments=true
+#spring.jpa.properties.hibernate.dialect.oracle.prefer_long_raw=false
+
+# D\u00e9sactiver les fonctionnalit\u00e9s non support\u00e9es par Oracle 11g
+spring.jpa.properties.hibernate.temp.use_jdbc_metadata_defaults=false
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+
+# Hibernate 6.x compatible
+spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
+spring.jpa.properties.hibernate.event.merge.entity_copy_observer=allow
+spring.jpa.properties.hibernate.id.new_generator_mappings=true
+# ============================================
+# FIX - D\u00e9sactiver validation NamedQueries 
+# au d\u00e9marrage (Hibernate 6.x + Oracle)
+# ============================================
+spring.jpa.properties.hibernate.query.startup_check=false
+spring.data.jpa.repositories.query-lookup-strategy=create-if-not-found
+
+
+# ============================================
+# FLYWAY - GESTION DES MIGRATIONS ORACLE
+# ============================================
+
+#spring.flyway.enabled=true
+#spring.flyway.url=${ORACLE_URL}
+#spring.flyway.user=${ORACLE_USER}
+#spring.flyway.password=${ORACLE_PASSWORD}
+#spring.flyway.schemas=${ORACLE_USER}
+#spring.flyway.default-schema=${ORACLE_USER}
+#
+#spring.flyway.out-of-order=true
+#spring.flyway.ignore-migration-patterns=*:missing,*:future,*:ignored
+#spring.flyway.clean-on-validation-error=true
+#
+## G\u00e8re une base d\u00e9j\u00e0 existante sans erreur
+#spring.flyway.baseline-on-migrate=true
+#spring.flyway.baseline-version=1
+#
+## Emplacement des scripts de migration
+#spring.flyway.locations=classpath:db/migration
+#spring.flyway.encoding=UTF-8
+#logging.level.org.flywaydb=DEBUG
+#spring.flyway.repair-on-migrate=true
+# ============================================
+# FLYWAY - GESTION DES MIGRATIONS ORACLE
+# ============================================
+spring.flyway.enabled=true
+spring.flyway.url=${ORACLE_URL}
+spring.flyway.user=${ORACLE_USER}
+spring.flyway.password=${ORACLE_PASSWORD}
+spring.flyway.schemas=${ORACLE_USER}
+spring.flyway.default-schema=${ORACLE_USER}
+spring.flyway.baseline-on-migrate=true
+spring.flyway.baseline-version=1
+spring.flyway.repair-on-migrate=true
+spring.flyway.out-of-order=true
+spring.flyway.ignore-migration-patterns=*:missing,*:future,*:ignored,*:pending
+spring.flyway.locations=classpath:db/migration
+spring.flyway.encoding=UTF-8
+
+# NE PAS mettre cleanOnValidationError=true
+# ============================================
+# CONFIGURATION DE LOGGING
+# ============================================
+
+# Niveau de log global
+logging.level.root=INFO
+
+# Logs application
+logging.level.sid.service_admin=DEBUG
+
+# Logs Spring & Security
+logging.level.org.springframework=INFO
+logging.level.org.springframework.security=DEBUG
+logging.level.org.springframework.orm.jpa=DEBUG
+logging.level.org.springframework.transaction=DEBUG
+
+# Logs Tomcat
+logging.level.org.apache.tomcat=INFO
+logging.level.org.apache.catalina=INFO
+
+# Logs Hibernate/SQL
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+logging.level.org.hibernate=DEBUG
+
+# Format des logs
+logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+
+# Log dans un fichier
+logging.file.name=myapp.log
+
+
+## login pooltpv
+app.url.pooltpv.login=http://41.211.108.123:8112/pooltpv/jwt/login
+app.login.pooltpv=${ZENITHE_LOGIN_POOLTPV}
+app.password.pooltpv=${ZENITHE_PASSWORD_POOLTPV}
+##url pooltpv data config 
+app.url.pooltpv.data=http://41.211.108.123:1819/pooltpv/api/conf/
+
+##url pooltpv police,risque,quittance 
+app.url.pooltpv.police=http://41.211.108.123:1819/pooltpv/api/police_risque/
+app.url.pooltpv.risque=http://41.211.108.123:1819/pooltpv/api/risque/
+app.url.pooltpv.encaissement=http://41.211.108.123:1819/pooltpv/api/encaissement/
+#attendant l end point 
+api.external.url.production=https://ppeatt-api.asac.cm/api/v1/productions
+api.external.token=https://ppeatt-api.asac.cm/api/v1/auth/tokens/app-key
+api.compagny.name=117
+api.X-App-Id=uF75y6t9Q7euKIsZG4LxVyVpv9pQTbyJzXDKokCCUaTLQRrjAGcoXYdF13IiMRTK
+# R\u00e9duire les logs Hibernate verbeux
+logging.level.org.hibernate.resource.transaction=WARN
+logging.level.org.springframework.orm.jpa=WARN
+logging.level.org.hibernate.orm.jdbc.mutation=WARN
+logging.level.org.hibernate=WARN
+logging.level.org.springframework.data=WARN
+
+spring.jackson.serialization.write-dates-as-timestamps=false
+spring.jackson.deserialization.fail-on-unknown-properties=false
+

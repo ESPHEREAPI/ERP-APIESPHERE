@@ -1,0 +1,182 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  login-playload.component.html                               ║
+  ║  Page de connexion — Payload API                             ║
+  ║  AdminLTE v3 — Angular 18 — i18n (FR/EN)                    ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<div class="hold-transition login-page" style="min-height:100vh;">
+
+  <div class="login-wrapper">
+
+    <!-- ══ LOGO ══════════════════════════════════════════════════════ -->
+    <div class="login-logo-block animate__animated animate__fadeInDown">
+
+      <div class="logo-img-wrapper">
+        <img
+          src="./favicon-96x96.png"
+          alt="Payload API Logo"
+          class="logo-img elevation-4">
+      </div>
+
+      <div class="logo-text-block">
+        <span class="logo-title">
+          <b>Payload</b>-API
+        </span>
+        <span class="logo-subtitle">
+          {{ currentLang === 'fr' ? 'Accès aux Attestations d\'Assurance' : 'Access to Insurance Certificates' }}
+        </span>
+      </div>
+
+    </div>
+    <!-- ══ FIN LOGO ════════════════════════════════════════════════ -->
+
+
+    <!-- ══ CARTE FORMULAIRE ═══════════════════════════════════════ -->
+    <div class="card login-card animate__animated animate__fadeInUp">
+
+      <div class="card-body login-card-body">
+
+        <!-- Sous-titre -->
+        <p class="login-box-msg">
+          <i class="fas fa-lock mr-1"></i>
+          {{ 'LOGIN.SUBTITLE' | translate }}
+        </p>
+
+        <!-- Alerte session expirée -->
+        <div class="alert alert-warning alert-dismissible fade show"
+             *ngIf="sessionExpired"
+             role="alert">
+          <i class="fas fa-clock mr-1"></i>
+          <strong>{{ currentLang === 'fr' ? 'Session expirée.' : 'Session expired.' }}</strong>
+          {{ currentLang === 'fr' ? 'Veuillez vous reconnecter.' : 'Please sign in again.' }}
+          <button type="button" class="close" (click)="sessionExpired = false">
+            <span>&times;</span>
+          </button>
+        </div>
+
+        <!-- Alerte erreur connexion -->
+        <div class="alert alert-danger alert-dismissible fade show"
+             *ngIf="errorMessage"
+             role="alert">
+          <i class="fas fa-exclamation-triangle mr-1"></i>
+          {{ errorMessage }}
+          <button type="button" class="close" (click)="errorMessage = ''">
+            <span>&times;</span>
+          </button>
+        </div>
+
+        <!-- ══ FORMULAIRE RÉACTIF ══════════════════════════════════ -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
+
+          <!-- Identifiant -->
+          <div class="form-group">
+            <div class="input-group"
+                 [class.input-group--error]="isFieldInvalid('username')">
+              <input
+                type="text"
+                id="username"
+                class="form-control"
+                [placeholder]="'LOGIN.USERNAME' | translate"
+                formControlName="username"
+                [class.is-invalid]="isFieldInvalid('username')"
+                autocomplete="username"
+                autofocus>
+              <div class="input-group-append">
+                <div class="input-group-text">
+                  <i class="fas fa-user"></i>
+                </div>
+              </div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('username')">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                {{ 'COMMON.REQUIRED' | translate }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Mot de passe -->
+          <div class="form-group">
+            <div class="input-group"
+                 [class.input-group--error]="isFieldInvalid('password')">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                class="form-control"
+                [placeholder]="'LOGIN.PASSWORD' | translate"
+                formControlName="password"
+                [class.is-invalid]="isFieldInvalid('password')"
+                autocomplete="current-password">
+              <div class="input-group-append">
+                <div class="input-group-text toggle-password"
+                     (click)="togglePassword()"
+                     [title]="(showPassword ? 'LOGIN.HIDE_PASSWORD' : 'LOGIN.SHOW_PASSWORD') | translate">
+                  <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </div>
+              </div>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('password')">
+                <i class="fas fa-exclamation-circle mr-1"></i>
+                {{ 'COMMON.REQUIRED' | translate }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Bouton Se connecter -->
+          <div class="row mt-4">
+            <div class="col-12">
+              <button
+                type="submit"
+                class="btn btn-primary btn-block btn-login"
+                [disabled]="isLoading">
+                <span *ngIf="isLoading"
+                      class="spinner-border spinner-border-sm mr-2"
+                      role="status"
+                      aria-hidden="true">
+                </span>
+                <i *ngIf="!isLoading" class="fas fa-sign-in-alt mr-2"></i>
+                {{ (isLoading ? 'LOGIN.LOADING' : 'LOGIN.SUBMIT') | translate }}
+              </button>
+            </div>
+          </div>
+
+        </form>
+        <!-- ══ FIN FORMULAIRE ════════════════════════════════════ -->
+
+        <!-- Sélecteur de langue -->
+        <div class="mt-3 text-center lang-switcher">
+          <span class="lang-label text-muted text-sm mr-2">
+            <i class="fas fa-globe mr-1"></i>{{ 'LANG.SELECT' | translate }} :
+          </span>
+          <button type="button"
+                  class="btn btn-sm lang-btn mr-1"
+                  [class.btn-primary]="currentLang === 'fr'"
+                  [class.btn-outline-secondary]="currentLang !== 'fr'"
+                  (click)="languageService.use('fr')">
+            🇫🇷 FR
+          </button>
+          <button type="button"
+                  class="btn btn-sm lang-btn"
+                  [class.btn-primary]="currentLang === 'en'"
+                  [class.btn-outline-secondary]="currentLang !== 'en'"
+                  (click)="languageService.use('en')">
+            🇬🇧 EN
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Pied de carte -->
+      <div class="card-footer text-center text-muted py-2">
+        <small>
+          <i class="fas fa-copyright mr-1"></i>
+          {{ currentYear }} Payload API &mdash; v1.0.0
+        </small>
+      </div>
+
+    </div>
+    <!-- ══ FIN CARTE ══════════════════════════════════════════════ -->
+
+  </div>
+  <!-- ══ FIN WRAPPER ═════════════════════════════════════════════ -->
+
+</div>

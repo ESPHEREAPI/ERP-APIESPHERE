@@ -1,0 +1,79 @@
+# ==============================================================================
+# PROFIL DÉVELOPPEMENT — esphere-ass-gateway-proxy
+# Activer avec : -Dspring.profiles.active=dev
+# ==============================================================================
+# ── Serveur dev (HTTP) ────────────────────────────────────────────────────────
+server:
+  port: 4141
+# ── Eureka dev ────────────────────────────────────────────────────────────────
+eureka:
+  instance:
+    hostname: localhost
+    ip-address: 127.0.0.1
+    prefer-ip-address: true
+    non-secure-port: ${server.port}
+  client:
+    service-url:
+      defaultZone: http://localhost:8762/eureka/
+# ── Routes dev — URI directes (localhost) ─────────────────────────────────────
+spring:
+  cloud:
+    gateway:
+      routes:
+        # Route 0 : Service Biométrie (port 8081)
+        - id: service-biometrie
+          uri: http://127.0.0.1:8081
+          predicates:
+            - Path=/gateway-proxy/api/service-biometrie/**
+          filters:
+            - StripPrefix=3
+            - PreserveHostHeader
+        # Route 1 : Service Administration (port 8083)
+        - id: service-admin
+          uri: http://127.0.0.1:8083
+          predicates:
+            - Path=/gateway-proxy/api/esphere-ass-microservice-admin/**
+          filters:
+            - StripPrefix=3
+            - PreserveHostHeader
+        # Route 2 : Service Biométrie Partenaire (port 8082)
+        - id: service-biometrie-partenaire
+          uri: http://127.0.0.1:8082
+          predicates:
+            - Path=/gateway-proxy/api/service-biometrie-partenaire/**
+          filters:
+            - StripPrefix=3
+            - PreserveHostHeader
+        # Route 3 : Actuator monitoring (port 8000)
+        - id: actuator-monitoring
+          uri: http://127.0.0.1:8000
+          predicates:
+            - Path=/actuator/**
+          filters:
+            - RewritePath=/actuator/(?<segment>.*), /actuator/${segment}
+# ── Actuator verbeux en dev ───────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0
+# ── Logging verbeux en dev ────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping: DEBUG
+    reactor.netty.http.client: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{40}) - %msg%n"

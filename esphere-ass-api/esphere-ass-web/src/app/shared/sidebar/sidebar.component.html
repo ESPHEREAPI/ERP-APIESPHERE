@@ -1,0 +1,100 @@
+<!-- src/app/components/sidebar/sidebar.component.html -->
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="#" class="brand-link">
+      <img src="./1logo.png" alt="zenith-insurance" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <span class="brand-text font-weight-light">PAYLOAD</span>
+    </a>
+
+    <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Sidebar user panel (optional) -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex" *ngIf="user">
+      <div class="image">
+        <img [src]="imagePath" class="img-circle elevation-2" alt="User Image">
+      </div>
+      <div class="info">
+        <a href="#" class="d-block">{{ user.nomcomplet }} </a>
+      </div>
+    </div>
+
+    <!-- Sidebar Menu -->
+   <nav class="mt-2">
+  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    <ng-container *ngFor="let item of menuItems">
+
+      <!-- Visible si : profilType correspond ET canSeeMenu autorise -->
+      <li class="nav-item"
+          *ngIf="(item.profilType === '' || item.profilType === profilType) && canSeeMenu(item.menuKey)">
+
+        <!-- Lien sans enfants -->
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: true}"
+          class="nav-link"
+          *ngIf="item.children.length === 0">
+          <i class="nav-icon {{item.icon}}"></i>
+          <p>{{ item.titleKey | translate }}</p>
+        </a>
+
+        <!-- Lien parent avec enfants -->
+        <a href="#" class="nav-link" *ngIf="item.children.length > 0">
+          <i class="nav-icon {{item.icon}}"></i>
+          <p>
+            {{ item.titleKey | translate }}
+            <i class="right fas fa-angle-left"></i>
+          </p>
+        </a>
+
+        <!-- Sous-menu -->
+        <ul class="nav nav-treeview" *ngIf="item.children.length > 0">
+          <li class="nav-item"
+              *ngFor="let child of item.children"
+              [style.display]="canSeeChild(child.childKey) ? '' : 'none'">
+            <a
+              [routerLink]="child.route"
+              routerLinkActive="active"
+              [routerLinkActiveOptions]="{exact: true}"
+              class="nav-link">
+              <i class="{{child.icon}} nav-icon"></i>
+              <p>{{ child.titleKey | translate }}</p>
+            </a>
+          </li>
+        </ul>
+
+      </li>
+    </ng-container>
+  </ul>
+</nav>
+    <!-- /.sidebar-menu -->
+
+    <!-- ── Alerte stock ────────────────────────────────────────── -->
+    <div class="stock-alerte-banner" *ngIf="alerteStock"
+         [class.alerte-non-init]="alerteStock === 'NON_INITIALISE'"
+         [class.alerte-critique]="alerteStock === 'CRITIQUE'"
+         [class.alerte-rupture]="alerteStock  === 'RUPTURE'"
+         [routerLink]="'/stock/liste'">
+      <div class="stock-alerte-inner">
+        <i class="fas" [class.fa-exclamation-circle]="alerteStock !== 'NON_INITIALISE'"
+                        [class.fa-box-open]="alerteStock === 'NON_INITIALISE'"></i>
+        <span *ngIf="alerteStock === 'NON_INITIALISE'">
+          {{ 'STOCK_ALERT.NOT_INIT' | translate }}<br>
+          <small>{{ 'STOCK_ALERT.NOT_INIT_MSG' | translate }}</small>
+        </span>
+        <span *ngIf="alerteStock === 'CRITIQUE'">
+          {{ 'STOCK_ALERT.CRITICAL' | translate }}<br>
+          <small>{{ 'STOCK_ALERT.CRITICAL_MSG' | translate }}</small>
+        </span>
+        <span *ngIf="alerteStock === 'RUPTURE'">
+          {{ 'STOCK_ALERT.RUPTURE' | translate }}<br>
+          <small>{{ 'STOCK_ALERT.RUPTURE_MSG' | translate }}</small>
+        </span>
+      </div>
+    </div>
+    <!-- /.alerte stock -->
+
+  </div>
+  <!-- /.sidebar -->
+
+  </aside>

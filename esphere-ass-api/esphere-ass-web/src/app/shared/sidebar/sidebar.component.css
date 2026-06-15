@@ -1,0 +1,68 @@
+/* ── Bandeau alerte stock ──────────────────────────────────── */
+.stock-alerte-banner {
+  margin: 10px 8px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  animation: stock-blink 1.4s ease-in-out infinite;
+  text-decoration: none;
+}
+
+.stock-alerte-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.stock-alerte-inner i {
+  font-size: 1.4rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.stock-alerte-inner small {
+  font-weight: 400;
+  opacity: 0.88;
+  font-size: 0.72rem;
+}
+
+/* Couleurs selon niveau — très visibles sur fond sombre de sidebar */
+.alerte-non-init .stock-alerte-inner {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  border: 2px solid #f1c40f;
+  box-shadow: 0 0 10px rgba(243,156,18,.6);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+
+.alerte-critique .stock-alerte-inner {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  border: 2px solid #ff6b6b;
+  box-shadow: 0 0 14px rgba(231,76,60,.8);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+
+.alerte-rupture .stock-alerte-inner {
+  background: linear-gradient(135deg, #c0392b, #922b21);
+  border: 2px solid #ff0000;
+  box-shadow: 0 0 18px rgba(255,0,0,.9);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+
+/* Clignotement : fond flashe entre la couleur vive et blanc/jaune */
+@keyframes stock-blink {
+  0%, 100% { opacity: 1;    transform: scale(1);    filter: brightness(1); }
+  50%       { opacity: 0.25; transform: scale(0.97); filter: brightness(1.6); }
+}
+
+/* Rupture : clignote plus vite */
+.alerte-rupture { animation-duration: 0.75s; }
+.alerte-critique { animation-duration: 1.1s; }
+.alerte-non-init { animation-duration: 1.6s; }

@@ -1,0 +1,71 @@
+# ==============================================================================
+# PROFIL PRODUCTION — esphere-ass-config-serveur
+# Activer avec : -Dspring.profiles.active=prod
+# Variables d'environnement OBLIGATOIRES :
+#   GIT_CONFIG_URI      — URL du dépôt Git de configuration
+#   GIT_CONFIG_BRANCH   — Branche (ex: main, prod)
+#   GIT_USERNAME        — Login GitHub/GitLab (dépôt privé)
+#   GIT_PASSWORD        — Token/mot de passe GitHub/GitLab
+#   KEYSTORE_PATH       — Chemin vers le keystore PKCS12
+#   KEYSTORE_PASSWORD   — Mot de passe du keystore
+#   KEY_ALIAS           — Alias de la clé dans le keystore
+# ==============================================================================
+
+spring:
+  profiles:
+    include: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:${CONFIG_FILES_PATH:C:/zen-it-biometrie/config}
+        git:
+          uri: ${GIT_CONFIG_URI:https://github.com/ESPHEREAPI/ERP-APIESPHERE.git}
+          default-label: ${GIT_CONFIG_BRANCH:main}
+          timeout: 30
+          clone-on-start: true
+          force-pull: true
+          username: ${GIT_USERNAME:ESPHEREAPI}
+          password: ${GIT_PASSWORD:esphere14101987}
+          skip-ssl-validation: false
+
+# ── Serveur HTTPS production ──────────────────────────────────────────────────
+server:
+  port: ${SERVER_PORT:8888}
+#  ssl:
+#    enabled: true
+#    key-store: ${KEYSTORE_PATH:classpath:keystore.p12}
+#    key-store-password: ${KEYSTORE_PASSWORD}
+#    key-store-type: PKCS12
+#    key-alias: ${KEY_ALIAS:esphere-ass-config}
+#    protocol: TLS
+#    enabled-protocols: TLSv1.2,TLSv1.3
+#  http2:
+#    enabled: true
+  error:
+    include-message: never
+    include-exception: false
+    include-stacktrace: never
+
+# ── Actuator — exposer uniquement health et info ─────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+# ── Logging minimal en production ────────────────────────────────────────────
+logging:
+  level:
+    root: WARN
+    org.springframework.cloud.config: INFO
+    org.springframework.boot: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+  file:
+    name: ${LOG_PATH:/var/log/esphere}/esphere-ass-config-server.log
+    max-size: 50MB
+    max-history: 30

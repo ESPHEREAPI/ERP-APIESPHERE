@@ -1,0 +1,547 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  dashboard.component.html — AdminLTE v3 Best Components      ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<!-- En-tête -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 page-title">
+          <i class="fas fa-tachometer-alt mr-2 text-primary"></i>{{ 'DASHBOARD.TITLE' | translate }}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item active">
+            <i class="fas fa-home mr-1"></i>{{ 'COMMON.HOME' | translate }}
+          </li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- ══ CARTE BIENVENUE ════════════════════════════════════ -->
+    <div class="row" *ngIf="session">
+      <div class="col-12 mb-3">
+        <div class="card card-welcome elevation-2">
+          <div class="card-body">
+            <div class="d-flex align-items-center flex-wrap gap-3">
+
+              <!-- Avatar -->
+              <div class="welcome-avatar-lg">
+                {{ session.userDTO.username.charAt(0).toUpperCase() }}
+              </div>
+
+              <!-- Texte -->
+              <div class="flex-grow-1">
+                <h4 class="mb-1 welcome-title">
+                  👋 {{ 'DASHBOARD.WELCOME' | translate }}, <strong class="text-primary">{{ session.userDTO.username }}</strong> !
+                </h4>
+                <p class="mb-0 text-muted" style="font-size:.85rem">
+                  {{ 'DASHBOARD.CONNECTED_AS' | translate }}
+                  <span class="badge badge-primary">{{ session.userDTO.role?.name ?? 'Utilisateur' }}</span>
+                </p>
+              </div>
+
+              <!-- Badges session -->
+              <div class="d-flex flex-wrap" style="gap:8px">
+                <!-- Agence -->
+                <div class="session-chip chip-blue">
+                  <i class="fas fa-building mr-1"></i>
+                  <span>{{ session.agencyName ?? 'Bureau Direct Siege ' }}</span>
+                  <span class="chip-code">{{ session.agencyCode ?? '0000' }}</span>
+                </div>
+                <!-- Compagnie -->
+                <div class="session-chip chip-green">
+                  <i class="fas fa-shield-alt mr-1"></i>
+                  <span>{{ session.companyName ?? 'ZENITHE INSURANT ' }}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SMALL BOXES ════════════════════════════════════════ -->
+    <div class="row">
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="small-box bg-gradient-primary">
+          <div class="inner">
+            <h3>{{ stats.totalProductions }}</h3>
+            <p>{{ 'DASHBOARD.TOTAL_PRODUCTIONS' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fas fa-file-alt"></i></div>
+          <a routerLink="/certificates" class="small-box-footer">
+            {{ 'COMMON.SEE_ALL' | translate }} <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="small-box bg-gradient-success">
+          <div class="inner">
+            <h3>{{ stats.totalCertificates }}</h3>
+            <p>{{ 'DASHBOARD.CERTIFICATES_EDITED' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fas fa-certificate"></i></div>
+          <a routerLink="/certificates" class="small-box-footer">
+            {{ 'COMMON.SEE_ALL' | translate }} <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="small-box bg-gradient-warning">
+          <div class="inner">
+            <h3>{{ stats.pdfDownloaded }}</h3>
+            <p>{{ 'DASHBOARD.PDF_DOWNLOADED' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fas fa-file-pdf"></i></div>
+          <a routerLink="/certificates/downloads" class="small-box-footer">
+            {{ 'COMMON.SEE_ALL' | translate }} <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+        <div class="small-box bg-gradient-info">
+          <div class="inner">
+            <h3>{{ stats.todayProductions }}</h3>
+            <p>{{ 'DASHBOARD.TODAY' | translate }}</p>
+          </div>
+          <div class="icon"><i class="fas fa-calendar-day"></i></div>
+          <a routerLink="/certificates/validation" class="small-box-footer">
+            {{ 'COMMON.NEW' | translate }} <i class="fas fa-arrow-circle-right"></i>
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ TABLEAU + INFO BOXES ═══════════════════════════════ -->
+    <div class="row mt-2">
+
+      <!-- Dernières productions -->
+      <div class="col-lg-8 col-12">
+        <div class="card card-primary card-outline elevation-1">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-history mr-2"></i>{{ 'DASHBOARD.LAST_PRODUCTIONS' | translate }}
+            </h3>
+            <div class="card-tools">
+              <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+              </button>
+              <a routerLink="/certificates" class="btn btn-primary btn-sm ml-2">
+                <i class="fas fa-list mr-1"></i>{{ 'COMMON.SEE_ALL' | translate }}
+              </a>
+            </div>
+          </div>
+          <div class="card-body p-0">
+
+            <!-- Spinner chargement -->
+            <div class="text-center p-4" *ngIf="isLoading">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-2 text-muted">{{ 'COMMON.LOADING' | translate }}</p>
+            </div>
+
+            <div class="table-responsive" *ngIf="!isLoading">
+              <table class="table table-hover table-striped mb-0">
+                <thead class="thead-light">
+                  <tr>
+                    <th>#</th>
+                    <th>{{ 'CERT_LIST.COL_REF' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_INSURED' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_PLATE' | translate }}</th>
+                    <th>{{ 'CERT_LIST.COL_DATE' | translate }}</th>
+                    <th>{{ 'CERT_LIST.COL_STATUS' | translate }}</th>
+                    <th>{{ 'CERT_LIST.COL_ACTIONS' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let prod of recentProductions; let i = index">
+                    <td><small class="text-muted">{{ i + 1 }}</small></td>
+                    <td>
+                      <span class="badge badge-light border">
+                        {{ prod.reference }}
+                      </span>
+                    </td>
+                    <td>{{ getInsuredName(prod) }}</td>
+                    <td><code class="licence-code">{{ getLicencePlate(prod) }}</code></td>
+                    <td>
+                      <small>{{ prod.formatted_created_at }}</small>
+                    </td>
+                    <td>
+                      <span class="badge badge-success px-2">
+                        <i class="fas fa-check-circle mr-1"></i>{{ 'DASHBOARD.EDITED' | translate }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="btn-group btn-group-xs">
+                        <!-- Aperçu & impression -->
+                        <button class="btn btn-outline-info btn-xs"
+                                (click)="openPreview(prod)"
+                                [title]="'COMMON.PREVIEW' | translate">
+                          <i class="fas fa-print"></i>
+                        </button>
+                        <!-- Voir détails -->
+                        <button class="btn btn-outline-primary btn-xs"
+                                (click)="openDetail(prod)"
+                                [title]="'COMMON.DETAILS' | translate">
+                          <i class="fas fa-eye"></i> {{ 'COMMON.DETAILS' | translate }}
+                        </button>
+                        <!-- Télécharger PDF fusionné -->
+                        <button class="btn btn-outline-success btn-xs"
+                                (click)="downloadProductionById(prod)"
+                                [disabled]="downloadingProd"
+                                [title]="'COMMON.DOWNLOAD' | translate">
+                          <span *ngIf="downloadingProd"
+                                class="spinner-border spinner-border-sm"></span>
+                          <i *ngIf="!downloadingProd" class="fas fa-download"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr *ngIf="recentProductions.length === 0 && !isLoading">
+                    <td colspan="7" class="text-center py-5">
+                      <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                      <p class="text-muted mb-2">{{ 'DASHBOARD.NO_PRODUCTION' | translate }}</p>
+                      <a routerLink="/certificates/validation"
+                         class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus mr-1"></i>{{ 'DASHBOARD.CREATE_FIRST' | translate }}
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Info boxes + action rapide -->
+      <div class="col-lg-4 col-12">
+
+        <!-- Info box stock -->
+        <div class="info-box mb-3 elevation-1">
+          <span class="info-box-icon bg-primary elevation-1">
+            <i class="fas fa-layer-group"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'DASHBOARD.STOCK_ATTESTATIONS' | translate }}</span>
+            <span class="info-box-number">
+              {{ stats.stockRemaining }}<small> {{ 'DASHBOARD.STOCK_REMAINING' | translate }}</small>
+            </span>
+            <div class="progress mt-1" style="height:6px">
+              <div class="progress-bar bg-primary"
+                   [style.width]="stats.stockPercent + '%'">
+              </div>
+            </div>
+            <span class="progress-description">
+              {{ stats.stockPercent }}% {{ 'DASHBOARD.STOCK_QUOTA' | translate }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Info box jaune -->
+        <div class="info-box mb-3 elevation-1">
+          <span class="info-box-icon elevation-1"
+                style="background:#f39c12">
+            <i class="fas fa-file-invoice" style="color:#fff"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'DASHBOARD.YELLOW_CERTS' | translate }}</span>
+            <span class="info-box-number">{{ stats.yellowCerts }}</span>
+          </div>
+        </div>
+
+        <!-- Info box verte -->
+        <div class="info-box mb-3 elevation-1">
+          <span class="info-box-icon bg-success elevation-1">
+            <i class="fas fa-file-invoice"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'DASHBOARD.GREEN_CERTS' | translate }}</span>
+            <span class="info-box-number">{{ stats.greenCerts }}</span>
+          </div>
+        </div>
+
+        <!-- Bouton action rapide -->
+        <a routerLink="/certificates/validation"
+           class="btn btn-primary btn-block btn-lg btn-action elevation-2">
+          <i class="fas fa-plus-circle mr-2"></i>
+          {{ 'DASHBOARD.NEW_PRODUCTION' | translate }}
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ MODAL DÉTAIL PRODUCTION ════════════════════════════════════════════ -->
+<ng-container *ngIf="selectedProduction">
+
+  <!-- Backdrop -->
+  <div class="modal-backdrop fade show" (click)="closeDetail()"></div>
+
+  <!-- Dialog -->
+  <div class="modal fade show d-block" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+      <div class="modal-content elevation-4">
+
+        <!-- ── En-tête ── -->
+        <div class="modal-header bg-primary text-white py-2">
+          <div class="d-flex align-items-center w-100">
+            <i class="fas fa-file-alt fa-lg mr-3"></i>
+            <div>
+              <h5 class="modal-title mb-0 font-weight-bold">
+                {{ 'DASHBOARD.DETAIL' | translate }}
+              </h5>
+              <small class="opacity-75">
+                Réf. <strong>{{ prod.reference }}</strong>
+                &nbsp;·&nbsp; {{ prod.formatted_created_at }}
+              </small>
+            </div>
+            <button type="button" class="close text-white ml-auto"
+                    (click)="closeDetail()" [attr.aria-label]="'COMMON.CLOSE' | translate">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Corps ── -->
+        <div class="modal-body p-0">
+
+          <!-- Section 1 — Informations générales -->
+          <div class="px-4 pt-3 pb-2">
+            <p class="text-uppercase text-muted font-weight-bold mb-2" style="font-size:.7rem;letter-spacing:.08em">
+              <i class="fas fa-info-circle mr-1"></i>{{ 'DASHBOARD.GEN_INFOS' | translate }}
+            </p>
+            <div class="row">
+              <div class="col-md-4 col-6 mb-2">
+                <label class="detail-label">{{ 'CERT_LIST.COL_REF' | translate }}</label>
+                <div class="detail-value">
+                  <span class="badge badge-secondary px-2">{{ prod.reference }}</span>
+                </div>
+              </div>
+              <div class="col-md-4 col-6 mb-2">
+                <label class="detail-label">{{ 'CERT_LIST.COL_CHANNEL' | translate }}</label>
+                <div class="detail-value">{{ prod.channel || '—' }}</div>
+              </div>
+              <div class="col-md-4 col-6 mb-2">
+                <label class="detail-label">{{ 'DASHBOARD.QUANTITY' | translate }}</label>
+                <div class="detail-value">
+                  <span class="badge badge-primary">{{ prod.quantity }}</span>
+                </div>
+              </div>
+              <div class="col-md-4 col-6 mb-2">
+                <label class="detail-label">{{ 'DASHBOARD.CREATED_AT' | translate }}</label>
+                <div class="detail-value">{{ prod.formatted_created_at }}</div>
+              </div>
+              <div class="col-md-4 col-6 mb-2">
+                <label class="detail-label">{{ 'DASHBOARD.IN_STOCK' | translate }}</label>
+                <div class="detail-value">
+                  <span class="badge" [ngClass]="prod.sent_to_storage ? 'badge-success' : 'badge-warning'">
+                    <i class="fas mr-1" [ngClass]="prod.sent_to_storage ? 'fa-check' : 'fa-clock'"></i>
+                    {{ prod.sent_to_storage ? ('COMMON.YES' | translate) : ('COMMON.NO' | translate) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr class="my-0">
+
+          <!-- Section 2 — Émetteur & Bureau -->
+          <div class="px-4 py-2">
+            <div class="row">
+              <!-- Utilisateur -->
+              <div class="col-md-4 mb-2">
+                <p class="text-uppercase text-muted font-weight-bold mb-2" style="font-size:.7rem;letter-spacing:.08em">
+                  <i class="fas fa-user mr-1"></i>{{ 'CERT_LIST.DETAIL_USER' | translate }}
+                </p>
+                <div class="detail-card">
+                  <div class="detail-card-row">
+                    <span class="detail-label">Nom</span>
+                    <span class="detail-value">{{ prod.user?.name || '—' }}</span>
+                  </div>
+                  <div class="detail-card-row">
+                    <span class="detail-label">Email</span>
+                    <span class="detail-value text-truncate">{{ prod.user?.email || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Organisation -->
+              <div class="col-md-4 mb-2">
+                <p class="text-uppercase text-muted font-weight-bold mb-2" style="font-size:.7rem;letter-spacing:.08em">
+                  <i class="fas fa-building mr-1"></i>{{ 'DASHBOARD.COMPANY' | translate }}
+                </p>
+                <div class="detail-card">
+                  <div class="detail-card-row">
+                    <span class="detail-label">Nom</span>
+                    <span class="detail-value">{{ prod.organization?.name || '—' }}</span>
+                  </div>
+                  <div class="detail-card-row">
+                    <span class="detail-label">Code</span>
+                    <span class="detail-value"><code>{{ prod.organization?.code || '—' }}</code></span>
+                  </div>
+                </div>
+              </div>
+              <!-- Bureau -->
+              <div class="col-md-4 mb-2">
+                <p class="text-uppercase text-muted font-weight-bold mb-2" style="font-size:.7rem;letter-spacing:.08em">
+                  <i class="fas fa-map-marker-alt mr-1"></i>{{ 'DASHBOARD.OFFICE' | translate }}
+                </p>
+                <div class="detail-card">
+                  <div class="detail-card-row">
+                    <span class="detail-label">Nom</span>
+                    <span class="detail-value">{{ prod.office?.name || '—' }}</span>
+                  </div>
+                  <div class="detail-card-row">
+                    <span class="detail-label">Code</span>
+                    <span class="detail-value"><code>{{ prod.office?.code || '—' }}</code></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <hr class="my-0">
+
+          <!-- Section 3 — Certificats -->
+          <div class="px-4 py-3">
+            <p class="text-uppercase text-muted font-weight-bold mb-2" style="font-size:.7rem;letter-spacing:.08em">
+              <i class="fas fa-certificate mr-1"></i>
+              {{ 'DASHBOARD.ASSOC_CERTS' | translate }}
+              <span class="badge badge-primary ml-1">{{ prod.certificates?.length || 0 }}</span>
+            </p>
+
+            <div *ngIf="!prod.certificates?.length" class="text-center py-3 text-muted">
+              <i class="fas fa-inbox fa-2x mb-2 d-block"></i>{{ 'DASHBOARD.NO_CERT' | translate }}
+            </div>
+
+            <div class="table-responsive" *ngIf="prod.certificates?.length">
+              <table class="table table-sm table-bordered table-hover mb-0" style="font-size:.82rem">
+                <thead class="thead-light">
+                  <tr>
+                    <th>#</th>
+                    <th>{{ 'CERT_LIST.COL_REF' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_TYPE' | translate }} / {{ 'CERT_PDF.COL_VARIANT' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_INSURED' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_PLATE' | translate }}</th>
+                    <th>{{ 'CERT_LIST.COL_POLICE' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_VALIDITY' | translate }}</th>
+                    <th>{{ 'CERT_PDF.COL_STATUS' | translate }}</th>
+                    <th>{{ 'CERT_LIST.COL_ACTIONS' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cert of prod.certificates; let j = index">
+                    <td class="text-muted">{{ j + 1 }}</td>
+                    <td>
+                      <span class="badge badge-light border" style="font-size:.78rem">
+                        {{ cert.reference }}
+                      </span>
+                    </td>
+                    <td>
+                      <div>{{ $any(cert).certificate_type?.name || '—' }}</div>
+                      <small class="text-muted">{{ $any(cert).certificate_variant?.name || '' }}</small>
+                    </td>
+                    <td>
+                      <div>{{ cert.insured_name || '—' }}</div>
+                      <small class="text-muted">{{ cert.insured_phone || '' }}</small>
+                    </td>
+                    <td><code>{{ cert.licence_plate || '—' }}</code></td>
+                    <td><small>{{ cert.police_number || '—' }}</small></td>
+                    <td>
+                      <small class="d-block">
+                        <i class="fas fa-play-circle text-success mr-1"></i>{{ cert.starts_at || '—' }}
+                      </small>
+                      <small class="d-block">
+                        <i class="fas fa-stop-circle text-danger mr-1"></i>{{ cert.ends_at || '—' }}
+                      </small>
+                    </td>
+                    <td>
+                      <span class="badge"
+                            [ngClass]="cert.state === 'PRINTED' ? 'badge-success' : cert.state === 'PENDING' ? 'badge-warning' : 'badge-secondary'">
+                        {{ cert.state || '—' }}
+                      </span>
+                    </td>
+                    <td>
+                      <ng-container *ngIf="cert.download_link; else noCert">
+                        <div class="btn-group btn-group-xs">
+                          <!-- Imprimer -->
+                          <button class="btn btn-outline-info btn-xs"
+                                  (click)="openPreview(selectedProduction)"
+                                  [title]="'COMMON.PREVIEW' | translate">
+                            <i class="fas fa-print"></i>
+                          </button>
+                          <!-- Télécharger PDF -->
+                          <button class="btn btn-outline-success btn-xs"
+                                  (click)="downloadCertByRef(cert)"
+                                  [disabled]="downloadingCertRef === cert.reference"
+                                  [title]="'COMMON.DOWNLOAD' | translate">
+                            <span *ngIf="downloadingCertRef === cert.reference"
+                                  class="spinner-border spinner-border-sm"></span>
+                            <i *ngIf="downloadingCertRef !== cert.reference"
+                               class="fas fa-file-pdf"></i>
+                          </button>
+                        </div>
+                      </ng-container>
+                      <ng-template #noCert>
+                        <span class="text-muted">—</span>
+                      </ng-template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Pied ── -->
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="closeDetail()">
+            <i class="fas fa-times mr-1"></i>{{ 'COMMON.CLOSE' | translate }}
+          </button>
+          <!-- Aperçu & Impression -->
+          <button class="btn btn-info btn-sm"
+                  (click)="openPreview(selectedProduction)">
+            <i class="fas fa-print mr-1"></i>{{ 'COMMON.PREVIEW' | translate }}
+          </button>
+          <!-- Télécharger tout le lot -->
+          <button class="btn btn-success btn-sm"
+                  (click)="downloadProductionById(selectedProduction)"
+                  [disabled]="downloadingProd">
+            <span *ngIf="downloadingProd"
+                  class="spinner-border spinner-border-sm mr-1"></span>
+            <i *ngIf="!downloadingProd" class="fas fa-download mr-1"></i>
+            {{ downloadingProd ? ('COMMON.GENERATING' | translate) : ('DASHBOARD.DOWNLOAD_LOT' | translate) }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</ng-container>
+
+<!-- ══ COMPOSANT PRÉVISUALISATION / IMPRESSION ══════════════════ -->
+<app-certificate-preview
+  [production]="previewProduction"
+  [visible]="showPreview"
+  (closeEvent)="closePreview()">
+</app-certificate-preview>

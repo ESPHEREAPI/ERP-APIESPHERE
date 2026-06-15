@@ -1,0 +1,314 @@
+<!-- acceuil.component.html -->
+<section class="content acc-root">
+  <div class="container-fluid">
+
+    <!-- ═══════════════════════════════════════════
+         HERO BANNER — Bienvenue
+    ════════════════════════════════════════════ -->
+    <div class="acc-hero">
+      <div class="acc-hero-bg"></div>
+      <div class="acc-hero-content">
+        <div class="acc-hero-left">
+          <div class="acc-avatar">
+            <span class="acc-avatar-initials">{{ getInitials() }}</span>
+            <span class="acc-avatar-status"></span>
+          </div>
+          <div class="acc-hero-text">
+            <p class="acc-hero-greeting">Bienvenue,</p>
+            <h2 class="acc-hero-name">{{ currentUser?.nomcomplet }}</h2>
+            <div class="acc-hero-meta">
+              <span class="acc-meta-chip">
+                <i class="fas fa-building mr-1"></i>{{ currentUser?.agencyName || 'Bureau Direct' }}
+              </span>
+              <span class="acc-meta-chip acc-chip-gold">
+                <i class="fas fa-shield-alt mr-1"></i>{{ currentUser?.profilName || 'Gestionnaire' }}
+              </span>
+              <span class="acc-meta-chip acc-chip-teal">
+                <i class="fas fa-circle mr-1" style="font-size:7px;vertical-align:middle"></i>En ligne
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="acc-hero-actions">
+          <button type="button" class="acc-btn acc-btn-ghost" (click)="openPasswordChangeModal()">
+            <i class="fas fa-key"></i>
+            <span>Changer mot de passe</span>
+          </button>
+          <button type="button" class="acc-btn acc-btn-danger" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Déconnexion</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats rapides -->
+      <div class="acc-hero-stats">
+        <div class="acc-stat">
+          <span class="acc-stat-value">{{ getEnabledCount() }}</span>
+          <span class="acc-stat-label">Modules actifs</span>
+        </div>
+        <div class="acc-stat-sep"></div>
+        <div class="acc-stat">
+          <span class="acc-stat-value">{{ modules.length }}</span>
+          <span class="acc-stat-label">Total modules</span>
+        </div>
+        <div class="acc-stat-sep"></div>
+        <div class="acc-stat">
+          <span class="acc-stat-value">{{ getDisabledCount() }}</span>
+          <span class="acc-stat-label">Non autorisés</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         SECTION TITRE
+    ════════════════════════════════════════════ -->
+    <div class="acc-section-header">
+      <div class="acc-section-line"></div>
+      <h4 class="acc-section-title">
+        <i class="fas fa-th-large mr-2"></i>Modules disponibles
+      </h4>
+      <div class="acc-section-line"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         GRILLE DES MODULES
+    ════════════════════════════════════════════ -->
+    <div class="row acc-modules-grid">
+      <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4"
+           *ngFor="let module of modules; let i = index">
+        <div class="acc-module-card"
+             [class.acc-card-enabled]="module.enabled"
+             [class.acc-card-disabled]="!module.enabled"
+             [style.animation-delay]="(i * 0.06) + 's'"
+             (click)="navigateToModule(module)">
+
+          <!-- Coin décoratif -->
+          <div class="acc-card-corner" *ngIf="module.enabled"></div>
+
+          <!-- Icône -->
+          <div class="acc-card-icon-wrap" [class.acc-icon-disabled]="!module.enabled">
+            <i [class]="module.icon"></i>
+          </div>
+
+          <!-- Titre -->
+          <h6 class="acc-card-title">{{ module.title }}</h6>
+
+          <!-- Badge statut -->
+          <div class="acc-card-badge" [class.acc-badge-ok]="module.enabled" [class.acc-badge-no]="!module.enabled">
+            <i [class]="module.enabled ? 'fas fa-check mr-1' : 'fas fa-lock mr-1'"></i>
+            {{ module.enabled ? 'Autorisé' : 'Accès refusé' }}
+          </div>
+
+          <!-- Hover overlay -->
+          <div class="acc-card-hover" *ngIf="module.enabled">
+            <i class="fas fa-arrow-right"></i>
+            <span>Accéder</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL — Changer le mot de passe
+════════════════════════════════════════════════════════════ -->
+<div class="acc-modal-overlay"
+     [class.acc-modal-visible]="showPasswordChangeModal"
+     (click)="closePasswordChangeModal()">
+</div>
+
+<div class="acc-modal"
+     [class.acc-modal-open]="showPasswordChangeModal"
+     role="dialog"
+     aria-labelledby="pwdModalTitle">
+
+  <div class="acc-modal-inner" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="acc-modal-header">
+      <div class="acc-modal-title-wrap">
+        <div class="acc-modal-icon"><i class="fas fa-key"></i></div>
+        <div>
+          <h5 class="acc-modal-title" id="pwdModalTitle">Changer le mot de passe</h5>
+          <p class="acc-modal-subtitle">Sécurisez votre compte avec un nouveau mot de passe fort</p>
+        </div>
+      </div>
+      <button class="acc-modal-close" (click)="closePasswordChangeModal()" aria-label="Fermer">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <form (ngSubmit)="updatePassword()" #passwordFormRef="ngForm">
+      <div class="acc-modal-body">
+
+        <div class="row">
+
+          <!-- Ancien mot de passe -->
+          <div class="col-md-6">
+            <div class="acc-field">
+              <label class="acc-label">
+                Ancien mot de passe <span class="acc-required">*</span>
+              </label>
+              <div class="acc-input-group">
+                <span class="acc-input-icon"><i class="fas fa-lock"></i></span>
+                <input type="password"
+                       class="acc-input"
+                       name="oldPassword"
+                       [(ngModel)]="passwordForm.oldPassword"
+                       required
+                       #oldPasswordRef="ngModel"
+                       placeholder="Mot de passe actuel" />
+              </div>
+              <div class="acc-field-error" *ngIf="oldPasswordRef.invalid && oldPasswordRef.touched">
+                <i class="fas fa-exclamation-circle mr-1"></i>Champ obligatoire
+              </div>
+            </div>
+          </div>
+
+          <!-- Clé de sécurité -->
+          <div class="col-md-6">
+            <div class="acc-field">
+              <label class="acc-label">
+                Clé de sécurité <span class="acc-required">*</span>
+              </label>
+              <div class="acc-input-group">
+                <span class="acc-input-icon"><i class="fas fa-shield-alt"></i></span>
+                <input type="password"
+                       class="acc-input"
+                       name="securityKey"
+                       [(ngModel)]="passwordForm.securityKey"
+                       required
+                       maxlength="6"
+                       #securityKeyRef="ngModel"
+                       placeholder="6 caractères" />
+              </div>
+              <div class="acc-field-error" *ngIf="securityKeyRef.invalid && securityKeyRef.touched">
+                <i class="fas fa-exclamation-circle mr-1"></i>Clé de sécurité requise
+              </div>
+            </div>
+          </div>
+
+          <!-- Nouveau mot de passe -->
+          <div class="col-md-6">
+            <div class="acc-field">
+              <label class="acc-label">
+                Nouveau mot de passe <span class="acc-required">*</span>
+              </label>
+              <div class="acc-input-group">
+                <span class="acc-input-icon"><i class="fas fa-key"></i></span>
+                <input [type]="showNewPwd ? 'text' : 'password'"
+                       class="acc-input acc-input-padded"
+                       name="newPassword"
+                       [(ngModel)]="passwordForm.newPassword"
+                       required
+                       minlength="6"
+                       #newPasswordRef="ngModel"
+                       placeholder="Nouveau mot de passe" />
+                <button type="button" class="acc-input-eye" (click)="showNewPwd = !showNewPwd">
+                  <i [class]="showNewPwd ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              <div class="acc-field-error" *ngIf="newPasswordRef.invalid && newPasswordRef.touched">
+                <i class="fas fa-exclamation-circle mr-1"></i>Minimum 6 caractères
+              </div>
+              <!-- Force du mot de passe -->
+              <div class="acc-strength-wrap" *ngIf="passwordForm.newPassword">
+                <div class="acc-strength-bar">
+                  <div class="acc-strength-fill"
+                       [style.width]="getPasswordStrength() + '%'"
+                       [class.acc-str-weak]="getPasswordStrength() < 40"
+                       [class.acc-str-medium]="getPasswordStrength() >= 40 && getPasswordStrength() < 70"
+                       [class.acc-str-strong]="getPasswordStrength() >= 70">
+                  </div>
+                </div>
+                <span class="acc-strength-label"
+                      [class.acc-str-weak]="getPasswordStrength() < 40"
+                      [class.acc-str-medium]="getPasswordStrength() >= 40 && getPasswordStrength() < 70"
+                      [class.acc-str-strong]="getPasswordStrength() >= 70">
+                  {{ getPasswordStrengthText() }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirmer mot de passe -->
+          <div class="col-md-6">
+            <div class="acc-field">
+              <label class="acc-label">
+                Confirmer mot de passe <span class="acc-required">*</span>
+              </label>
+              <div class="acc-input-group">
+                <span class="acc-input-icon"><i class="fas fa-check-circle"></i></span>
+                <input [type]="showConfirmPwd ? 'text' : 'password'"
+                       class="acc-input acc-input-padded"
+                       name="confirmPassword"
+                       [(ngModel)]="passwordForm.confirmPassword"
+                       required
+                       #confirmPasswordRef="ngModel"
+                       placeholder="Confirmer le mot de passe" />
+                <button type="button" class="acc-input-eye" (click)="showConfirmPwd = !showConfirmPwd">
+                  <i [class]="showConfirmPwd ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              <div class="acc-field-error"
+                   *ngIf="passwordForm.newPassword && passwordForm.confirmPassword &&
+                          passwordForm.newPassword !== passwordForm.confirmPassword">
+                <i class="fas fa-exclamation-circle mr-1"></i>Les mots de passe ne correspondent pas
+              </div>
+              <div class="acc-field-success"
+                   *ngIf="passwordForm.confirmPassword &&
+                          passwordForm.newPassword === passwordForm.confirmPassword">
+                <i class="fas fa-check-circle mr-1"></i>Les mots de passe correspondent
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Règles de sécurité -->
+        <div class="acc-security-rules">
+          <p class="acc-rules-title"><i class="fas fa-info-circle mr-1"></i>Règles de sécurité</p>
+          <div class="acc-rules-grid">
+            <span class="acc-rule" [class.acc-rule-ok]="passwordForm.newPassword.length   >= 6">
+              <i [class]="passwordForm.newPassword.length  >= 6 ? 'fas fa-check-circle' : 'far fa-circle'"></i>
+              Minimum 6 caractères
+            </span>
+            <span class="acc-rule" [class.acc-rule-ok]="hasUpperCase(passwordForm.newPassword)">
+              <i [class]="hasUpperCase(passwordForm.newPassword) ? 'fas fa-check-circle' : 'far fa-circle'"></i>
+              Une majuscule
+            </span>
+            <span class="acc-rule" [class.acc-rule-ok]="hasNumber(passwordForm.newPassword)">
+              <i [class]="hasNumber(passwordForm.newPassword) ? 'fas fa-check-circle' : 'far fa-circle'"></i>
+              Un chiffre
+            </span>
+            <span class="acc-rule" [class.acc-rule-ok]="hasSpecialChar(passwordForm.newPassword)">
+              <i [class]="hasSpecialChar(passwordForm.newPassword) ? 'fas fa-check-circle' : 'far fa-circle'"></i>
+              Un caractère spécial
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="acc-modal-footer">
+        <button type="button" class="acc-btn acc-btn-ghost" (click)="closePasswordChangeModal()">
+          <i class="fas fa-times mr-1"></i>Annuler
+        </button>
+        <button type="submit"
+                class="acc-btn acc-btn-primary"
+                [disabled]="!passwordFormRef.valid || passwordForm.newPassword !== passwordForm.confirmPassword">
+          <i class="fas fa-save mr-1"></i>Enregistrer
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

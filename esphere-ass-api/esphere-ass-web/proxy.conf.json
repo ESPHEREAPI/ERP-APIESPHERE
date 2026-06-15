@@ -1,0 +1,9 @@
+{
+  "/gateway-proxy/api/esphere-ass-microservice-admin": {
+    "target": "http://localhost:4141",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+ 
+}

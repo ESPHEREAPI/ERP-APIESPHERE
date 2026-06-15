@@ -1,0 +1,376 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  pdf-downloads.component.html                                ║
+  ║  Téléchargements PDF — AdminLTE v3                           ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<!-- En-tête -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 page-title">
+          <i class="fas fa-file-pdf mr-2 text-danger"></i>
+          {{ 'CERT_PDF.TITLE' | translate }}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboard">{{ 'COMMON.HOME' | translate }}</a>
+          </li>
+          <li class="breadcrumb-item active">PDFs</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- ══ STATS RAPIDES ═════════════════════════════════════ -->
+    <div class="row mb-3">
+
+      <!-- Total certificats -->
+      <div class="col-lg-3 col-md-6 col-6">
+        <div class="info-box elevation-1">
+          <span class="info-box-icon bg-danger elevation-1">
+            <i class="fas fa-file-pdf"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'CERT_PDF.TOTAL_PDFS' | translate }}</span>
+            <span class="info-box-number">{{ totalCertificates }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDFs disponibles -->
+      <div class="col-lg-3 col-md-6 col-6">
+        <div class="info-box elevation-1">
+          <span class="info-box-icon bg-success elevation-1">
+            <i class="fas fa-check-circle"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'CERT_PDF.DISPONIBLES' | translate }}</span>
+            <span class="info-box-number">{{ totalCertificates }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Productions -->
+      <div class="col-lg-3 col-md-6 col-6">
+        <div class="info-box elevation-1">
+          <span class="info-box-icon bg-primary elevation-1">
+            <i class="fas fa-folder-open"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'CERT_PDF.PRODUCTIONS' | translate }}</span>
+            <span class="info-box-number">{{ productions.length }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- En cours de téléchargement -->
+      <div class="col-lg-3 col-md-6 col-6">
+        <div class="info-box elevation-1">
+          <span class="info-box-icon bg-warning elevation-1">
+            <i class="fas fa-download"></i>
+          </span>
+          <div class="info-box-content">
+            <span class="info-box-text">{{ 'CERT_PDF.IN_PROGRESS' | translate }}</span>
+            <span class="info-box-number">{{ downloadingCount }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══ CARTE PRINCIPALE ═══════════════════════════════════ -->
+    <div class="card card-danger card-outline elevation-2">
+
+      <!-- En-tête carte -->
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-list mr-2"></i>
+          {{ 'CERT_PDF.AVAILABLE' | translate }}
+          <span class="badge badge-danger ml-2">{{ totalCertificates }}</span>
+        </h3>
+        <div class="card-tools d-flex align-items-center" style="gap:8px">
+
+          <!-- Recherche -->
+          <div class="input-group input-group-sm search-group">
+            <input type="text"
+                   class="form-control"
+                   [placeholder]="'CERT_PDF.SEARCH' | translate"
+                   [(ngModel)]="searchTerm"
+                   (input)="filterCertificates()">
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+
+          <!-- Télécharger tout -->
+          <button class="btn btn-danger btn-sm"
+                  (click)="downloadAll()"
+                  [disabled]="downloadingAll">
+            <span *ngIf="downloadingAll"
+                  class="spinner-border spinner-border-sm mr-1">
+            </span>
+            <i *ngIf="!downloadingAll" class="fas fa-download mr-1"></i>
+            {{ 'COMMON.DOWNLOAD_ALL' | translate }}
+          </button>
+
+          <!-- Rafraîchir -->
+          <button class="btn btn-outline-secondary btn-sm"
+                  (click)="loadData()"
+                  [title]="'COMMON.REFRESH' | translate">
+            <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Corps -->
+      <div class="card-body p-0">
+
+        <!-- Spinner -->
+        <div class="text-center p-5" *ngIf="isLoading">
+          <div class="spinner-border text-danger"
+               style="width:3rem;height:3rem">
+          </div>
+          <p class="mt-3 text-muted">{{ 'CERT_PDF.LOADING' | translate }}</p>
+        </div>
+
+        <!-- Accordéon par production -->
+        <div class="pdf-accordion" *ngIf="!isLoading">
+
+          <!-- ── Une production = un bloc accordéon ──────────── -->
+          <div class="production-block"
+               *ngFor="let prod of filteredProductions; let pi = index">
+
+            <!-- En-tête production -->
+            <div class="production-header"
+                 (click)="toggleProduction(pi)"
+                 [class.active]="openProductions[pi]">
+
+              <div class="d-flex align-items-center" style="gap:10px">
+
+                <!-- Icône toggle -->
+                <i class="fas toggle-icon"
+                   [class.fa-chevron-down]="openProductions[pi]"
+                   [class.fa-chevron-right]="!openProductions[pi]">
+                </i>
+
+                <!-- Référence production -->
+                <span class="prod-ref-badge">
+                  {{ prod.data?.reference }}
+                </span>
+
+                <!-- Agence -->
+                <small class="text-muted d-none d-md-inline">
+                  <i class="fas fa-building mr-1"></i>
+                  {{ prod.data?.office?.name }}
+                </small>
+
+                <!-- Date -->
+                <small class="text-muted d-none d-lg-inline">
+                  <i class="fas fa-calendar mr-1"></i>
+                  {{ prod.data?.formattedCreatedAt }}
+                </small>
+
+              </div>
+
+              <div class="d-flex align-items-center" style="gap:8px">
+
+                <!-- Nombre de certificats -->
+                <span class="badge badge-danger">
+                  {{ prod.data?.certificates?.length }} cert.
+                </span>
+
+                <!-- Télécharger toute la production -->
+                <button class="btn btn-xs btn-outline-danger"
+                        (click)="downloadProduction(prod, $event)"
+                        [title]="'COMMON.DOWNLOAD_ALL' | translate">
+                  <i class="fas fa-download mr-1"></i>{{ 'COMMON.DOWNLOAD_ALL' | translate }}
+                </button>
+
+              </div>
+            </div>
+
+            <!-- Contenu accordéon : liste des certificats -->
+            <div class="production-body"
+                 [class.open]="openProductions[pi]">
+              <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0 cert-table">
+                  <thead>
+                    <tr>
+                      <th style="width:30px">#</th>
+                      <th>{{ 'CERT_PDF.COL_REF' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_INSURED' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_PLATE' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_TYPE' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_VARIANT' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_VALIDITY' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_STATUS' | translate }}</th>
+                      <th>{{ 'CERT_PDF.COL_DOWNLOAD' | translate }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let cert of prod.data?.certificates;
+                                let ci = index"
+                        class="cert-row">
+
+                      <td>
+                        <small class="text-muted">{{ ci + 1 }}</small>
+                      </td>
+
+                      <td>
+                        <span class="cert-ref">
+                          {{ cert.reference }}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div class="insured-cell">
+                          <i class="fas fa-user-circle text-muted mr-1"></i>
+                          {{ cert.insured_name }}
+                        </div>
+                        <small class="text-muted d-block">
+                          {{ cert.insured_phone }}
+                        </small>
+                      </td>
+
+                      <td>
+                        <code class="plate-code">
+                          {{ cert.licence_plate }}
+                        </code>
+                      </td>
+
+                      <td>
+                        <span class="badge badge-secondary">
+                          {{ cert.certificate_type?.code }}
+                        </span>
+                      </td>
+
+                      <td>
+                        <!-- Badge couleur selon la variante -->
+                        <span class="badge variant-badge"
+                              [class.badge-warning]="cert.certificate_variant?.code === 'JAUNE'"
+                              [class.badge-success]="cert.certificate_variant?.code === 'VERTE'">
+                          {{ cert.certificate_variant?.name }}
+                        </span>
+                      </td>
+
+                      <td>
+                        <small>
+                          <i class="fas fa-calendar-alt text-muted mr-1"></i>
+                          {{ cert.starts_at }}
+                          <br>
+                          <i class="fas fa-arrow-right text-muted mr-1"></i>
+                          {{ cert.ends_at }}
+                        </small>
+                      </td>
+
+                      <td>
+                        <span class="badge"
+                              [class.badge-success]="cert.state === 'Éditée'"
+                              [class.badge-warning]="cert.state !== 'Éditée'">
+                          <i class="fas fa-check-circle mr-1"
+                             *ngIf="cert.state === 'Éditée'"></i>
+                          {{ cert.state }}
+                        </span>
+                        <!-- Indicateur imprimé -->
+                        <small class="text-muted d-block"
+                               *ngIf="cert.printed_at">
+                          <i class="fas fa-print mr-1"></i>
+                          {{ cert.printed_at }}
+                        </small>
+                      </td>
+  <td>{{ cert.id }}</td>
+                      <td>
+                        <div class="download-actions">
+
+                          <!-- Télécharger via lien direct -->
+                          <a [href]="cert.download_link"
+                             target="_blank"
+                             class="btn btn-xs btn-danger"
+                             [title]="'COMMON.DOWNLOAD' | translate"
+                             *ngIf="cert.download_link">
+                            <i class="fas fa-file-pdf mr-1"></i>PDF
+                          </a>
+
+                          <!-- Télécharger via notre API backend -->
+                          <button class="btn btn-xs btn-outline-primary ml-1"
+                                  (click)="downloadFromApi(cert, pi, ci)"
+                                  [disabled]="isDownloading(pi, ci)"
+                                  [title]="'COMMON.DOWNLOAD' | translate">
+
+                            <span *ngIf="isDownloading(pi, ci)"
+                                  class="spinner-border spinner-border-sm">
+                            </span>
+                            <i *ngIf="!isDownloading(pi, ci)"
+                               class="fas fa-download"></i>
+                          </button>
+
+                        </div>
+                      </td>
+
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+          <!-- ── FIN BOUCLE PRODUCTIONS ──────────────────── -->
+
+          <!-- Aucun résultat -->
+          <div class="text-center py-5"
+               *ngIf="filteredProductions.length === 0">
+            <i class="fas fa-search fa-3x text-muted mb-3 d-block"></i>
+            <p class="text-muted">{{ 'CERT_PDF.NO_RESULT' | translate }}</p>
+            <a routerLink="/certificates/validation"
+               class="btn btn-primary btn-sm">
+              <i class="fas fa-plus mr-1"></i>
+              {{ 'CERT_LIST.CREATE' | translate }}
+            </a>
+          </div>
+
+        </div>
+        <!-- ── FIN ACCORDÉON ─────────────────────────────── -->
+
+      </div>
+
+      <!-- Pied de carte -->
+      <div class="card-footer text-muted"
+           *ngIf="!isLoading && totalCertificates > 0">
+        <small>
+          <i class="fas fa-info-circle mr-1"></i>
+          {{ 'CERT_PDF.FOOTER' | translate:{ prods: filteredProductions.length, certs: totalCertificates } }}
+        </small>
+      </div>
+
+    </div>
+
+    <!-- ══ TOAST NOTIFICATION ═════════════════════════════════ -->
+    <div class="toast-container">
+      <div class="toast-notification"
+           *ngFor="let toast of toasts"
+           [class.toast-success]="toast.type === 'success'"
+           [class.toast-error]="toast.type === 'error'"
+           [class.toast-info]="toast.type === 'info'">
+        <i class="fas mr-2"
+           [class.fa-check-circle]="toast.type === 'success'"
+           [class.fa-exclamation-circle]="toast.type === 'error'"
+           [class.fa-info-circle]="toast.type === 'info'">
+        </i>
+        {{ toast.message }}
+      </div>
+    </div>
+
+  </div>
+</section>

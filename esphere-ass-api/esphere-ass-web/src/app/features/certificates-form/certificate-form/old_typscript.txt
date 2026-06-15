@@ -1,0 +1,306 @@
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  certificate-form.component.ts                               ║
+// ║  Vérification police automatique + dialog + pré-remplissage  ║
+// ╚══════════════════════════════════════════════════════════════╝
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup,
+         ReactiveFormsModule,
+         Validators }                   from '@angular/forms';
+import { CommonModule }                 from '@angular/common';
+import { RouterModule }                 from '@angular/router';
+import { Subject }                      from 'rxjs';
+import { debounceTime, distinctUntilChanged,
+         switchMap, takeUntil }         from 'rxjs/operators';
+import { CertificateService }           from '../../../core/services/certificate.service';
+import { AuthService }                  from '../../../core/auth/auth.service';
+import { InsuranceCertificateRequest } from '../../../core/model/InsuranceCertificateRequest';
+import { ProductionRequest } from '../../../core/model/ProductionRequest';
+
+// Statuts possibles pour la vérification de la police
+type PoliceStatus = 'idle' | 'checking' | 'found' | 'not_found' | 'error';
+
+@Component({
+  selector:    'app-certificate-form',
+  standalone:  true,
+  imports:     [CommonModule, RouterModule, ReactiveFormsModule],
+  templateUrl: './certificate-form.component.html',
+  styleUrl:    './certificate-form.component.css'
+})
+export class CertificateFormComponent implements OnInit, OnDestroy {
+
+  productionForm!:  FormGroup;
+  isSubmitting     = false;
+  errorResponse:   any = null;
+  successResponse: any = null;
+  fieldErrors:     Record<string, string[]> = {};
+
+  // ── État vérification police ──────────────────────────────────
+  policeStatus:     PoliceStatus = 'idle';
+  policeChecked     = '';
+  showPoliceDialog  = false;
+  policeFoundData:  any = null;
+
+  // ── Subject pour le debounce de la saisie police ─────────────
+  private policeInput$ = new Subject<string>();
+  private destroy$     = new Subject<void>();
+
+  constructor(
+    private fb:                 FormBuilder,
+    private certificateService: CertificateService,
+    private authService:        AuthService
+  ) {}
+
+  ngOnInit(): void {
+    this.initForm();
+    this.setupPoliceCheck();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // FORMULAIRE
+  // ════════════════════════════════════════════════════════════
+  initForm(): void {
+    this.productionForm = this.fb.group({
+      certificate_variant_code: ['', Validators.required],
+      rc:                       ['', Validators.required],
+      police_number:            ['', Validators.required],
+      starts_at:                ['', Validators.required],
+      ends_at:                  ['', Validators.required],
+      customer_name:            ['', Validators.required],
+      customer_phone:           [''],
+      customer_email:           [''],
+      customer_postal_code:     [''],
+      customer_type:            ['TSPM'],
+      insured_name:             [''],
+      insured_phone:            [''],
+      insured_email:            [''],
+      insured_postal_code:      [''],
+      licence_plate:            ['', Validators.required],
+      vehicle_chassis:          ['', Validators.required],
+      vehicle_brand:            [''],
+      vehicle_model:            [''],
+      vehicle_category:         ['', Validators.required],
+      vehicle_genre:            ['GV04'],
+      vehicle_type:             ['TV10'],
+      vehicule_usage:           ['UV01'],
+      vehicle_energy:           ['SEES'],
+      nb_of_seats:              [5],
+      fiscal_power:             [5],
+      circulation_zone:         ['A'],
+      vehicle_has_trailer:      [false],
+      trailer_licence_plate:    [''],
+      driver_name:              [''],
+      driver_birthdate:         [''],
+      driver_licence_issued_at: [''],
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // VÉRIFICATION AUTOMATIQUE POLICE — debounce 600ms
+  // ════════════════════════════════════════════════════════════
+  private setupPoliceCheck(): void {
+    this.policeInput$.pipe(
+      debounceTime(600),           // Attend 600ms après la dernière frappe
+      distinctUntilChanged(),      // Ignore si même valeur
+      switchMap(policeNumber => {
+
+        // Ignore les saisies trop courtes
+        if (!policeNumber || policeNumber.trim().length < 5) {
+          this.policeStatus    = 'idle';
+          this.showPoliceDialog = false;
+          return [];
+        }
+
+        // Active le spinner "Vérification..."
+        this.policeStatus  = 'checking';
+        this.policeChecked = policeNumber.trim();
+
+        // Appel GET /api/v1/police/check?number=...
+        return this.certificateService.checkPolice(policeNumber.trim());
+      }),
+      takeUntil(this.destroy$)    // Nettoie à la destruction du composant
+    ).subscribe({
+
+      next: (response: InsuranceCertificateRequest) => {
+        if (response && response.productions?.length > 0) {
+          // ✅ Police trouvée → pré-remplit le formulaire
+          const production = response.productions[0]; // ✅ extraire la première production
+
+          this.policeStatus    = 'found';
+          this.policeFoundData = production;
+          this.prefillForm(production);
+          this.showPoliceDialog = false;
+        } else {
+          // ❌ Police introuvable → affiche le dialog
+          this.policeStatus    = 'not_found';
+          this.policeFoundData = null;
+          this.showPoliceDialog = true;
+        }
+      },
+
+      error: () => {
+        this.policeStatus    = 'error';
+        this.showPoliceDialog = false;
+      }
+    });
+  }
+
+  /**
+   * Déclenché à chaque frappe dans le champ police_number
+   */
+  onPoliceNumberInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    if (!value || value.trim().length < 5) {
+      this.policeStatus    = 'idle';
+      this.showPoliceDialog = false;
+      this.policeFoundData  = null;
+    }
+    this.policeInput$.next(value);
+  }
+
+  /**
+   * Pré-remplit le formulaire avec les données de la police trouvée
+   */
+  private prefillForm(data: ProductionRequest): void {
+    this.productionForm.patchValue({
+      certificate_variant_code: data.certificate_variant_code || '',
+    rc:                       data.rc                       || '',
+    police_number:            data.police_number            || '',
+    starts_at:                data.starts_at                || '',
+    ends_at:                  data.ends_at                  || '',
+    // Customer
+    customer_name:            data.customer_name            || '',
+    customer_phone:           data.customer_phone           || '',
+    customer_email:           data.customer_email           || '',
+    customer_postal_code:     data.customer_postal_code     || '',
+    customer_type:            data.customer_type            || 'TSPM',
+    // Insured
+    insured_name:             data.insured_name             || '',
+    insured_phone:            data.insured_phone            || '',
+    insured_email:            data.insured_email            || '',
+    insured_postal_code:      data.insured_postal_code      || '',
+    // Vehicle
+    licence_plate:            data.licence_plate            || '',
+    vehicle_chassis:          data.vehicle_chassis          || '',
+    vehicle_brand:            data.vehicle_brand            || '',
+    vehicle_model:            data.vehicle_model            || '',
+    vehicle_category:         data.vehicle_category         || '',
+    vehicle_genre:            data.vehicle_genre            || 'GV04',
+    vehicle_type:             data.vehicle_type             || 'TV10',
+    vehicule_usage:           data.vehicule_usage           || 'UV01',
+    vehicle_energy:           data.vehicle_energy           || 'SEES',
+    nb_of_seats:              data.nb_of_seats              || 5,
+    fiscal_power:             data.fiscal_power             || 5,
+    circulation_zone:         data.circulation_zone         || 'A',
+    vehicle_has_trailer:      data.vehicle_has_trailer      || false,
+    trailer_licence_plate:    data.trailer_licence_plate    || '',
+    // Driver
+    driver_name:              data.driver_name              || '',
+    driver_birthdate:         data.driver_birthdate         || '',
+    driver_licence_issued_at: data.driver_licence_issued_at || '',
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // GESTION DU DIALOG "POLICE INTROUVABLE"
+  // ════════════════════════════════════════════════════════════
+
+  /** Ferme le dialog + vide le champ → l'utilisateur corrige */
+  closePoliceDialog(): void {
+    this.showPoliceDialog = false;
+    this.policeStatus     = 'idle';
+    this.productionForm.patchValue({ police_number: '' });
+    setTimeout(() => {
+      document.getElementById('police_number')?.focus();
+    }, 150);
+  }
+
+  /** Ferme le dialog + garde la valeur → nouvelle police */
+  continueWithNewPolice(): void {
+    this.showPoliceDialog = false;
+    this.policeStatus     = 'idle';
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // SOUMISSION
+  // ════════════════════════════════════════════════════════════
+  onSubmit(): void {
+    this.productionForm.markAllAsTouched();
+    if (this.productionForm.invalid) return;
+
+    this.isSubmitting    = true;
+    this.errorResponse   = null;
+    this.successResponse = null;
+    this.fieldErrors     = {};
+
+    const session = this.authService.currentUserValue;
+    const form    = this.productionForm.value;
+
+    const request = {
+      office_code:       session?.agencyCode  || 'AG-DLA-001',
+      organization_code: session?.companyName || 'ZENITHE INSURANCE',
+      certificate_type:  'cima',
+      channel:           'api',
+      productions: [{
+        ...form,
+        insured_name:        form.insured_name        || form.customer_name,
+        insured_phone:       form.insured_phone       || form.customer_phone,
+        insured_email:       form.insured_email       || form.customer_email,
+        insured_postal_code: form.insured_postal_code || form.customer_postal_code,
+      }]
+    };
+
+    this.certificateService.createCertificate(request).subscribe({
+      next: (response: any) => {
+        this.isSubmitting    = false;
+        this.successResponse = response;
+        this.policeStatus    = 'idle';
+        this.initForm();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      },
+      error: (err: any) => {
+        this.isSubmitting  = false;
+        this.errorResponse = err;
+        this.fieldErrors   = err.errors || {};
+        //✅ Ajoute ceci temporairement pour déboguer
+    console.error('Erreur complète reçue :', JSON.stringify(err));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+  }
+
+  // ════════════════════════════════════════════════════════════
+  // UTILITAIRES
+  // ════════════════════════════════════════════════════════════
+  resetForm(): void {
+    this.initForm();
+    this.errorResponse   = null;
+    this.successResponse = null;
+    this.fieldErrors     = {};
+    this.policeStatus    = 'idle';
+    this.showPoliceDialog = false;
+    this.policeFoundData  = null;
+  }
+
+  isPhysique(): boolean {
+    return this.productionForm.get('customer_type')?.value === 'TSPP';
+  }
+
+  isInvalid(field: string): boolean {
+    const c = this.productionForm.get(field);
+    return (!!c && c.invalid && c.touched)
+        || !!this.fieldErrors[`productions.0.${field}`];
+  }
+
+  getFieldError(field: string): string {
+    return this.fieldErrors[`productions.0.${field}`]?.[0] || '';
+  }
+
+  hasFieldErrors(): boolean   { return Object.keys(this.fieldErrors).length > 0; }
+  getErrorKeys():   string[]  { return Object.keys(this.fieldErrors); }
+  getFirstError(k: string):   string { return this.fieldErrors[k]?.[0] || ''; }
+}

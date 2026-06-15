@@ -1,0 +1,1366 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  certificate-form.component.html                             ║
+  ║  Police check automatique + dialog + pré-remplissage         ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 page-title">
+          <i class="fas fa-plus-circle mr-2 text-primary"></i>
+          Nouvelle production
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Accueil</a></li>
+          <li class="breadcrumb-item"><a routerLink="/certificates">Productions</a></li>
+          <li class="breadcrumb-item active">Nouvelle</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- ══ ALERTE ERREUR API ══════════════════════════════════ -->
+    <div class="alert alert-danger alert-dismissible"
+         *ngIf="errorResponse" role="alert">
+      <h6 class="alert-heading">
+        <i class="fas fa-exclamation-triangle mr-2"></i>
+        {{ errorResponse.message }}
+      </h6>
+      <ul class="mb-0 mt-2" *ngIf="hasFieldErrors()">
+        <li *ngFor="let key of getErrorKeys()">
+          <strong>{{ key }}</strong> : {{ getFirstError(key) }}
+        </li>
+      </ul>
+      <button type="button" class="close" (click)="errorResponse=null">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <!-- ══ ALERTE SUCCÈS ══════════════════════════════════════ -->
+    <div class="alert alert-success alert-dismissible"
+         *ngIf="successResponse" role="alert">
+      <i class="fas fa-check-circle mr-2"></i>
+      <strong>{{ successResponse.message }}</strong>
+      — {{ successResponse.data?.certificates?.length }} certificat(s) édité(s).
+      <a [href]="successResponse.data?.download_link" target="_blank"
+         class="btn btn-success btn-sm ml-2">
+        <i class="fas fa-download mr-1"></i>Télécharger tout
+      </a>
+      <button type="button" class="close" (click)="successResponse=null">
+        <span>&times;</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         DIALOG "POLICE INTROUVABLE" — s'affiche par-dessus
+         ════════════════════════════════════════════════════════ -->
+    <div class="police-dialog-overlay" *ngIf="showPoliceDialog"
+         (click)="closePoliceDialog()">
+    </div>
+
+    <div class="police-dialog" *ngIf="showPoliceDialog">
+
+      <!-- Icône principale -->
+      <div class="police-dialog-icon">
+        <div class="icon-circle icon-circle-warning">
+          <i class="fas fa-search-minus"></i>
+        </div>
+      </div>
+
+      <!-- Titre -->
+      <h5 class="police-dialog-title">Police introuvable</h5>
+
+      <!-- Message -->
+      <p class="police-dialog-message">
+        Le numéro de police
+        <strong class="text-danger">« {{ policeChecked }} »</strong>
+        n'existe pas dans notre base de données.
+      </p>
+      <p class="police-dialog-hint">
+        <i class="fas fa-info-circle mr-1 text-info"></i>
+        Vérifiez le numéro saisi ou continuez pour créer une nouvelle production.
+      </p>
+
+      <!-- Actions -->
+      <div class="police-dialog-actions">
+
+        <!-- Corriger la saisie -->
+        <button class="btn btn-outline-secondary"
+                (click)="closePoliceDialog()">
+          <i class="fas fa-edit mr-1"></i>
+          Corriger le numéro
+        </button>
+
+        <!-- Continuer quand même -->
+        <button class="btn btn-primary"
+                (click)="continueWithNewPolice()">
+          <i class="fas fa-plus mr-1"></i>
+          Créer nouvelle production
+        </button>
+
+      </div>
+
+    </div>
+    <!-- ══ FIN DIALOG ═════════════════════════════════════════ -->
+
+
+    <!-- ══ FORMULAIRE ════════════════════════════════════════ -->
+    <form [formGroup]="productionForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+
+        <!-- ── Colonne principale ──────────────────────────── -->
+        <div class="col-lg-8 col-12">
+
+          <!-- ÉTAPE 1 — Contrat -->
+          <div class="card card-primary card-outline elevation-1 mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-badge">1</span>
+                Informations du contrat
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool"
+                        data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+
+                <!-- ── CHAMP POLICE — avec indicateur de statut ── -->
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-hashtag mr-1 text-primary"></i>
+                      Numéro de police <span class="text-danger">*</span>
+                    </label>
+
+                    <!-- Groupe input avec indicateur de statut -->
+                    <div class="input-group police-input-group"
+                         [class.police-checking]="policeStatus === 'checking'"
+                         [class.police-found]="policeStatus === 'found'"
+                         [class.police-not-found]="policeStatus === 'not_found'"
+                         [class.police-error]="policeStatus === 'error'">
+
+                      <input type="text"
+                             id="police_number"
+                             class="form-control form-control-rounded"
+                             placeholder="POL-2026-00123"
+                             formControlName="police_number"
+                             [class.is-invalid]="isInvalid('police_number')"
+                             (input)="onPoliceNumberInput($event)"
+                             autocomplete="off"
+                             style="text-transform:uppercase">
+
+                      <!-- Indicateur dynamique selon le statut -->
+                      <div class="input-group-append">
+                        <span class="input-group-text police-status-icon">
+
+                          <!-- Idle : icône normale -->
+                          <i class="fas fa-search text-muted"
+                             *ngIf="policeStatus === 'idle'"></i>
+
+                          <!-- Checking : spinner -->
+                          <span class="spinner-border spinner-border-sm text-primary"
+                                *ngIf="policeStatus === 'checking'"
+                                title="Vérification en cours...">
+                          </span>
+
+                          <!-- Found : check vert -->
+                          <i class="fas fa-check-circle text-success"
+                             *ngIf="policeStatus === 'found'"
+                             title="Police trouvée — formulaire pré-rempli">
+                          </i>
+
+                          <!-- Not found : croix rouge -->
+                          <i class="fas fa-times-circle text-danger"
+                             *ngIf="policeStatus === 'not_found'"
+                             title="Police introuvable">
+                          </i>
+
+                          <!-- Error : warning -->
+                          <i class="fas fa-exclamation-triangle text-warning"
+                             *ngIf="policeStatus === 'error'"
+                             title="Erreur de vérification">
+                          </i>
+
+                        </span>
+                      </div>
+
+                    </div>
+
+                    <!-- Message sous le champ selon le statut -->
+                    <div class="police-status-msg mt-1">
+
+                      <small class="text-muted"
+                             *ngIf="policeStatus === 'idle'">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Saisissez le numéro de police pour vérification automatique
+                      </small>
+
+                      <small class="text-primary"
+                             *ngIf="policeStatus === 'checking'">
+                        <i class="fas fa-circle-notch fa-spin mr-1"></i>
+                        Vérification en cours...
+                      </small>
+
+                      <small class="text-success font-weight-bold"
+                             *ngIf="policeStatus === 'found'">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Police trouvée — formulaire pré-rempli automatiquement
+                      </small>
+
+                      <small class="text-danger"
+                             *ngIf="policeStatus === 'not_found'">
+                        <i class="fas fa-times-circle mr-1"></i>
+                        Police introuvable dans la base de données
+                      </small>
+
+                      <small class="text-warning"
+                             *ngIf="policeStatus === 'error'">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Erreur de connexion — vérification impossible
+                      </small>
+
+                    </div>
+
+                    <!-- Bandeau "pré-rempli" si police trouvée -->
+                    <div class="prefill-banner" *ngIf="policeStatus === 'found'">
+                      <i class="fas fa-magic mr-1"></i>
+                      Les champs ont été pré-remplis depuis la police existante.
+                      Vous pouvez les modifier si nécessaire.
+                    </div>
+
+                    <div class="invalid-feedback">
+                      {{ getFieldError('police_number') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Variante -->
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-tag mr-1 text-primary"></i>
+                      Variante <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-control form-control-rounded"
+                            formControlName="certificate_variant_code"
+                            [class.is-invalid]="isInvalid('certificate_variant_code')">
+                      <option value="">-- Choisir --</option>
+                      <option value="JAUNE">🟡 Jaune</option>
+                      <option value="VERTE">🟢 Verte</option>
+                    </select>
+                    <div class="invalid-feedback">Obligatoire</div>
+                  </div>
+                </div>
+
+                <!-- Date effet -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-calendar-alt mr-1 text-primary"></i>
+                      Date d'effet <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" class="form-control form-control-rounded"
+                           formControlName="starts_at"
+                           [class.is-invalid]="isInvalid('starts_at')">
+                    <div class="invalid-feedback">Obligatoire</div>
+                  </div>
+                </div>
+
+                <!-- Date échéance -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-calendar-check mr-1 text-primary"></i>
+                      Date d'échéance <span class="text-danger">*</span>
+                    </label>
+                    <input type="date" class="form-control form-control-rounded"
+                           formControlName="ends_at"
+                           [class.is-invalid]="isInvalid('ends_at')">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('ends_at') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Prime RC -->
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-coins mr-1 text-primary"></i>
+                      Prime RC (FCFA) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control form-control-rounded"
+                           placeholder="63784"
+                           formControlName="rc"
+                           [class.is-invalid]="isInvalid('rc')">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('rc') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 2 — Client & Assuré -->
+          <div class="card card-info card-outline elevation-1 mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-badge step-badge-info">2</span>
+                Client & Assuré
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool"
+                        data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Nom du client <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="Entreprise ABC SARL"
+                           formControlName="customer_name"
+                           [class.is-invalid]="isInvalid('customer_name')">
+                    <div class="invalid-feedback">Obligatoire</div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Type client</label>
+                    <select class="form-control form-control-rounded"
+                            formControlName="customer_type">
+                      <option value="TSPM">Personne Morale</option>
+                      <option value="TSPP">Personne Physique</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Téléphone</label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="+237690000000"
+                           formControlName="customer_phone">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-control form-control-rounded"
+                           placeholder="contact@abc.cm"
+                           formControlName="customer_email">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 3 — Véhicule -->
+          <div class="card card-warning card-outline elevation-1 mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-badge step-badge-warning">3</span>
+                Informations véhicule
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool"
+                        data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Immatriculation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="LT-1234-AB"
+                           formControlName="licence_plate"
+                           [class.is-invalid]="isInvalid('licence_plate')"
+                           style="text-transform:uppercase">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('licence_plate') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Châssis <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="WVWZZZ3CZWE123456"
+                           formControlName="vehicle_chassis"
+                           [class.is-invalid]="isInvalid('vehicle_chassis')">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('vehicle_chassis') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Marque</label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="TOYOTA" formControlName="vehicle_brand">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Modèle</label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="COROLLA" formControlName="vehicle_model">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Catégorie <span class="text-danger">*</span></label>
+                    <select class="form-control form-control-rounded"
+                            formControlName="vehicle_category"
+                            [class.is-invalid]="isInvalid('vehicle_category')">
+                      <option value="">-- Choisir --</option>
+                      <option value="01">01 - Véhicule léger</option>
+                      <option value="02">02 - Utilitaire</option>
+                      <option value="03">03 - Poids lourd</option>
+                      <option value="04">04 - Moto</option>
+                      <option value="05">05 - Engin spécial</option>
+                    </select>
+                    <div class="invalid-feedback">
+                      {{ getFieldError('vehicle_category') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Nb de places</label>
+                    <input type="number" class="form-control form-control-rounded"
+                           formControlName="nb_of_seats">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Puissance (CV)</label>
+                    <input type="number" class="form-control form-control-rounded"
+                           formControlName="fiscal_power">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label>Zone</label>
+                    <select class="form-control form-control-rounded"
+                            formControlName="circulation_zone">
+                      <option value="A">Zone A</option>
+                      <option value="B">Zone B</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="custom-control custom-switch mb-2">
+                    <input type="checkbox" class="custom-control-input"
+                           id="hasTrailer" formControlName="vehicle_has_trailer">
+                    <label class="custom-control-label" for="hasTrailer">
+                      Le véhicule a une remorque
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6"
+                     *ngIf="productionForm.get('vehicle_has_trailer')?.value">
+                  <div class="form-group">
+                    <label>Immat. remorque <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="LT-9999-RQ"
+                           formControlName="trailer_licence_plate"
+                           [class.is-invalid]="isInvalid('trailer_licence_plate')">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('trailer_licence_plate') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ÉTAPE 4 — Conducteur -->
+          <div class="card card-success card-outline elevation-1 mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-badge step-badge-success">4</span>
+                Conducteur
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool"
+                        data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      Nom du conducteur
+                      <span class="text-danger" *ngIf="isPhysique()">*</span>
+                    </label>
+                    <input type="text" class="form-control form-control-rounded"
+                           placeholder="Paul Kamga"
+                           formControlName="driver_name"
+                           [class.is-invalid]="isInvalid('driver_name')">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('driver_name') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      Date de naissance
+                      <span class="text-danger" *ngIf="isPhysique()">*</span>
+                    </label>
+                    <input type="date" class="form-control form-control-rounded"
+                           formControlName="driver_birthdate"
+                           [class.is-invalid]="isInvalid('driver_birthdate')">
+                    <div class="invalid-feedback">
+                      {{ getFieldError('driver_birthdate') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>Date d'obtention du permis</label>
+                    <input type="date" class="form-control form-control-rounded"
+                           formControlName="driver_licence_issued_at">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Résumé sticky ───────────────────────────────── -->
+        <div class="col-lg-4 col-12">
+          <div class="card elevation-1 mb-3 sticky-top" style="top:70px">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-receipt mr-2"></i>Résumé
+              </h3>
+              <!-- Badge statut police dans le résumé -->
+              <div class="card-tools">
+                <span class="badge badge-success"
+                      *ngIf="policeStatus === 'found'">
+                  <i class="fas fa-magic mr-1"></i>Auto-rempli
+                </span>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Police</small>
+                  <small class="font-weight-bold">
+                    {{ productionForm.get('police_number')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Variante</small>
+                  <span class="badge badge-warning">
+                    {{ productionForm.get('certificate_variant_code')?.value || '—' }}
+                  </span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Immatriculation</small>
+                  <small class="font-weight-bold text-primary">
+                    {{ productionForm.get('licence_plate')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Véhicule</small>
+                  <small>
+                    {{ productionForm.get('vehicle_brand')?.value }}
+                    {{ productionForm.get('vehicle_model')?.value }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Période</small>
+                  <small>
+                    {{ productionForm.get('starts_at')?.value || '—' }}
+                    → {{ productionForm.get('ends_at')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Prime RC</small>
+                  <small class="font-weight-bold text-success">
+                    {{ productionForm.get('rc')?.value | number }} FCFA
+                  </small>
+                </li>
+              </ul>
+            </div>
+            <div class="card-footer p-3">
+              <button type="submit"
+                      class="btn btn-primary btn-block btn-submit elevation-2"
+                      [disabled]="isSubmitting">
+                <span *ngIf="isSubmitting"
+                      class="spinner-border spinner-border-sm mr-2"></span>
+                <i *ngIf="!isSubmitting" class="fas fa-paper-plane mr-2"></i>
+                {{ isSubmitting ? 'Envoi en cours...' : 'Soumettre la production' }}
+              </button>
+              <button type="button"
+                      class="btn btn-outline-secondary btn-block mt-2"
+                      (click)="resetForm()">
+                <i class="fas fa-redo mr-2"></i>Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+  </div>
+</section>
+
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 page-title">
+          <i class="fas fa-plus-circle mr-2 text-primary"></i>
+          Nouvelle production
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">Accueil</a></li>
+          <li class="breadcrumb-item"><a routerLink="/certificates">Productions</a></li>
+          <li class="breadcrumb-item active">Nouvelle</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- ══ ALERTE ERREUR ════════════════════════════════════ -->
+    <div class="alert alert-danger alert-dismissible" *ngIf="errorResponse" role="alert">
+      <h6 class="alert-heading">
+        <i class="fas fa-exclamation-triangle mr-2"></i>{{ errorResponse.message }}
+      </h6>
+      <ul class="mb-0 mt-2" *ngIf="hasFieldErrors()">
+        <li *ngFor="let key of getErrorKeys()">
+          <strong>{{ key }}</strong> : {{ getFirstError(key) }}
+        </li>
+      </ul>
+      <button type="button" class="close" (click)="errorResponse=null"><span>&times;</span></button>
+    </div>
+
+    <!-- ══ ALERTE SUCCÈS ════════════════════════════════════ -->
+    <div class="alert alert-success alert-dismissible" *ngIf="successResponse" role="alert">
+      <i class="fas fa-check-circle mr-2"></i>
+      <strong>{{ successResponse.message }}</strong>
+      — {{ successResponse.data?.certificates?.length }} certificat(s) édité(s).
+      <a [href]="successResponse.data?.download_link" target="_blank"
+         class="btn btn-success btn-sm ml-2">
+        <i class="fas fa-download mr-1"></i>Télécharger tout
+      </a>
+      <button type="button" class="close" (click)="successResponse=null"><span>&times;</span></button>
+    </div>
+
+    <!-- ══ DIALOG POLICE INTROUVABLE ════════════════════════ -->
+    <div class="police-dialog-overlay" *ngIf="showPoliceDialog" (click)="closePoliceDialog()"></div>
+    <div class="police-dialog" *ngIf="showPoliceDialog">
+      <div class="police-dialog-icon">
+        <div class="icon-circle icon-circle-warning">
+          <i class="fas fa-search-minus"></i>
+        </div>
+      </div>
+      <h5 class="police-dialog-title">Police introuvable</h5>
+      <p class="police-dialog-message">
+        Le numéro de police
+        <strong class="text-danger">« {{ policeChecked }} »</strong>
+        n'existe pas dans notre base de données.
+      </p>
+      <p class="police-dialog-hint">
+        <i class="fas fa-info-circle mr-1 text-info"></i>
+        Vérifiez le numéro saisi ou continuez pour créer une nouvelle production.
+      </p>
+      <div class="police-dialog-actions">
+        <button class="btn btn-outline-secondary" (click)="closePoliceDialog()">
+          <i class="fas fa-edit mr-1"></i>Corriger le numéro
+        </button>
+        <button class="btn btn-primary" (click)="continueWithNewPolice()">
+          <i class="fas fa-plus mr-1"></i>Créer nouvelle production
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ FORMULAIRE PRINCIPAL ══════════════════════════════ -->
+    <form [formGroup]="productionForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+
+        <!-- ── Colonne principale ──────────────────────────── -->
+        <div class="col-lg-8 col-12">
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               ÉTAPE 1 — Contrat  (TOUJOURS VISIBLE)
+               contient le champ police_number
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <div class="card card-primary card-outline elevation-1 mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-badge">1</span>
+                Informations du contrat
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+
+                <!-- Champ police — TOUJOURS VISIBLE -->
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-hashtag mr-1 text-primary"></i>
+                      Numéro de police <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group police-input-group"
+                         [class.police-checking]="policeStatus === 'checking'"
+                         [class.police-found]="policeStatus === 'found'"
+                         [class.police-not-found]="policeStatus === 'not_found'"
+                         [class.police-error]="policeStatus === 'error'">
+
+                      <input type="text"
+                             id="police_number"
+                             class="form-control form-control-rounded"
+                             placeholder="ex: 1000-1030000009"
+                             formControlName="police_number"
+                             [class.is-invalid]="isInvalid('police_number')"
+                             (input)="onPoliceNumberInput($event)"
+                             autocomplete="off"
+                             style="text-transform:uppercase">
+
+                      <div class="input-group-append">
+                        <span class="input-group-text police-status-icon">
+                          <i class="fas fa-search text-muted"      *ngIf="policeStatus === 'idle'"></i>
+                          <span class="spinner-border spinner-border-sm text-primary"
+                                *ngIf="policeStatus === 'checking'"></span>
+                          <i class="fas fa-check-circle text-success"
+                             *ngIf="policeStatus === 'found'"
+                             [title]="viewMode === 'fleet' ? 'Flotte trouvée' : 'Police trouvée'"></i>
+                          <i class="fas fa-times-circle text-danger"
+                             *ngIf="policeStatus === 'not_found'"></i>
+                          <i class="fas fa-exclamation-triangle text-warning"
+                             *ngIf="policeStatus === 'error'"></i>
+                        </span>
+                      </div>
+                    </div>
+
+                    <!-- Message statut -->
+                    <div class="police-status-msg mt-1">
+                      <small class="text-muted" *ngIf="policeStatus === 'idle'">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Saisissez le numéro de police pour vérification automatique
+                      </small>
+                      <small class="text-primary" *ngIf="policeStatus === 'checking'">
+                        <i class="fas fa-circle-notch fa-spin mr-1"></i>Vérification en cours...
+                      </small>
+                      <small class="text-success font-weight-bold"
+                             *ngIf="policeStatus === 'found' && viewMode === 'form'">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        Police trouvée — formulaire pré-rempli automatiquement
+                      </small>
+                      <small class="text-success font-weight-bold"
+                             *ngIf="policeStatus === 'found' && viewMode === 'fleet'">
+                        <i class="fas fa-layer-group mr-1"></i>
+                        Flotte détectée — {{ foundProductions.length }} véhicule(s) trouvé(s)
+                      </small>
+                      <small class="text-danger" *ngIf="policeStatus === 'not_found'">
+                        <i class="fas fa-times-circle mr-1"></i>Police introuvable
+                      </small>
+                      <small class="text-warning" *ngIf="policeStatus === 'error'">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>Erreur de connexion
+                      </small>
+                    </div>
+
+                    <!-- Bandeau mono pré-rempli -->
+                    <div class="prefill-banner" *ngIf="policeStatus === 'found' && viewMode === 'form'">
+                      <i class="fas fa-magic mr-1"></i>
+                      Les champs ont été pré-remplis. Vous pouvez les modifier si nécessaire.
+                    </div>
+
+                    <div class="invalid-feedback">
+                      {{ getFieldError('police_number') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Variante — masquée en mode flotte (gérée dans le tableau) -->
+                <div class="col-md-6" *ngIf="viewMode === 'form'">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-tag mr-1 text-primary"></i>
+                      Variante <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-control form-control-rounded"
+                            formControlName="certificate_variant_code"
+                            [class.is-invalid]="isInvalid('certificate_variant_code')">
+                      <option value="">-- Choisir --</option>
+                      <option value="JAUNE">🟡 Jaune</option>
+                      <option value="VERTE">🟢 Verte</option>
+                    </select>
+                    <div class="invalid-feedback">Obligatoire</div>
+                  </div>
+                </div>
+
+                <!-- Dates & RC — masqués en mode flotte -->
+                <ng-container *ngIf="viewMode === 'form'">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>
+                        <i class="fas fa-calendar-alt mr-1 text-primary"></i>
+                        Date d'effet <span class="text-danger">*</span>
+                      </label>
+                      <input type="date" class="form-control form-control-rounded"
+                             formControlName="starts_at"
+                             [class.is-invalid]="isInvalid('starts_at')">
+                      <div class="invalid-feedback">Obligatoire</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>
+                        <i class="fas fa-calendar-check mr-1 text-primary"></i>
+                        Date d'échéance <span class="text-danger">*</span>
+                      </label>
+                      <input type="date" class="form-control form-control-rounded"
+                             formControlName="ends_at"
+                             [class.is-invalid]="isInvalid('ends_at')">
+                      <div class="invalid-feedback">{{ getFieldError('ends_at') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>
+                        <i class="fas fa-coins mr-1 text-primary"></i>
+                        Prime RC (FCFA) <span class="text-danger">*</span>
+                      </label>
+                      <input type="number" class="form-control form-control-rounded"
+                             placeholder="63784"
+                             formControlName="rc"
+                             [class.is-invalid]="isInvalid('rc')">
+                      <div class="invalid-feedback">{{ getFieldError('rc') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                </ng-container>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               VUE FLOTTE — tableau de sélection
+               (visible seulement si viewMode === 'fleet')
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <ng-container *ngIf="viewMode === 'fleet'">
+
+            <!-- Variante globale flotte -->
+            <div class="card card-primary card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-tag mr-2"></i>Variante pour toute la sélection
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <select class="form-control form-control-rounded"
+                            [(ngModel)]="fleetVariantCode"
+                            [ngModelOptions]="{standalone: true}">
+                      <option value="JAUNE">🟡 Jaune</option>
+                      <option value="VERTE">🟢 Verte</option>
+                    </select>
+                  </div>
+                  <div class="col-md-8 text-muted">
+                    <small>
+                      <i class="fas fa-info-circle mr-1"></i>
+                      Appliquée à tous les véhicules sélectionnés.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tableau véhicules -->
+            <div class="card card-outline elevation-1 mb-3">
+              <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title">
+                  <i class="fas fa-car mr-2"></i>
+                  Véhicules de la flotte
+                  <span class="badge badge-primary ml-2">
+                    {{ selectedCount }} / {{ foundProductions.length }} sélectionné(s)
+                  </span>
+                </h3>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        (click)="backToForm()">
+                  <i class="fas fa-edit mr-1"></i>Saisie manuelle
+                </button>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="thead-light">
+                      <tr>
+                        <th style="width:40px">
+                          <input type="checkbox"
+                                 [checked]="allSelected"
+                                 (change)="toggleAll($event)">
+                        </th>
+                        <th>#</th>
+                        <th>Immatriculation</th>
+                        <th>Marque / Modèle</th>
+                        <th>Châssis</th>
+                        <th>Catégorie</th>
+                        <th>Client</th>
+                        <th>Période</th>
+                        <th>Prime RC</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let p of foundProductions; let i = index"
+                          [class.table-success]="isSelected(i)"
+                          (click)="toggleSelection(i)"
+                          style="cursor:pointer">
+                        <td>
+                          <input type="checkbox"
+                                 [checked]="isSelected(i)"
+                                 (click)="$event.stopPropagation()"
+                                 (change)="toggleSelection(i)">
+                        </td>
+                        <td><small class="text-muted">{{ i + 1 }}</small></td>
+                        <td><strong class="text-primary">{{ p.licence_plate || '—' }}</strong></td>
+                        <td><small>{{ p.vehicle_brand }} {{ p.vehicle_model }}</small></td>
+                        <td><small class="text-monospace">{{ p.vehicle_chassis || '—' }}</small></td>
+                        <td><span class="badge badge-secondary">{{ p.vehicle_category }}</span></td>
+                        <td><small>{{ p.customer_name || '—' }}</small></td>
+                        <td>
+                          <small>
+                            {{ p.starts_at | date:'dd/MM/yy' }}
+                            → {{ p.ends_at | date:'dd/MM/yy' }}
+                          </small>
+                        </td>
+                        <td>
+                          <small class="text-success font-weight-bold">
+                            {{ p.rc | number }} F
+                          </small>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </ng-container><!-- /fleet -->
+
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               ÉTAPES 2, 3, 4 — masquées en mode flotte
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <ng-container *ngIf="viewMode === 'form'">
+
+            <!-- ÉTAPE 2 — Client & Assuré -->
+            <div class="card card-info card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-badge step-badge-info">2</span>Client & Assuré
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Nom du client <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="Entreprise ABC SARL"
+                             formControlName="customer_name"
+                             [class.is-invalid]="isInvalid('customer_name')">
+                      <div class="invalid-feedback">Obligatoire</div>
+                    </div>
+                  </div>
+                   <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Date Naissance</label>
+                       <input type="date" class="form-control form-control-rounded"
+                             formControlName="insured_birthdate">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Type client</label>
+                      <select class="form-control form-control-rounded" formControlName="customer_type">
+                        <option value="TSPM">Personne Morale</option>
+                        <option value="TSPP">Personne Physique</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Téléphone</label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="+237690000000" formControlName="customer_phone">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Email</label>
+                      <input type="email" class="form-control form-control-rounded"
+                             placeholder="contact@abc.cm" formControlName="customer_email">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 3 — Véhicule -->
+            <div class="card card-warning card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-badge step-badge-warning">3</span>Informations véhicule
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Immatriculation <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="LT-1234-AB"
+                             formControlName="licence_plate"
+                             [class.is-invalid]="isInvalid('licence_plate')"
+                             style="text-transform:uppercase">
+                      <div class="invalid-feedback">{{ getFieldError('licence_plate') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Châssis <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="WVWZZZ3CZWE123456"
+                             formControlName="vehicle_chassis"
+                             [class.is-invalid]="isInvalid('vehicle_chassis')">
+                      <div class="invalid-feedback">{{ getFieldError('vehicle_chassis') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Marque</label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="TOYOTA" formControlName="vehicle_brand">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Modèle</label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="COROLLA" formControlName="vehicle_model">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Catégorie <span class="text-danger">*</span></label>
+                      <select class="form-control form-control-rounded"
+                              formControlName="vehicle_category"
+                              [class.is-invalid]="isInvalid('vehicle_category')">
+                        <option value="">-- Choisir --</option>
+                        <option value="01">01 - Véhicule léger</option>
+                        <option value="02">02 - Utilitaire</option>
+                        <option value="03">03 - Poids lourd</option>
+                        <option value="04">04 - Moto</option>
+                        <option value="05">05 - Engin spécial</option>
+                      </select>
+                      <div class="invalid-feedback">{{ getFieldError('vehicle_category') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Nb de places</label>
+                      <input type="number" class="form-control form-control-rounded"
+                             formControlName="nb_of_seats">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Puissance (CV)</label>
+                      <input type="number" class="form-control form-control-rounded"
+                             formControlName="fiscal_power">
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Zone</label>
+                      <select class="form-control form-control-rounded" formControlName="circulation_zone">
+                        <option value="A">Zone A</option>
+                        <option value="B">Zone B</option>
+                      </select>
+                    </div>
+                  </div>
+                   <div class="col-md-4">
+                    <div class="form-group">
+                      <label>Date de Mise en Circulation</label>
+                    <input type="date" class="form-control form-control-rounded"
+                             formControlName="vehicle_circulation_date">
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div class="custom-control custom-switch mb-2">
+                      <input type="checkbox" class="custom-control-input"
+                             id="hasTrailer" formControlName="vehicle_has_trailer">
+                      <label class="custom-control-label" for="hasTrailer">
+                        Le véhicule a une remorque
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6" *ngIf="productionForm.get('vehicle_has_trailer')?.value">
+                    <div class="form-group">
+                      <label>Immat. remorque <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="LT-9999-RQ"
+                             formControlName="trailer_licence_plate"
+                             [class.is-invalid]="isInvalid('trailer_licence_plate')">
+                      <div class="invalid-feedback">{{ getFieldError('trailer_licence_plate') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 4 — Conducteur -->
+            <div class="card card-success card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-badge step-badge-success">4</span>Conducteur
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        Nom du conducteur
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="Paul Kamga"
+                             formControlName="driver_name"
+                             [class.is-invalid]="isInvalid('driver_name')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_name') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                   <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        Numero Permis
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="B450245"
+                             formControlName="driver_permis"
+                             [class.is-invalid]="isInvalid('driver_permis')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_permis') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                    <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        Categorie Permis
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="text" class="form-control form-control-rounded"
+                             placeholder="A,B,C..."
+                             formControlName="driver_permis_categorie"
+                             [class.is-invalid]="isInvalid('driver_permis_categorie')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_permis_categorie') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        Date de naissance
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="date" class="form-control form-control-rounded"
+                             formControlName="driver_birthdate"
+                             [class.is-invalid]="isInvalid('driver_birthdate')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_birthdate') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>Date d'obtention du permis</label>
+                      <input type="date" class="form-control form-control-rounded"
+                             formControlName="driver_licence_issued_at">
+                    </div>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+
+          </ng-container><!-- /form -->
+
+        </div><!-- /col-lg-8 -->
+
+
+        <!-- ── Résumé sticky ─────────────────────────────── -->
+        <div class="col-lg-4 col-12">
+          <div class="card elevation-1 mb-3 sticky-top" style="top:70px">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-receipt mr-2"></i>Résumé
+              </h3>
+              <div class="card-tools">
+                <span class="badge badge-success" *ngIf="policeStatus === 'found' && viewMode === 'form'">
+                  <i class="fas fa-magic mr-1"></i>Auto-rempli
+                </span>
+                <span class="badge badge-primary" *ngIf="viewMode === 'fleet'">
+                  <i class="fas fa-layer-group mr-1"></i>Flotte
+                </span>
+              </div>
+            </div>
+
+            <div class="card-body p-0">
+
+              <!-- Résumé FLOTTE -->
+              <ul class="list-group list-group-flush" *ngIf="viewMode === 'fleet'">
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Police</small>
+                  <small class="font-weight-bold">{{ policeChecked }}</small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Variante</small>
+                  <span class="badge badge-warning">{{ fleetVariantCode }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Véhicules sélectionnés</small>
+                  <strong class="text-primary">{{ selectedCount }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Total flotte</small>
+                  <small>{{ foundProductions.length }} véhicule(s)</small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Prime RC totale</small>
+                  <small class="font-weight-bold text-success">
+                    {{ getTotalRc() | number }} FCFA
+                  </small>
+                </li>
+              </ul>
+
+              <!-- Résumé MONO -->
+              <ul class="list-group list-group-flush" *ngIf="viewMode === 'form'">
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Police</small>
+                  <small class="font-weight-bold">
+                    {{ productionForm.get('police_number')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Variante</small>
+                  <span class="badge badge-warning">
+                    {{ productionForm.get('certificate_variant_code')?.value || '—' }}
+                  </span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Immatriculation</small>
+                  <small class="font-weight-bold text-primary">
+                    {{ productionForm.get('licence_plate')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Véhicule</small>
+                  <small>
+                    {{ productionForm.get('vehicle_brand')?.value }}
+                    {{ productionForm.get('vehicle_model')?.value }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Période</small>
+                  <small>
+                    {{ productionForm.get('starts_at')?.value || '—' }}
+                    → {{ productionForm.get('ends_at')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">Prime RC</small>
+                  <small class="font-weight-bold text-success">
+                    {{ productionForm.get('rc')?.value | number }} FCFA
+                  </small>
+                </li>
+              </ul>
+
+            </div>
+
+            <div class="card-footer p-3">
+              <button type="submit"
+                      class="btn btn-primary btn-block btn-submit elevation-2"
+                      [disabled]="isSubmitting || (viewMode === 'fleet' && selectedCount === 0)">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm mr-2"></span>
+                <i *ngIf="!isSubmitting" class="fas fa-paper-plane mr-2"></i>
+                <ng-container *ngIf="!isSubmitting">
+                  {{ viewMode === 'fleet'
+                      ? 'Émettre ' + selectedCount + ' certificat(s)'
+                      : 'Soumettre la production' }}
+                </ng-container>
+                <ng-container *ngIf="isSubmitting">Envoi en cours...</ng-container>
+              </button>
+              <button type="button"
+                      class="btn btn-outline-secondary btn-block mt-2"
+                      (click)="resetForm()">
+                <i class="fas fa-redo mr-2"></i>Réinitialiser
+              </button>
+            </div>
+
+          </div>
+        </div><!-- /col-lg-4 -->
+
+      </div>
+    </form>
+
+  </div>
+</section>

@@ -1,0 +1,281 @@
+<!--
+  ╔══════════════════════════════════════════════════════════════╗
+  ║  certificate-preview.component.html                          ║
+  ║  Prévisualisation & impression des attestations              ║
+  ║  AdminLTE v3 — Modal plein écran avec carousel               ║
+  ╚══════════════════════════════════════════════════════════════╝
+-->
+<ng-container *ngIf="visible && production">
+
+  <!-- ══ MODAL PLEIN ÉCRAN ════════════════════════════════════════ -->
+  <div class="modal fade show preview-modal"
+       tabindex="-1" role="dialog"
+       style="display:block; z-index:1055;">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable"
+         role="document">
+      <div class="modal-content preview-content">
+
+        <!-- ── HEADER ────────────────────────────────────────── -->
+        <div class="modal-header preview-header">
+
+          <!-- Titre + badge compteur -->
+          <div class="d-flex align-items-center">
+            <span class="preview-icon-wrap mr-3">
+              <i class="fas fa-eye"></i>
+            </span>
+            <div>
+              <h5 class="modal-title mb-0 text-white">
+                Prévisualisation — <code class="text-info">{{ prod?.reference }}</code>
+              </h5>
+              <small class="text-white-50">
+                {{ certs.length }} attestation{{ certs.length > 1 ? 's' : '' }}
+                · {{ prod?.channel | uppercase }}
+                · {{ prod?.office?.name }}
+              </small>
+            </div>
+          </div>
+
+          <!-- Boutons d'action globaux -->
+          <div class="d-flex align-items-center" style="gap:8px">
+
+            <!-- Imprimer tout -->
+            <button class="btn btn-warning btn-sm"
+                    (click)="printAll()"
+                    title="Imprimer toutes les attestations">
+              <i class="fas fa-print mr-1"></i>
+              <span class="d-none d-md-inline">Tout imprimer</span>
+            </button>
+
+            <!-- Télécharger PDF fusionné -->
+            <button class="btn btn-success btn-sm"
+                    (click)="downloadAllPdf()"
+                    [disabled]="downloadingAll"
+                    title="Télécharger PDF fusionné">
+              <span *ngIf="downloadingAll"
+                    class="spinner-border spinner-border-sm mr-1"></span>
+              <i *ngIf="!downloadingAll" class="fas fa-file-pdf mr-1"></i>
+              <span class="d-none d-md-inline">
+                {{ downloadingAll ? 'Génération…' : 'PDF fusionné' }}
+              </span>
+            </button>
+
+            <!-- Fermer -->
+            <button type="button" class="btn btn-outline-light btn-sm"
+                    (click)="close()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── BODY ───────────────────────────────────────────── -->
+        <div class="modal-body preview-body p-0">
+          <div class="preview-layout">
+
+            <!-- ━━ PANNEAU GAUCHE : thumbnails ━━━━━━━━━━━━━━━━ -->
+            <div class="thumb-panel">
+              <div class="thumb-panel-header">
+                <i class="fas fa-th-large mr-1"></i>Attestations
+              </div>
+              <div class="thumb-list">
+                <div *ngFor="let cert of certs; let i = index"
+                     class="thumb-item"
+                     [class.active]="i === activeIndex"
+                     (click)="goTo(i)">
+                  <!-- Miniature image -->
+                  <div class="thumb-img-wrap">
+                    <img [src]="cert.download_link"
+                         [alt]="cert.reference"
+                         (error)="onImageError(cert.reference)"
+                         *ngIf="!imageErrors[cert.reference]" />
+                    <div class="thumb-error" *ngIf="imageErrors[cert.reference]">
+                      <i class="fas fa-image-slash"></i>
+                    </div>
+                  </div>
+                  <!-- Infos sous la miniature -->
+                  <div class="thumb-info">
+                    <div class="thumb-ref">{{ cert.reference }}</div>
+                    <div class="thumb-police text-muted">
+                      <i class="fas fa-hashtag mr-1" style="font-size:10px"></i>
+                      {{ cert.police_number || '—' }}
+                    </div>
+                  </div>
+                  <!-- Indicateur actif -->
+                  <span class="thumb-badge" *ngIf="i === activeIndex">
+                    <i class="fas fa-eye"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ━━ PANNEAU CENTRAL : visionneuse ━━━━━━━━━━━━━━ -->
+            <div class="viewer-panel" *ngIf="activeCert">
+
+              <!-- Navigation carousel -->
+              <div class="viewer-nav">
+                <button class="nav-btn"
+                        (click)="prev()"
+                        [disabled]="activeIndex === 0"
+                        title="Précédent">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+                <span class="nav-counter">
+                  {{ activeIndex + 1 }} / {{ certs.length }}
+                </span>
+                <button class="nav-btn"
+                        (click)="next()"
+                        [disabled]="activeIndex === certs.length - 1"
+                        title="Suivant">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+              </div>
+
+              <!-- Image principale -->
+              <div class="viewer-img-wrap">
+                <img [src]="activeCert.download_link"
+                     [alt]="activeCert.reference"
+                     class="viewer-img"
+                     (error)="onImageError(activeCert.reference)"
+                     *ngIf="!imageErrors[activeCert.reference]" />
+                <div class="viewer-error" *ngIf="imageErrors[activeCert.reference]">
+                  <i class="fas fa-exclamation-triangle fa-3x text-warning mb-2"></i>
+                  <p class="text-muted">Impossible de charger cette attestation</p>
+                </div>
+              </div>
+
+              <!-- Dots pagination -->
+              <div class="viewer-dots" *ngIf="certs.length > 1">
+                <span *ngFor="let c of certs; let i = index"
+                      class="dot"
+                      [class.active]="i === activeIndex"
+                      (click)="goTo(i)">
+                </span>
+              </div>
+            </div>
+
+            <!-- ━━ PANNEAU DROIT : infos + actions ━━━━━━━━━━━━ -->
+            <div class="info-panel" *ngIf="activeCert">
+
+              <!-- Carte infos certificat -->
+              <div class="card card-primary card-outline mb-3">
+                <div class="card-header py-2">
+                  <h6 class="card-title mb-0 text-sm">
+                    <i class="fas fa-certificate mr-2 text-primary"></i>
+                    Attestation
+                  </h6>
+                </div>
+                <div class="card-body py-2 px-3">
+                  <div class="info-row">
+                    <span class="info-label">Référence</span>
+                    <span class="info-value text-primary font-weight-bold">
+                      {{ activeCert.reference }}
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">N° Police</span>
+                    <span class="info-value">
+                      <code class="police-code">{{ activeCert.police_number || '—' }}</code>
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Assuré</span>
+                    <span class="info-value">{{ activeCert.insured_name }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Plaque</span>
+                    <span class="info-value">
+                      <code>{{ activeCert.licence_plate }}</code>
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Chassis</span>
+                    <span class="info-value text-muted small">
+                      {{ activeCert.chassis_number || '—' }}
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Validité</span>
+                    <span class="info-value small">
+                      {{ activeCert.starts_at }}
+                      <i class="fas fa-arrow-right mx-1 text-muted" style="font-size:10px"></i>
+                      {{ activeCert.ends_at }}
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">État</span>
+                    <span class="badge badge-success badge-sm">{{ activeCert.state }}</span>
+                  </div>
+                  <div class="info-row" *ngIf="activeCert.printed_at">
+                    <span class="info-label">Imprimé</span>
+                    <span class="info-value text-muted small">{{ activeCert.printed_at }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Carte assuré -->
+              <div class="card card-success card-outline mb-3">
+                <div class="card-header py-2">
+                  <h6 class="card-title mb-0 text-sm">
+                    <i class="fas fa-user mr-2 text-success"></i>
+                    Contact assuré
+                  </h6>
+                </div>
+                <div class="card-body py-2 px-3">
+                  <div class="info-row" *ngIf="activeCert.insured_phone">
+                    <span class="info-label">Tél.</span>
+                    <span class="info-value">{{ activeCert.insured_phone }}</span>
+                  </div>
+                  <div class="info-row" *ngIf="activeCert.insured_email">
+                    <span class="info-label">Email</span>
+                    <span class="info-value small text-truncate">{{ activeCert.insured_email }}</span>
+                  </div>
+                  <div class="info-row" *ngIf="!activeCert.insured_phone && !activeCert.insured_email">
+                    <span class="text-muted small">Aucun contact renseigné</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Boutons d'action pour CE certificat -->
+              <div class="action-group">
+                <button class="btn btn-primary btn-block mb-2"
+                        (click)="printSingle(activeCert)"
+                        title="Ouvre l'imprimante pour cette attestation">
+                  <i class="fas fa-print mr-2"></i>
+                  Imprimer cette attestation
+                </button>
+                <button class="btn btn-outline-danger btn-block"
+                        (click)="downloadPdf(activeCert)"
+                        [disabled]="downloadingRef === activeCert.reference">
+                  <span *ngIf="downloadingRef === activeCert.reference"
+                        class="spinner-border spinner-border-sm mr-1"></span>
+                  <i *ngIf="downloadingRef !== activeCert.reference"
+                     class="fas fa-file-pdf mr-2"></i>
+                  {{ downloadingRef === activeCert.reference ? 'Génération PDF…' : 'Télécharger PDF' }}
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── FOOTER ─────────────────────────────────────────── -->
+        <div class="modal-footer preview-footer">
+          <small class="text-muted mr-auto">
+            <i class="fas fa-info-circle mr-1"></i>
+            Les images s'impriment directement via l'imprimante système
+          </small>
+          <button type="button" class="btn btn-secondary btn-sm"
+                  (click)="close()">
+            <i class="fas fa-times mr-1"></i>Fermer
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Backdrop -->
+  <div class="modal-backdrop fade show" style="z-index:1054"
+       (click)="close()"></div>
+
+</ng-container>

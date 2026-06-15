@@ -1,0 +1,180 @@
+# ==============================================================================
+# ESPHERE-ASS — Docker Compose Production
+# Serveur : 77.68.94.193
+#
+# Pré-requis :
+#   1. Créer le fichier .env à partir de .env.example
+#   2. Placer le keystore PKCS12 dans ./certs/keystore.p12
+#      (générer avec generate-ssl-cert.sh si auto-signé)
+#
+# Démarrage :
+#   docker compose up -d --build
+#
+# Architecture :
+#   config-server (8888) → eureka-server (8762) → admin-api (8083)
+#   gateway-proxy (4141, HTTPS) ← point d'entrée public
+#   frontend      (80)          ← interface Angular
+# ==============================================================================
+
+services:
+
+  # ── 1. Config Server ─────────────────────────────────────────────────────────
+  config-server:
+    build:
+      context: ./esphere-ass-config-serveur
+    container_name: config-server
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_SSL_ENABLED: "false"
+      GIT_CONFIG_URI: ${GIT_CONFIG_URI}
+      GIT_CONFIG_BRANCH: ${GIT_CONFIG_BRANCH:-main}
+      GIT_USERNAME: ${GIT_USERNAME:-}
+      GIT_PASSWORD: ${GIT_PASSWORD:-}
+      LOG_PATH: /var/log/esphere
+    volumes:
+      - config-server-logs:/var/log/esphere
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8888/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - esphere-net
+
+  # ── 2. Eureka Server ──────────────────────────────────────────────────────────
+  eureka-server:
+    build:
+      context: ./esphere-ass-eureka-server
+    container_name: eureka-server
+    restart: unless-stopped
+    ports:
+      - "8762:8762"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_SSL_ENABLED: "false"
+      SERVER_PORT: "8762"
+      EUREKA_INSTANCE_HOSTNAME: eureka-server
+      EUREKA_INSTANCE_IP: eureka-server
+      EUREKA_INSTANCE_SECUREPORTENABLED: "false"
+      EUREKA_INSTANCE_NONSECUREPORTENABLED: "true"
+      LOG_PATH: /var/log/esphere
+    volumes:
+      - eureka-logs:/var/log/esphere
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8762/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - esphere-net
+
+  # ── 3. Administration API ─────────────────────────────────────────────────────
+  admin-api:
+    build:
+      context: ./esphere-ass-administration-api
+    container_name: admin-api
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Désactive SSL interne — la sécurité TLS est gérée par le gateway
+      SERVER_SSL_ENABLED: "false"
+      SERVER_PORT: "8083"
+      # Oracle
+      ORACLE_URL: ${ORACLE_URL}
+      ORACLE_USER: ${ORACLE_USER}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      # Eureka — pointe vers le container interne (HTTP)
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8762/eureka/
+      EUREKA_INSTANCE_HOSTNAME: admin-api
+      EUREKA_INSTANCE_PREFERIPADDRESS: "true"
+      LOG_PATH: /var/log/esphere
+    volumes:
+      - admin-logs:/var/log/esphere
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - esphere-net
+
+  # ── 4. Gateway Proxy (point d'entrée HTTPS public) ───────────────────────────
+  gateway-proxy:
+    build:
+      context: ./esphere-ass-gateway-proxy
+    container_name: gateway-proxy
+    restart: unless-stopped
+    ports:
+      - "4141:4141"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # Config Server interne (HTTP)
+      CONFIG_SERVER_URL: http://config-server:8888
+      # Eureka interne (HTTP)
+      EUREKA_SERVER_URL: http://eureka-server:8762/eureka/
+      EUREKA_INSTANCE_HOSTNAME: ${SERVER_IP:-77.68.94.193}
+      EUREKA_INSTANCE_IP: ${SERVER_IP:-77.68.94.193}
+      # Routes vers services internes (HTTP)
+      SERVICE_ADMIN_URL: http://admin-api:8083
+      SERVICE_BIOMETRIE_URL: ${SERVICE_BIOMETRIE_URL:-http://77.68.94.193:8081}
+      SERVICE_BIOMETRIE_PART_URL: ${SERVICE_BIOMETRIE_PART_URL:-http://77.68.94.193:8082}
+      # SSL — keystore monté depuis ./certs/
+      KEYSTORE_PATH: /certs/keystore.p12
+      KEYSTORE_PASSWORD: ${KEYSTORE_PASSWORD}
+      KEY_ALIAS: ${KEY_ALIAS:-gateway}
+      LOG_PATH: /var/log/esphere
+    volumes:
+      - ./certs:/certs:ro
+      - gateway-logs:/var/log/esphere
+    depends_on:
+      admin-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --no-check-certificate -O /dev/null https://localhost:4141/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - esphere-net
+
+  # ── 5. Frontend Angular / Nginx ──────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./esphere-ass-web
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "80:8080"
+    depends_on:
+      - gateway-proxy
+    networks:
+      - esphere-net
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  config-server-logs:
+  eureka-logs:
+  admin-logs:
+  gateway-logs:
+
+# ── Réseau interne ────────────────────────────────────────────────────────────
+networks:
+  esphere-net:
+    driver: bridge

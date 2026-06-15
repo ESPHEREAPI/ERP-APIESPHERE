@@ -1,0 +1,455 @@
+
+<!-- ╔══════════════════════════════════════════════════════════════════╗ -->
+<!-- ║   Gestion des Administrateurs Agences — AdminLTE v3 + Angular 18 ║ -->
+<!-- ╚══════════════════════════════════════════════════════════════════╝ -->
+
+<!-- Toast Notification -->
+<div *ngIf="showToast"
+     [class]="'alert alert-' + toastType + ' alert-dismissible fade show position-fixed'"
+     style="top:1.25rem;right:1.25rem;z-index:9999;min-width:320px;box-shadow:0 4px 20px rgba(0,0,0,.15)">
+  <i [class]="toastType === 'success' ? 'fas fa-check-circle mr-2'
+             : toastType === 'danger'  ? 'fas fa-times-circle mr-2'
+             : 'fas fa-exclamation-triangle mr-2'"></i>
+  {{ toastMessage }}
+  <button type="button" class="close" (click)="showToast=false">
+    <span>&times;</span>
+  </button>
+</div>
+
+<!-- Content Header -->
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-users-cog text-primary mr-2"></i>
+          {{ 'ADMIN_AGENCE.TITLE' | translate }}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a href="#">{{ 'COMMON.HOME' | translate }}</a></li>
+          <li class="breadcrumb-item active">{{ 'ADMIN_AGENCE.TITLE' | translate }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Card principal -->
+    <div class="card card-outline card-primary shadow-sm">
+
+      <!-- Card Header -->
+      <div class="card-header d-flex align-items-center">
+        <h3 class="card-title">
+          <i class="fas fa-list mr-1"></i>
+          {{ 'ADMIN_AGENCE.TITLE' | translate }}
+          <span class="badge badge-primary ml-2">{{ totalElements }}</span>
+        </h3>
+        <div class="card-tools d-flex align-items-center ml-auto">
+          <!-- Recherche -->
+          <div class="input-group input-group-sm mr-2" style="width:260px">
+            <input type="text"
+                   class="form-control"
+                   [placeholder]="'ADMIN_AGENCE.SEARCH' | translate"
+                   (input)="onSearch($event)">
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+          <!-- Nouveau bouton -->
+          <button class="btn btn-primary btn-sm" (click)="openCreate()">
+            <i class="fas fa-plus mr-1"></i> {{ 'ADMIN_AGENCE.NEW' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body p-0">
+
+        <!-- Loader -->
+        <div *ngIf="isLoading" class="d-flex justify-content-center align-items-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">{{ 'COMMON.LOADING' | translate }}</span>
+          </div>
+          <span class="ml-3 text-muted">{{ 'COMMON.LOADING' | translate }}</span>
+        </div>
+
+        <!-- Table -->
+        <div *ngIf="!isLoading" class="table-responsive">
+          <table class="table table-hover table-striped table-sm mb-0">
+            <thead class="bg-primary text-white">
+              <tr>
+                <th class="cursor-pointer" (click)="changeSort('id')">
+                  # <i [class]="sortBy==='id' ? (sortDir==='asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort text-white-50'"></i>
+                </th>
+                <th class="cursor-pointer" (click)="changeSort('codeAgence')">
+                  {{ 'ADMIN_AGENCE.OFFICE_CODE' | translate }}
+                  <i [class]="sortBy==='codeAgence' ? (sortDir==='asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort text-white-50'"></i>
+                </th>
+                <th class="cursor-pointer" (click)="changeSort('libelleAgence')">
+                  {{ 'SIDEBAR.AGENCIES' | translate }}
+                  <i [class]="sortBy==='libelleAgence' ? (sortDir==='asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort text-white-50'"></i>
+                </th>
+                <th>Email</th>
+                <th>Login</th>
+                <th>{{ 'ADMIN_AGENCE.CLIENT_NAME' | translate }}</th>
+                <th class="cursor-pointer" (click)="changeSort('username')">
+                  Username(ASAC)
+                  <i [class]="sortBy==='username' ? (sortDir==='asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort text-white-50'"></i>
+                </th>
+                <th>Office Code(ASAC)</th>
+                <th class="text-center">{{ 'ADMIN_AGENCE.EXPIRES' | translate }}</th>
+                <th>{{ 'ADMIN_AGENCE.PROFIL' | translate }}</th>
+                <th class="text-center">{{ 'ADMIN_AGENCE.CAN_EDIT' | translate }}</th>
+                <th class="text-center" style="width:120px">{{ 'CERT_LIST.COL_ACTIONS' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of items">
+                <td><span class="badge badge-secondary">{{ item.id }}</span></td>
+                <td><strong>{{ item.codeAgence }}</strong></td>
+                <td>
+                  <i class="fas fa-building text-primary mr-1"></i>
+                  {{ item.libelleAgence }}
+                </td>
+                <td>
+                  <a [href]="'mailto:' + item.email" class="text-muted">
+                    <i class="fas fa-envelope mr-1"></i>{{ item.email }}
+                  </a>
+                </td>
+                <td><code>{{ item.login }}</code></td>
+                <td>{{ item.clientName || '—' }}</td>
+                <td>
+                  <span class="badge badge-info">
+                    <i class="fas fa-user mr-1"></i>{{ item.username }}
+                  </span>
+                </td>
+                <td>{{ item.officeCode || '—' }}</td>
+                <td class="text-center">
+                  <span class="badge badge-warning text-dark">
+                    <i class="fas fa-clock mr-1"></i>{{ item.expiresAt }}h
+                  </span>
+                </td>
+                <td>
+                  <span class="badge"
+                    [class.badge-danger]="item.profilAgent === 'ADMINISTRATEUR'"
+                    [class.badge-primary]="item.profilAgent === 'CHEF_BUREAU_DIRECT_SIEGE'"
+                    [class.badge-info]="item.profilAgent === 'CHEF_BUREAU_AGENT'"
+                    [class.badge-secondary]="item.profilAgent === 'PRODUCTEUR' || !item.profilAgent">
+                    <i class="fas mr-1"
+                      [class.fa-crown]="item.profilAgent === 'ADMINISTRATEUR'"
+                      [class.fa-user-tie]="item.profilAgent === 'CHEF_BUREAU_DIRECT_SIEGE'"
+                      [class.fa-user-tag]="item.profilAgent === 'CHEF_BUREAU_AGENT'"
+                      [class.fa-user]="item.profilAgent === 'PRODUCTEUR' || !item.profilAgent"></i>
+                    {{ item.profilAgent === 'ADMINISTRATEUR'           ? ('ADMIN_AGENCE.PROFIL_ADMIN' | translate)
+                     : item.profilAgent === 'CHEF_BUREAU_DIRECT_SIEGE' ? ('ADMIN_AGENCE.PROFIL_CHEF_SIEGE' | translate)
+                     : item.profilAgent === 'CHEF_BUREAU_AGENT'        ? ('ADMIN_AGENCE.PROFIL_CHEF_AGENT' | translate)
+                     : ('ADMIN_AGENCE.PROFIL_PRODUCTEUR' | translate) }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <span *ngIf="item.canEdit" class="badge badge-success">
+                    <i class="fas fa-pen mr-1"></i>{{ 'COMMON.YES' | translate }}
+                  </span>
+                  <span *ngIf="!item.canEdit" class="badge badge-light text-muted">
+                    <i class="fas fa-lock mr-1"></i>{{ 'COMMON.NO' | translate }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-xs btn-info mr-1"
+                          [title]="'ADMIN_AGENCE.EDIT' | translate"
+                          (click)="openEdit(item)">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-xs btn-danger"
+                          [title]="'ADMIN_AGENCE.DELETE' | translate"
+                          (click)="confirmDelete(item.id!)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="items.length === 0">
+                <td colspan="10" class="text-center py-4 text-muted">
+                  <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                  {{ 'ADMIN_AGENCE.RECORDS' | translate:{ count: 0 } }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Card Footer — Pagination -->
+      <div class="card-footer clearfix" *ngIf="totalPages > 1">
+        <div class="float-left text-muted small pt-1">
+          {{ 'ADMIN_AGENCE.PAGE' | translate:{ current: currentPage + 1, total: totalPages } }}
+          &nbsp;·&nbsp;
+          {{ 'ADMIN_AGENCE.RECORDS' | translate:{ count: totalElements } }}
+        </div>
+        <ul class="pagination pagination-sm mb-0 float-right">
+          <li class="page-item" [class.disabled]="currentPage === 0">
+            <a class="page-link" (click)="goToPage(0)">
+              <i class="fas fa-angle-double-left"></i>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === 0">
+            <a class="page-link" (click)="goToPage(currentPage - 1)">
+              <i class="fas fa-angle-left"></i>
+            </a>
+          </li>
+          <ng-container *ngFor="let p of pages">
+            <li class="page-item" [class.active]="p === currentPage"
+                *ngIf="p >= currentPage - 2 && p <= currentPage + 2">
+              <a class="page-link" (click)="goToPage(p)">{{ p + 1 }}</a>
+            </li>
+          </ng-container>
+          <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+            <a class="page-link" (click)="goToPage(currentPage + 1)">
+              <i class="fas fa-angle-right"></i>
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+            <a class="page-link" (click)="goToPage(totalPages - 1)">
+              <i class="fas fa-angle-double-right"></i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div><!-- /card -->
+
+  </div>
+</section>
+
+<!-- ═══════════════════════ MODAL CRÉER / MODIFIER ═══════════════════════ -->
+<div class="modal fade" [class.show]="isModalOpen" [style.display]="isModalOpen ? 'block' : 'none'"
+     tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i [class]="isEditMode ? 'fas fa-edit mr-2' : 'fas fa-plus-circle mr-2'"></i>
+          {{ isEditMode ? ('ADMIN_AGENCE.EDIT' | translate) : ('ADMIN_AGENCE.NEW' | translate) }}
+        </h5>
+        <button type="button" class="close text-white" (click)="isModalOpen=false">
+          <span>&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body" [formGroup]="form">
+        <div class="row">
+
+          <!-- Code Agence -->
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>{{ 'ADMIN_AGENCE.OFFICE_CODE' | translate }} <span class="text-danger">*</span></label>
+              <input type="number" class="form-control form-control-sm"
+                     formControlName="codeAgence"
+                     [class.is-invalid]="isInvalid('codeAgence')"
+                     placeholder="Ex: 1001">
+              <div class="invalid-feedback">{{ errorMsg('codeAgence') }}</div>
+            </div>
+          </div>
+
+          <!-- Libellé Agence -->
+          <div class="col-md-8">
+            <div class="form-group">
+              <label>{{ 'SIDEBAR.AGENCIES' | translate }} <span class="text-danger">*</span></label>
+              <input type="text" class="form-control form-control-sm"
+                     formControlName="libelleAgence"
+                     [class.is-invalid]="isInvalid('libelleAgence')"
+                     placeholder="Nom complet de l'agence">
+              <div class="invalid-feedback">{{ errorMsg('libelleAgence') }}</div>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Email <span class="text-danger">*</span></label>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                </div>
+                <input type="email" class="form-control"
+                       formControlName="email"
+                       [class.is-invalid]="isInvalid('email')"
+                       placeholder="admin@exemple.com">
+                <div class="invalid-feedback">{{ errorMsg('email') }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Login -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Login <span class="text-danger">*</span></label>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-sign-in-alt"></i></span>
+                </div>
+                <input type="text" class="form-control"
+                       formControlName="login"
+                       [class.is-invalid]="isInvalid('login')"
+                       placeholder="login_admin">
+                <div class="invalid-feedback">{{ errorMsg('login') }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Username -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>Username ASAC <span class="text-danger">*</span></label>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-user"></i></span>
+                </div>
+                <input type="text" class="form-control"
+                       formControlName="username"
+                       [class.is-invalid]="isInvalid('username')"
+                       placeholder="username_unique">
+                <div class="invalid-feedback">{{ errorMsg('username') }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Name -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>{{ 'ADMIN_AGENCE.CLIENT_NAME' | translate }}</label>
+              <input type="text" class="form-control form-control-sm"
+                     formControlName="clientName"
+                     placeholder="Nom du client">
+            </div>
+          </div>
+
+          <!-- Office Code -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>{{ 'ADMIN_AGENCE.OFFICE_CODE' | translate }}</label>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-building"></i></span>
+                </div>
+                <input type="text" class="form-control"
+                       formControlName="officeCode"
+                       placeholder="Ex: OFF001">
+              </div>
+            </div>
+          </div>
+
+          <!-- Profil Agent -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>{{ 'ADMIN_AGENCE.PROFIL' | translate }} <span class="text-danger">*</span></label>
+              <select class="form-control form-control-sm"
+                      formControlName="profilAgent"
+                      [class.is-invalid]="isInvalid('profilAgent')">
+                <option *ngFor="let p of profils" [value]="p.value">{{ p.label | translate }}</option>
+              </select>
+              <div class="invalid-feedback">{{ errorMsg('profilAgent') }}</div>
+              <small class="form-text text-muted">
+                Détermine les modules accessibles après connexion.
+              </small>
+            </div>
+          </div>
+
+          <!-- Permission édition -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>{{ 'ADMIN_AGENCE.CAN_EDIT' | translate }}</label>
+              <div class="card card-body py-2 px-3 bg-light border">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input"
+                         id="canEditSwitch"
+                         formControlName="canEdit">
+                  <label class="custom-control-label" for="canEditSwitch">
+                    {{ 'ADMIN_AGENCE.CAN_EDIT_DESC' | translate }}
+                  </label>
+                </div>
+                <small class="text-muted mt-1 d-block">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  {{ 'ADMIN_AGENCE.CAN_EDIT_DESC' | translate }}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expires At -->
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>{{ 'ADMIN_AGENCE.EXPIRES' | translate }} <span class="text-danger">*</span></label>
+              <div class="input-group input-group-sm">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                </div>
+                <input type="number" class="form-control"
+                       formControlName="expiresAt"
+                       [class.is-invalid]="isInvalid('expiresAt')"
+                       min="1">
+                <div class="input-group-append">
+                  <span class="input-group-text">h</span>
+                </div>
+                <div class="invalid-feedback">{{ errorMsg('expiresAt') }}</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" (click)="isModalOpen=false">
+          <i class="fas fa-times mr-1"></i> {{ 'ADMIN_AGENCE.CANCEL' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary btn-sm"
+                (click)="saveForm()" [disabled]="isSaving">
+          <span *ngIf="isSaving" class="spinner-border spinner-border-sm mr-1"></span>
+          <i *ngIf="!isSaving" [class]="isEditMode ? 'fas fa-save mr-1' : 'fas fa-plus mr-1'"></i>
+          {{ isEditMode ? ('ADMIN_AGENCE.UPDATE' | translate) : ('ADMIN_AGENCE.SAVE' | translate) }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="isModalOpen" (click)="isModalOpen=false"></div>
+
+<!-- ═══════════════════════ MODAL CONFIRMATION SUPPRESSION ═══════════════ -->
+<div class="modal fade" [class.show]="isDeleteModalOpen"
+     [style.display]="isDeleteModalOpen ? 'block' : 'none'" tabindex="-1">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle mr-2"></i>{{ 'COMMON.CONFIRM' | translate }}
+        </h5>
+        <button class="close text-white" (click)="isDeleteModalOpen=false">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <i class="fas fa-trash-alt fa-3x text-danger mb-3 d-block"></i>
+        <p class="mb-0">{{ 'ADMIN_AGENCE.CONFIRM_DELETE' | translate }}</p>
+        <small class="text-muted">{{ 'ADMIN_AGENCE.IRREVERSIBLE' | translate }}</small>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button class="btn btn-secondary btn-sm" (click)="isDeleteModalOpen=false">
+          <i class="fas fa-times mr-1"></i> {{ 'ADMIN_AGENCE.CANCEL' | translate }}
+        </button>
+        <button class="btn btn-danger btn-sm" (click)="doDelete()">
+          <i class="fas fa-trash mr-1"></i> {{ 'ADMIN_AGENCE.DELETE' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="isDeleteModalOpen" (click)="isDeleteModalOpen=false"></div>

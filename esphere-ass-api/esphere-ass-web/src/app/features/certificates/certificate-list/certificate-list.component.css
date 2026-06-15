@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════════════
+   certificate-list.component.css
+   ═══════════════════════════════════════════════════════════════ */
+
+.page-title { font-size: 1.3rem; font-weight: 600; }
+
+.search-group { max-width: 220px; }
+
+/* Colonnes triables */
+.sortable-col { cursor: pointer; user-select: none; }
+.sortable-col:hover { background: rgba(255,255,255,.08); }
+
+/* Ligne de tableau */
+.prod-row { transition: background .12s; }
+
+/* Badge référence */
+.ref-badge {
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Pastilles certificats */
+.cert-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  background: #e3f2fd;
+  color: #1565c0;
+  border-radius: 50%;
+  font-size: 10px;
+  margin-right: 2px;
+  cursor: default;
+}
+
+/* ── Colonne Police ────────────────────────────────────────── */
+.police-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #fff8e1;
+  color: #f57f17;
+  border: 1px solid #ffe082;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+/* ── En-tête carte ─────────────────────────────────────────── */
+.card-primary.card-outline > .card-header {
+  border-bottom: 2px solid #007bff;
+}

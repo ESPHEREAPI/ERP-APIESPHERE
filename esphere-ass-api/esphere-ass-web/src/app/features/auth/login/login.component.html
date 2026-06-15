@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ESPHERE-ASS | Connexion</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+  <!-- Google Font: Source Sans Pro -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" rel="stylesheet">
+</head>
+
+<body class="hold-transition login-page">
+
+  <!-- Toast notifications -->
+  <p-toast position="top-right" [life]="5000"></p-toast>
+
+  <div class="login-box">
+    <!-- Login logo -->
+    <div class="login-logo">
+      <a href="#">
+        <img src="../1logo.png"
+             alt="Zenithe Logo"
+             class="brand-image img-circle elevation-3 mb-2"
+             style="opacity: .9; width: 80px; height: 80px;">
+       <br>
+        <b class="text-primary"></b>
+
+          <b class="login-logo bold-text">ESPHERE </b>
+              <span class="text-sm">  Orass-Web</span>
+      </a>
+    </div>
+
+    <!-- Login box -->
+    <div class="card card-outline card-primary shadow">
+      <div class="card-header text-center">
+        <h4 class="h4 text-primary mb-0">
+          <i class="fas fa-sign-in-alt mr-2"></i>{{ 'LOGIN.TITLE' | translate }}
+        </h4>
+      </div>
+
+      <div class="card-body">
+        <p class="login-box-msg text-muted">
+          <i class="fas fa-user-shield mr-1"></i>
+          {{ 'LOGIN.SUBTITLE' | translate }}
+        </p>
+
+        <!-- Loading indicator -->
+        <div *ngIf="isLoading" class="text-center mb-3">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">{{ 'LOGIN.LOADING' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- Login Form -->
+        <form #loginForm="ngForm"
+              (ngSubmit)="onLogin(loginForm)"
+              novalidate
+              autocomplete="on"
+              [class.was-validated]="loginForm.submitted">
+
+          <!-- Username field -->
+          <div class="input-group mb-3">
+            <input type="text"
+                   class="form-control"
+                   [placeholder]="'LOGIN.USERNAME' | translate"
+                   name="username"
+                   [(ngModel)]="credentials.username"
+                   #usernameField="ngModel"
+                   required
+                   autocomplete="username"
+                   [class.is-invalid]="usernameField.invalid && (usernameField.dirty || usernameField.touched)"
+                   [class.is-valid]="usernameField.valid && (usernameField.dirty || usernameField.touched)"
+                   maxlength="100"
+                   [disabled]="isLoading">
+            <div class="input-group-append">
+              <div class="input-group-text">
+                <span class="fas fa-user-shield"></span>
+              </div>
+            </div>
+            <div class="invalid-feedback" *ngIf="usernameField.invalid && (usernameField.dirty || usernameField.touched)">
+              <div *ngIf="usernameField.errors?.['required']">{{ 'COMMON.REQUIRED' | translate }}</div>
+            </div>
+          </div>
+
+          <!-- Password field -->
+          <div class="input-group mb-3">
+            <input [type]="showPassword ? 'text' : 'password'"
+                   class="form-control"
+                   [placeholder]="'LOGIN.PASSWORD' | translate"
+                   name="password"
+                   [(ngModel)]="credentials.password"
+                   #passwordField="ngModel"
+                   required
+                   minlength="6"
+                   autocomplete="current-password"
+                   [class.is-invalid]="passwordField.invalid && (passwordField.dirty || passwordField.touched)"
+                   [class.is-valid]="passwordField.valid && (passwordField.dirty || passwordField.touched)"
+                   maxlength="128"
+                   [disabled]="isLoading">
+            <div class="input-group-append">
+              <button class="btn btn-outline-secondary"
+                      type="button"
+                      (click)="togglePasswordVisibility()"
+                      [disabled]="isLoading"
+                      [title]="(showPassword ? 'LOGIN.HIDE_PASSWORD' : 'LOGIN.SHOW_PASSWORD') | translate">
+                <span class="fas" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></span>
+              </button>
+            </div>
+            <div class="invalid-feedback" *ngIf="passwordField.invalid && (passwordField.dirty || passwordField.touched)">
+              <div *ngIf="passwordField.errors?.['required']">{{ 'COMMON.REQUIRED' | translate }}</div>
+              <div *ngIf="passwordField.errors?.['minlength']">{{ 'COMMON.MIN_LENGTH' | translate:{ min: 6 } }}</div>
+            </div>
+          </div>
+
+          <!-- Remember me and Login button -->
+          <div class="row align-items-center">
+            <div class="col-8">
+              <div class="icheck-primary">
+                <input type="checkbox"
+                       id="remember"
+                       name="remember"
+                       [(ngModel)]="credentials.remember"
+                       [disabled]="isLoading">
+                <label for="remember" class="text-sm">
+                  {{ 'LOGIN.REMEMBER' | translate }}
+                </label>
+              </div>
+            </div>
+            <div class="col-4">
+              <button type="submit"
+                      class="btn btn-primary btn-block custom-btn"
+                      [disabled]="loginForm.invalid || isLoading">
+                <span *ngIf="!isLoading">
+                  <i class="fas fa-sign-in-alt mr-2"></i>{{ 'LOGIN.SUBMIT' | translate }}
+                </span>
+                <span *ngIf="isLoading">
+                  <i class="fas fa-spinner fa-spin mr-2"></i>{{ 'LOGIN.LOADING' | translate }}
+                </span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Language switcher -->
+        <div class="mt-3 text-center">
+          <div class="lang-switcher">
+            <span class="lang-label text-muted text-sm mr-2">
+              <i class="fas fa-globe mr-1"></i>{{ 'LANG.SELECT' | translate }} :
+            </span>
+            <button type="button"
+                    class="btn btn-sm lang-btn mr-1"
+                    [class.btn-primary]="currentLang === 'fr'"
+                    [class.btn-outline-secondary]="currentLang !== 'fr'"
+                    (click)="languageService.use('fr')">
+              🇫🇷 FR
+            </button>
+            <button type="button"
+                    class="btn btn-sm lang-btn"
+                    [class.btn-primary]="currentLang === 'en'"
+                    [class.btn-outline-secondary]="currentLang !== 'en'"
+                    (click)="languageService.use('en')">
+              🇬🇧 EN
+            </button>
+          </div>
+        </div>
+
+        <!-- Additional links -->
+        <div class="mt-3 text-center">
+          <p class="mb-1">
+            <a href="#" class="text-primary">
+              <i class="fas fa-key mr-1"></i>{{ currentLang === 'fr' ? 'Mot de passe oublié ?' : 'Forgot password?' }}
+            </a>
+          </p>
+        </div>
+
+        <!-- Security notice -->
+        <div class="alert alert-info mt-3" role="alert">
+          <i class="fas fa-info-circle mr-2"></i>
+          <small>
+            {{ currentLang === 'fr'
+              ? 'Vos données sont protégées par un chiffrement SSL/TLS. Cette session expirera automatiquement pour votre sécurité.'
+              : 'Your data is protected by SSL/TLS encryption. This session will expire automatically for your security.' }}
+          </small>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="card-footer text-center text-muted">
+        <small>
+          <i class="fas fa-shield-alt mr-1"></i>
+          © {{ currentYear }} ESPHERE  Orass-Web - {{ currentLang === 'fr' ? 'Tous droits réservés' : 'All rights reserved' }}
+        </small>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

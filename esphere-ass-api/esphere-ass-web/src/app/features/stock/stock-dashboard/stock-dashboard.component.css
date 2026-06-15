@@ -1,0 +1,16 @@
+.stock-card {
+  border-left: 4px solid #ccc;
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: #fff;
+  transition: box-shadow .2s;
+}
+.stock-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+.stock-card.border-success  { border-left-color: #28a745; }
+.stock-card.border-warning  { border-left-color: #ffc107; }
+.stock-card.border-danger   { border-left-color: #dc3545; }
+.stock-card.border-dark     { border-left-color: #343a40; }
+
+.timeline .timeline-item { font-size: .85rem; }
+.timeline .time { font-size: .75rem; }

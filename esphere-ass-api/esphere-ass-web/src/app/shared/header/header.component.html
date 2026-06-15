@@ -1,0 +1,173 @@
+<!-- src/app/components/header/header.component.html -->
+<nav class="main-header navbar navbar-expand navbar-white navbar-light hdr-root">
+
+  <!-- ═══════════════════════════════════════════════
+       GAUCHE — Toggle sidebar + Session info
+  ════════════════════════════════════════════════ -->
+  <ul class="navbar-nav hdr-left">
+
+    <!-- Burger sidebar -->
+    <li class="nav-item">
+      <a class="nav-link hdr-burger" data-widget="pushmenu" href="#" role="button">
+        <i class="fas fa-bars"></i>
+      </a>
+    </li>
+
+    <!-- Pill session : Agence | Compagnie -->
+    <li class="nav-item d-none d-lg-flex align-items-center" *ngIf="session">
+      <div class="hdr-session-pill">
+
+        <!-- Agence -->
+        <span class="hdr-pill-segment hdr-pill-agency">
+          <span class="hdr-pill-icon"><i class="fas fa-building"></i></span>
+          <span class="hdr-pill-label">{{ session.agencyName }}</span>
+          <span class="hdr-pill-code">{{ session.agencyCode }}</span>
+        </span>
+
+        <!-- Divider -->
+        <span class="hdr-pill-div"></span>
+
+        <!-- Compagnie -->
+        <span class="hdr-pill-segment hdr-pill-company">
+          <span class="hdr-pill-icon"><i class="fas fa-shield-alt"></i></span>
+          <span class="hdr-pill-label">{{ session.companyName }}</span>
+        </span>
+
+      </div>
+    </li>
+
+  </ul>
+
+  <!-- ═══════════════════════════════════════════════
+       DROITE — Notifications + Messages + Profil
+  ════════════════════════════════════════════════ -->
+  <ul class="navbar-nav ml-auto hdr-right">
+
+    <!-- ── Recherche rapide ── -->
+    <li class="nav-item hdr-search-wrap d-none d-md-flex align-items-center">
+      <div class="hdr-search-box">
+        <i class="fas fa-search hdr-search-icon"></i>
+        <input type="text" class="hdr-search-input" placeholder="Recherche rapide…" />
+      </div>
+    </li>
+
+    <!-- ── Messages ── -->
+    <li class="nav-item dropdown hdr-icon-item">
+      <a class="nav-link hdr-icon-btn" data-toggle="dropdown" href="#" role="button" aria-haspopup="true">
+        <i class="far fa-comments"></i>
+        <span class="hdr-badge hdr-badge-danger">3</span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right hdr-dropdown">
+        <div class="hdr-dropdown-header">
+          <span><i class="far fa-comments mr-2"></i>Messages</span>
+          <span class="hdr-dropdown-count">3 nouveaux</span>
+        </div>
+
+        <a href="#" class="dropdown-item hdr-msg-item">
+          <div class="hdr-msg-avatar">BD</div>
+          <div class="hdr-msg-body">
+            <div class="hdr-msg-name">Brad Diesel <span class="hdr-msg-time">4 h</span></div>
+            <div class="hdr-msg-text">Appelez-moi quand vous pourrez…</div>
+          </div>
+          <span class="hdr-msg-dot"></span>
+        </a>
+
+        <a href="#" class="dropdown-item hdr-msg-item">
+          <div class="hdr-msg-avatar hdr-avatar-teal">MK</div>
+          <div class="hdr-msg-body">
+            <div class="hdr-msg-name">Marie Koné <span class="hdr-msg-time">1 h</span></div>
+            <div class="hdr-msg-text">Le dossier sinistre est prêt pour validation.</div>
+          </div>
+          <span class="hdr-msg-dot"></span>
+        </a>
+
+        <div class="hdr-dropdown-footer">
+          <a href="#">Voir tous les messages <i class="fas fa-arrow-right ml-1"></i></a>
+        </div>
+      </div>
+    </li>
+
+    <!-- ── Notifications ── -->
+    <li class="nav-item dropdown hdr-icon-item">
+      <a class="nav-link hdr-icon-btn" data-toggle="dropdown" href="#" role="button" aria-haspopup="true">
+        <i class="far fa-bell"></i>
+        <span class="hdr-badge hdr-badge-warning">15</span>
+      </a>
+      <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right hdr-dropdown">
+        <div class="hdr-dropdown-header">
+          <span><i class="far fa-bell mr-2"></i>Notifications</span>
+          <span class="hdr-dropdown-count">15</span>
+        </div>
+
+        <a href="#" class="dropdown-item hdr-notif-item">
+          <span class="hdr-notif-icon hdr-notif-blue"><i class="fas fa-envelope"></i></span>
+          <span class="hdr-notif-text">4 nouveaux messages reçus</span>
+          <span class="hdr-notif-time">3 min</span>
+        </a>
+        <a href="#" class="dropdown-item hdr-notif-item">
+          <span class="hdr-notif-icon hdr-notif-amber"><i class="fas fa-file-contract"></i></span>
+          <span class="hdr-notif-text">2 contrats en attente de validation</span>
+          <span class="hdr-notif-time">1 h</span>
+        </a>
+        <a href="#" class="dropdown-item hdr-notif-item">
+          <span class="hdr-notif-icon hdr-notif-green"><i class="fas fa-check-circle"></i></span>
+          <span class="hdr-notif-text">Sinistre #2048 clôturé avec succès</span>
+          <span class="hdr-notif-time">2 h</span>
+        </a>
+
+        <div class="hdr-dropdown-footer">
+          <a href="#">Voir toutes les notifications <i class="fas fa-arrow-right ml-1"></i></a>
+        </div>
+      </div>
+    </li>
+
+    <!-- ── Profil utilisateur ── -->
+    <li class="nav-item dropdown hdr-icon-item">
+      <a class="nav-link hdr-profile-btn" data-toggle="dropdown" href="#" role="button" aria-haspopup="true">
+        <div class="hdr-avatar-ring">
+          <div class="hdr-avatar-ring hdr-avatar-lg" [style.background-color]="getAvatarColor(session?.nomcomplet || '')">
+              <span class="hdr-avatar-initials">{{ getInitials(session?.nomcomplet || '') }}</span>
+            </div>
+        </div>
+        <div class="hdr-profile-meta d-none d-md-block">
+          <span class="hdr-profile-name">{{session?.nomcomplet}}</span>
+          <!-- ──   <span class="hdr-profile-role">Gestionnaire</span>── -->
+        </div>
+        <i class="fas fa-chevron-down hdr-chevron d-none d-md-inline"></i>
+      </a>
+      <div class="dropdown-menu dropdown-menu-right hdr-dropdown hdr-profile-dropdown">
+        <div class="hdr-profile-hero">
+          <div class="hdr-avatar-ring hdr-avatar-lg">
+             <div class="hdr-avatar-ring hdr-avatar-lg" [style.background-color]="getAvatarColor(session?.nomcomplet || '')">
+              <span class="hdr-avatar-initials">{{ getInitials(session?.nomcomplet || '') }}</span>
+            </div>
+          </div>
+          <div>
+           
+            <div class="hdr-profile-name" style="font-size:14px;font-weight:600;">{{session?.nomcomplet}}</div>
+            <div class="hdr-profile-role">admin&#64;zenith-insurance.com</div>
+          </div>
+        </div>
+
+        <div class="hdr-dropdown-divider"></div>
+
+        <a href="#" class="dropdown-item hdr-profile-item">
+          <i class="fas fa-user-circle"></i> Mon profil
+        </a>
+        <a href="#" class="dropdown-item hdr-profile-item">
+          <i class="fas fa-cog"></i> Paramètres
+        </a>
+        <a href="#" class="dropdown-item hdr-profile-item">
+          <i class="fas fa-life-ring"></i> Aide & Support
+        </a>
+
+        <div class="hdr-dropdown-divider"></div>
+
+        <a class="dropdown-item hdr-logout-item" (click)="onLogout()" href="javascript:void(0)">
+          <i class="fas fa-sign-out-alt"></i> Déconnexion
+        </a>
+      </div>
+    </li>
+
+  </ul>
+</nav>

@@ -1,0 +1,504 @@
+<!-- ══════════════════════════════════════════════════════════════
+     stock-list.component.html — Gestion des stocks d'attestations
+     ══════════════════════════════════════════════════════════════ -->
+
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-warehouse mr-2 text-primary"></i>{{ 'STOCK_LIST.TITLE' | translate }}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard-payload">{{ 'COMMON.HOME' | translate }}</a></li>
+          <li class="breadcrumb-item"><a routerLink="/stock">{{ 'SIDEBAR.STOCK' | translate }}</a></li>
+          <li class="breadcrumb-item active">{{ 'SIDEBAR.STOCK_LIST' | translate }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <div class="alert alert-danger alert-dismissible" *ngIf="errorMessage">
+      <button type="button" class="close" (click)="errorMessage=''">×</button>
+      <i class="fas fa-exclamation-circle mr-2"></i>{{ errorMessage }}
+    </div>
+
+    <!-- Sélecteur de bureau — Administrateur uniquement -->
+    <div class="card card-warning card-outline elevation-1 mb-3" *ngIf="isAdmin">
+      <div class="card-header py-2">
+        <h3 class="card-title">
+          <i class="fas fa-crown text-warning mr-2"></i>
+          {{ 'STOCK_LIST.ADMIN_VIEW' | translate }}
+        </h3>
+      </div>
+      <div class="card-body py-2">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <select class="form-control form-control-sm" [(ngModel)]="officeCode" (change)="load()">
+              <option value="">{{ 'STOCK_LIST.ALL_BUREAUX' | translate }}</option>
+              <option *ngFor="let b of bureaux" [value]="b.officeCode || b.codeAgence">
+                {{ b.libelleAgence }} — {{ b.officeCode || b.codeAgence }}
+              </option>
+            </select>
+          </div>
+          <div class="col-md-auto">
+            <span class="badge badge-warning text-dark">
+              <i class="fas fa-filter mr-1"></i>
+              {{ officeCode ? 'Bureau sélectionné : ' + officeCode : ('STOCK_LIST.ALL_BUREAUX' | translate) }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-primary card-outline elevation-1">
+      <div class="card-header">
+        <div class="row align-items-center w-100">
+          <div class="col-md-4 mb-2 mb-md-0">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control"
+                     [placeholder]="'STOCK_LIST.SEARCH' | translate"
+                     [(ngModel)]="searchTerm" (input)="filter()">
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3 mb-2 mb-md-0">
+            <select class="form-control form-control-sm" [(ngModel)]="filterStatut" (change)="filter()">
+              <option value="">{{ 'STOCK_LIST.ALL_LEVELS' | translate }}</option>
+              <option value="NORMAL">{{ 'STOCK_LIST.NORMAL' | translate }}</option>
+              <option value="ALERTE">{{ 'STOCK_LIST.ALERT' | translate }}</option>
+              <option value="CRITIQUE">{{ 'STOCK_LIST.CRITICAL' | translate }}</option>
+              <option value="RUPTURE">{{ 'STOCK_LIST.RUPTURE' | translate }}</option>
+            </select>
+          </div>
+          <div class="col-md-5 text-md-right">
+            <button class="btn btn-sm btn-outline-secondary mr-2" (click)="load()" [title]="'STOCK_LIST.REFRESH' | translate">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="btn btn-sm btn-success" (click)="ouvrirInit()" *ngIf="isAdmin">
+              <i class="fas fa-plus mr-1"></i>{{ 'STOCK_LIST.NEW_STOCK' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+
+        <div class="text-center py-5" *ngIf="isLoading">
+          <div class="spinner-border text-primary"></div>
+          <p class="mt-2 text-muted">{{ 'STOCK_LIST.LOADING' | translate }}</p>
+        </div>
+
+        <div class="text-center py-5" *ngIf="!isLoading && filtered.length === 0">
+          <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+          <p class="text-muted">{{ 'STOCK_LIST.EMPTY' | translate }}</p>
+          <button class="btn btn-success" (click)="ouvrirInit()" *ngIf="isAdmin">
+            <i class="fas fa-plus mr-1"></i>{{ 'STOCK_LIST.FIRST_STOCK' | translate }}
+          </button>
+        </div>
+
+        <div class="table-responsive" *ngIf="!isLoading && filtered.length > 0">
+          <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th>{{ 'STOCK_LIST.COL_BUREAU' | translate }}</th>
+                <th>{{ 'STOCK_LIST.COL_TYPE' | translate }}</th>
+                <th class="text-center">{{ 'STOCK_LIST.COL_AVAILABLE' | translate }}</th>
+                <th style="min-width:150px">{{ 'STOCK_LIST.COL_LEVEL' | translate }}</th>
+                <th class="text-center">{{ 'STOCK_LIST.COL_ALERT_TH' | translate }}</th>
+                <th class="text-center">{{ 'STOCK_LIST.COL_STATUS' | translate }}</th>
+                <th class="text-right">{{ 'CERT_LIST.COL_ACTIONS' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of filtered">
+                <td>
+                  <div class="font-weight-bold">{{ s.officeName || s.officeCode }}</div>
+                  <small class="text-muted">Code : {{ s.officeCode }}</small>
+                </td>
+                <td>
+                  <div>{{ labelStock(s) }}</div>
+                  <small class="text-muted" *ngIf="badgeVariant(s)">
+                    Variante : <span class="badge badge-light">{{ badgeVariant(s) }}</span>
+                  </small>
+                </td>
+                <td class="text-center">
+                  <span class="font-weight-bold text-{{ statutColor(s.statut) }} h5 mb-0">
+                    {{ s.quantiteDisponible }}
+                  </span>
+                  <br>
+                  <small class="text-muted">sur {{ s.quantiteTotaleApprovisionnee }} reçus</small>
+                </td>
+                <td>
+                  <div class="progress progress-sm mb-1">
+                    <div class="progress-bar bg-{{ pctColor(s) }}"
+                         [style.width]="pct(s) + '%'"
+                         [title]="pct(s) + '% restant'">
+                    </div>
+                  </div>
+                  <small class="text-muted">{{ pct(s) }}% restant — {{ s.quantiteTotalConsommee }} utilisés</small>
+                </td>
+                <td class="text-center">
+                  <small class="text-warning d-block">
+                    <i class="fas fa-bell mr-1"></i>{{ 'STOCK_DASH.ALERT_TH' | translate }} : {{ s.seuilAlerte }}
+                  </small>
+                  <small class="text-danger d-block">
+                    <i class="fas fa-exclamation mr-1"></i>{{ 'STOCK_DASH.CRITICAL_TH' | translate }} : {{ s.seuilCritique }}
+                  </small>
+                </td>
+                <td class="text-center">
+                  <span class="badge badge-{{ statutColor(s.statut) }} badge-pill">
+                    <i class="{{ statutIcon(s.statut) }} mr-1"></i>
+                    <span [ngSwitch]="s.statut">
+                      <span *ngSwitchCase="'NORMAL'">{{ 'STOCK_LIST.NORMAL' | translate }}</span>
+                      <span *ngSwitchCase="'ALERTE'">{{ 'STOCK_LIST.ALERT' | translate }}</span>
+                      <span *ngSwitchCase="'CRITIQUE'">{{ 'STOCK_LIST.CRITICAL' | translate }}</span>
+                      <span *ngSwitchCase="'RUPTURE'">{{ 'STOCK_LIST.RUPTURE' | translate }}</span>
+                    </span>
+                  </span>
+                </td>
+                <td class="text-right">
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-success" [title]="'STOCK_LIST.APPRO_BTN' | translate"
+                            (click)="openAppro(s)">
+                      <i class="fas fa-plus"></i> {{ 'STOCK_LIST.APPRO_BTN' | translate }}
+                    </button>
+                    <button class="btn btn-warning" [title]="'STOCK_LIST.AJUST_BTN' | translate"
+                            (click)="openAjust(s)">
+                      <i class="fas fa-sliders-h"></i>
+                    </button>
+                    <a [routerLink]="['/stock/historique']" class="btn btn-info"
+                       [title]="'SIDEBAR.STOCK_HISTORY' | translate">
+                      <i class="fas fa-history"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-footer text-muted" *ngIf="!isLoading">
+        <i class="fas fa-info-circle mr-1"></i>
+        {{ 'STOCK_LIST.FOOTER' | translate:{ shown: filtered.length, total: stocks.length } }}
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══ MODAL APPROVISIONNEMENT ═══════════════════════════════════ -->
+<div class="modal fade show d-block" tabindex="-1" *ngIf="showApproModal"
+     style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-boxes mr-2"></i>{{ 'STOCK_LIST.APPRO_TITLE' | translate }}
+        </h5>
+        <button type="button" class="close text-white" (click)="closeModals()">×</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedStock">
+
+        <!-- Rappel du bureau concerné -->
+        <div class="alert alert-light border-left border-success mb-3">
+          <div class="font-weight-bold text-success">
+            <i class="fas fa-building mr-2"></i>
+            {{ selectedStock.officeName || selectedStock.officeCode }}
+          </div>
+          <div class="text-muted mt-1">
+            {{ 'STOCK_LIST.COL_TYPE' | translate }} :
+            <strong>{{ labelStock(selectedStock) }}</strong>
+            <span *ngIf="badgeVariant(selectedStock)" class="badge badge-light ml-1">
+              {{ badgeVariant(selectedStock) }}
+            </span>
+          </div>
+          <div class="mt-1">
+            {{ 'STOCK_LIST.COL_AVAILABLE' | translate }} :
+            <span class="font-weight-bold text-{{ statutColor(selectedStock.statut) }}">
+              {{ selectedStock.quantiteDisponible }}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold">
+            Nombre d'attestations reçues <span class="text-danger">*</span>
+          </label>
+          <input type="number" class="form-control form-control-lg" [(ngModel)]="approForm.quantite"
+                 min="1" placeholder="ex : 200" autofocus>
+          <small class="form-text text-muted">
+            Comptez les carnets d'attestations reçus physiquement.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Référence du bon de livraison / bordereau</label>
+          <input type="text" class="form-control" [(ngModel)]="approForm.referenceSource"
+                 placeholder="ex : BL-2026-042, FACT-00123">
+          <small class="form-text text-muted">
+            Numéro du document de réception (facultatif mais recommandé pour la traçabilité).
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Observations</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="approForm.motif"
+                    placeholder="ex : Réception mensuelle mars 2026, livraison partielle..."></textarea>
+        </div>
+
+        <div class="alert alert-info" *ngIf="approForm.quantite > 0">
+          <i class="fas fa-calculator mr-2"></i>
+          Après enregistrement, le stock passera à
+          <strong>{{ selectedStock.quantiteDisponible + approForm.quantite }} attestations</strong>.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button class="btn btn-success btn-lg"
+                (click)="saveAppro()"
+                [disabled]="savingAppro || !approForm.quantite || approForm.quantite <= 0">
+          <span class="spinner-border spinner-border-sm mr-1" *ngIf="savingAppro"></span>
+          <i class="fas fa-check mr-1" *ngIf="!savingAppro"></i>
+          {{ 'STOCK_LIST.SAVE_APPRO' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MODAL AJUSTEMENT ══════════════════════════════════════════ -->
+<div class="modal fade show d-block" tabindex="-1" *ngIf="showAjustModal"
+     style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-tools mr-2"></i>{{ 'STOCK_LIST.AJUST_TITLE' | translate }}
+        </h5>
+        <button type="button" class="close text-white" (click)="closeModals()">×</button>
+      </div>
+      <div class="modal-body" *ngIf="selectedStock">
+
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          Utilisez cette fonction uniquement après un <strong>inventaire physique</strong>
+          ou pour corriger une <strong>erreur de saisie</strong>.
+        </div>
+
+        <div class="alert alert-light border mb-3">
+          <strong>{{ selectedStock.officeName || selectedStock.officeCode }}</strong>
+          — {{ labelStock(selectedStock) }}<br>
+          {{ 'STOCK_LIST.COL_AVAILABLE' | translate }} : <strong>{{ selectedStock.quantiteDisponible }}</strong>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold">
+            Correction à appliquer <span class="text-danger">*</span>
+          </label>
+          <input type="number" class="form-control" [(ngModel)]="ajustForm.delta"
+                 placeholder="ex : +10 pour ajouter, -5 pour retirer">
+          <small class="form-text text-muted" *ngIf="selectedStock">
+            Stock après correction :
+            <strong [ngClass]="selectedStock.quantiteDisponible + (ajustForm.delta||0) >= 0 ? 'text-success' : 'text-danger'">
+              {{ selectedStock.quantiteDisponible + (ajustForm.delta || 0) }} attestations
+            </strong>
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label class="font-weight-bold">
+            Motif de la correction <span class="text-danger">*</span>
+          </label>
+          <textarea class="form-control" rows="2" [(ngModel)]="ajustForm.motif"
+                    placeholder="ex : Inventaire physique du 11/06/2026, 3 attestations endommagées..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button class="btn btn-warning" (click)="saveAjust()"
+                [disabled]="savingAjust || !ajustForm.delta || ajustForm.delta === 0 || !ajustForm.motif">
+          <span class="spinner-border spinner-border-sm mr-1" *ngIf="savingAjust"></span>
+          <i class="fas fa-check mr-1" *ngIf="!savingAjust"></i>
+          {{ 'STOCK_LIST.AJUST_BTN' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MODAL OUVERTURE STOCK POUR UN BUREAU ═════════════════════ -->
+<div class="modal fade show d-block" tabindex="-1" *ngIf="showInitModal"
+     style="background:rgba(0,0,0,.5)">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-folder-plus mr-2"></i>{{ 'STOCK_LIST.INIT_TITLE' | translate }}
+        </h5>
+        <button type="button" class="close text-white" (click)="closeModals()">×</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- ÉTAPE 1 : choisir le bureau -->
+        <div class="card card-default mb-3">
+          <div class="card-header bg-light py-2">
+            <strong><i class="fas fa-building mr-2 text-primary"></i>{{ 'STOCK_LIST.STEP1' | translate }}</strong>
+          </div>
+          <div class="card-body">
+            <div class="form-group mb-0">
+              <label class="font-weight-bold">
+                Bureau / Agence <span class="text-danger">*</span>
+              </label>
+              <select class="form-control" [(ngModel)]="initForm.bureauSelectionne">
+                <option [ngValue]="null" disabled>
+                  {{ loadingBureaux ? ('COMMON.LOADING' | translate) : '— Sélectionner un bureau —' }}
+                </option>
+                <option *ngFor="let b of bureaux" [ngValue]="b">
+                  {{ b.libelleAgence }}
+                  <span *ngIf="b.officeCode"> — Code : {{ b.officeCode }}</span>
+                </option>
+              </select>
+              <small class="form-text text-muted">
+                C'est le bureau qui va recevoir et utiliser physiquement les carnets d'attestations.
+              </small>
+            </div>
+          </div>
+        </div>
+
+        <!-- ÉTAPE 2 : type d'attestation -->
+        <div class="card card-default mb-3">
+          <div class="card-header bg-light py-2">
+            <strong><i class="fas fa-file-contract mr-2 text-info"></i>{{ 'STOCK_LIST.STEP2' | translate }}</strong>
+          </div>
+          <div class="card-body">
+
+            <div class="alert alert-info mb-3 py-2">
+              <i class="fas fa-info-circle mr-2"></i>
+              <strong>Cas le plus courant :</strong> laissez les champs vides si le bureau utilise
+              <strong>un seul type d'attestation</strong> (stock global).
+              Renseignez seulement si vous gérez <strong>plusieurs types séparément</strong>
+              (ex : Terrestre, Fluviale, Maritime…).
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Code du type <small class="text-muted">(laisser vide = stock global)</small></label>
+                  <input type="text" class="form-control"
+                         [(ngModel)]="initForm.certTypeCode"
+                         placeholder="ex : TERR, FLUV, MARIT">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label>Libellé du type</label>
+                  <input type="text" class="form-control"
+                         [(ngModel)]="initForm.certTypeName"
+                         placeholder="ex : Attestation Terrestre">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-0">
+                  <label>Couleur / Variante <small class="text-muted">(facultatif)</small></label>
+                  <input type="text" class="form-control"
+                         [(ngModel)]="initForm.certVariantCode"
+                         placeholder="ex : JAUNE, ROSE, BLEU">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-0">
+                  <label>Libellé variante</label>
+                  <input type="text" class="form-control"
+                         [(ngModel)]="initForm.certVariantName"
+                         placeholder="ex : Jaune CIMA">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ÉTAPE 3 : quantité initiale et seuils -->
+        <div class="card card-default mb-0">
+          <div class="card-header bg-light py-2">
+            <strong><i class="fas fa-sliders-h mr-2 text-success"></i>{{ 'STOCK_LIST.STEP3' | translate }}</strong>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="font-weight-bold">Carnets reçus aujourd'hui</label>
+                  <input type="number" class="form-control" min="0"
+                         [(ngModel)]="initForm.quantiteInitiale"
+                         placeholder="0">
+                  <small class="form-text text-muted">
+                    Nombre d'attestations disponibles dès l'ouverture.
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>
+                    <i class="fas fa-bell text-warning mr-1"></i>
+                    Alerter quand il reste moins de
+                  </label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" min="0"
+                           [(ngModel)]="initForm.seuilAlerte">
+                    <div class="input-group-append">
+                      <span class="input-group-text">att.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label>
+                    <i class="fas fa-exclamation-circle text-danger mr-1"></i>
+                    Niveau critique en dessous de
+                  </label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" min="0"
+                           [(ngModel)]="initForm.seuilCritique">
+                    <div class="input-group-append">
+                      <span class="input-group-text">att.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-group mb-0">
+              <label>Référence / Observations</label>
+              <textarea class="form-control" rows="2"
+                        [(ngModel)]="initForm.motif"
+                        placeholder="ex : Ouverture stock bureau suite dotation initiale du 11/06/2026"></textarea>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModals()">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button class="btn btn-primary btn-lg" (click)="saveInit()"
+                [disabled]="savingInit || !initForm.bureauSelectionne">
+          <span class="spinner-border spinner-border-sm mr-1" *ngIf="savingInit"></span>
+          <i class="fas fa-folder-plus mr-1" *ngIf="!savingInit"></i>
+          {{ 'STOCK_LIST.INIT_BTN' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

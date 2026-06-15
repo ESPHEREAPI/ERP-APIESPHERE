@@ -1,0 +1,90 @@
+# ========================================
+# Configuration du Config Server
+# ========================================
+
+# Serveur
+server.port=8888
+spring.application.name=esphere-ass-config-serveur
+
+# ========================================
+# Configuration Git
+# ========================================
+spring.cloud.config.server.git.uri=https://github.com/ESPHEREAPI/esphere-ass-erp.git
+# Branch \u00e0 utiliser
+spring.cloud.config.server.git.default-label=main
+spring.cloud.config.server.git.timeout=30
+
+# \u26a0\ufe0f IMPORTANT: Chercher les configs dans le sous-dossier 'docker'
+#spring.cloud.config.server.git.search-paths=docker
+
+# Cloner au d\u00e9marrage
+spring.cloud.config.server.git.clone-on-start=true
+spring.cloud.config.server.git.force-pull=true
+
+# Si le d\u00e9p\u00f4t est priv\u00e9, d\u00e9commentez :
+# spring.cloud.config.server.git.username=${GIT_USERNAME}
+# spring.cloud.config.server.git.password=${GIT_PASSWORD}
+
+# Profil actif
+//spring.profiles.active=git
+//spring.cloud.config.server.git.implementation=native-git
+
+# D\u00e9sactiver la recherche de config externe
+spring.cloud.config.enabled=false
+
+# D\u00e9sactiver Eureka
+eureka.client.enabled=false
+spring.cloud.config.discovery.enabled=false
+
+# Actuator
+management.endpoints.web.exposure.include=health,info
+
+# Logging
+logging.level.org.springframework.cloud.config=DEBUG
+logging.level.org.springframework.boot=INFO
+
+# Le config-server ne d\u00e9pend d'aucun autre service
+# Il ne cherche pas de configuration externe
+spring.cloud.config.enabled=false
+
+#spring.cloud.config.server.git.uri=file:///E:/zenithe/ERP_Projet_Esphere/ESPHERE-ASS
+#spring.cloud.config.server.git.default-label=main
+#spring.cloud.config.server.git.search-paths=docker
+#spring.cloud.config.server.git.clone-on-start=true
+#spring.cloud.config.server.git.force-pull=true
+#spring.cloud.config.server.git.timeout=10
+
+# Si le d\u00e9p\u00f4t est priv\u00e9, d\u00e9commentez et configurez :
+# spring.cloud.config.server.git.username=${GIT_USERNAME}
+# spring.cloud.config.server.git.password=${GIT_PASSWORD}
+
+# ========================================
+# Profil actif
+# ========================================
+#spring.profiles.active=git
+
+# ========================================
+# D\u00e9sactivation Eureka
+# ========================================
+eureka.client.enabled=false
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+spring.cloud.config.discovery.enabled=false
+
+# ========================================
+# Configuration interne
+# ========================================
+spring.cloud.config.enabled=false
+spring.cloud.compatibility-verifier.enabled=false
+
+# ========================================
+# Actuator
+# ========================================
+management.endpoints.web.exposure.include=health,info
+
+# ========================================
+# Logging
+# ========================================
+logging.level.org.springframework.cloud.config=DEBUG
+logging.level.org.springframework.boot=INFO
+logging.level.org.springframework.web=DEBUG

@@ -1,0 +1,1276 @@
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0 page-title">
+          <i class="fas fa-plus-circle mr-2 text-primary"></i>
+          {{ 'CERT_FORM.TITLE' | translate }}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+          <li class="breadcrumb-item"><a routerLink="/dashboard">{{ 'COMMON.HOME' | translate }}</a></li>
+          <li class="breadcrumb-item"><a routerLink="/certificates">{{ 'SIDEBAR.PRODUCTIONS' | translate }}</a></li>
+          <li class="breadcrumb-item active">{{ 'CERT_FORM.NEW' | translate }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Bandeau permission lecture seule -->
+    <div class="alert d-flex align-items-center py-2 mb-3"
+         style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;"
+         *ngIf="!canEdit">
+      <i class="fas fa-lock text-warning mr-3" style="font-size:1.3rem;"></i>
+      <div>{{ 'CERT_FORM.READ_ONLY_BANNER' | translate }}</div>
+    </div>
+
+    <!-- ══ ALERTE ERREUR ════════════════════════════════════ 
+    <div class="alert alert-danger alert-dismissible" *ngIf="errorResponse" role="alert">
+      <h6 class="alert-heading">
+        <i class="fas fa-exclamation-triangle mr-2"></i>{{ errorResponse.message }}
+      </h6>
+      <ul class="mb-0 mt-2" *ngIf="hasFieldErrors()">
+        <li *ngFor="let key of getErrorKeys()">
+          <strong>{{ key }}</strong> : {{ getFirstError(key) }}
+        </li>
+      </ul>
+      <button type="button" class="close" (click)="errorResponse=null"><span>&times;</span></button>
+    </div>-->
+
+    <!-- ══ ALERTE SUCCÈS ════════════════════════════════════ 
+    <div class="alert alert-success alert-dismissible" *ngIf="successResponse" role="alert">
+      <i class="fas fa-check-circle mr-2"></i>
+      <strong>{{ successResponse.message }}</strong>
+      — {{ successResponse.data?.certificates?.length }} certificat(s) édité(s).
+      <a [href]="successResponse.data?.download_link" target="_blank"
+         class="btn btn-success btn-sm ml-2">
+        <i class="fas fa-download mr-1"></i>Télécharger tout
+      </a>
+      <button type="button" class="close" (click)="successResponse=null"><span>&times;</span></button>
+    </div>-->
+    <!-- ══ ALERTE ERREUR FORMATÉE — remplace l'ancien bloc alert ══ -->
+    <div class="api-error-block" *ngIf="parsedErrors.length" role="alert">
+
+      <!-- En-tête rouge -->
+      <div class="api-error-header">
+        <div class="api-error-header-left">
+          <div class="api-error-icon-wrap">
+            <i class="fas fa-times-circle"></i>
+          </div>
+          <div>
+            <strong class="api-error-title">{{ 'CERT_FORM.SUBMIT_ERROR' | translate }}</strong>
+            <span class="api-error-subtitle">
+              &mdash; {{ parsedErrors.length }} {{ 'CERT_FORM.PROBLEMS' | translate }}
+            </span>
+          </div>
+        </div>
+        <button type="button" class="api-error-close" (click)="dismissErrors()" title="Fermer">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Intro -->
+      <div class="api-error-intro-bar">
+        <i class="fas fa-info-circle mr-2"></i>
+        {{ 'CERT_FORM.ERROR_INTRO' | translate }}
+      </div>
+
+      <!-- Liste des erreurs -->
+      <div class="api-error-body">
+        <div class="api-error-item" *ngFor="let err of parsedErrors; let i = index">
+
+          <!-- Numéro -->
+          <div class="api-error-num">{{ i + 1 }}</div>
+
+          <!-- Icône champ -->
+          <div class="api-error-item-icon">
+            <i class="fas {{ err.icon }}"></i>
+          </div>
+
+          <!-- Texte -->
+          <div class="api-error-item-body">
+            <span class="api-error-field-label">{{ err.field }}</span>
+            <span class="api-error-field-message">{{ err.message }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+    <!-- ══ FIN ALERTE ERREUR ═════════════════════════════════════ -->
+
+
+    <!-- ══ ALERTE SUCCÈS ════════════════════════════════════ -->
+    <div class="alert alert-success alert-dismissible" *ngIf="successResponse" role="alert">
+      <i class="fas fa-check-circle mr-2"></i>
+      <strong>{{ successResponse.message }}</strong>
+      — {{ successResponse.data?.certificates?.length }} certificat(s) édité(s).
+      <a [href]="successResponse.data?.download_link" target="_blank" class="btn btn-success btn-sm ml-2">
+        <i class="fas fa-download mr-1"></i>Télécharger tout
+      </a>
+      <button type="button" class="close" (click)="successResponse=null"><span>&times;</span></button>
+    </div>
+    <!-- ══ DIALOG POLICE INTROUVABLE ════════════════════════ -->
+    <div class="police-dialog-overlay" *ngIf="showPoliceDialog" (click)="closePoliceDialog()"></div>
+    <div class="police-dialog" *ngIf="showPoliceDialog">
+      <div class="police-dialog-icon">
+        <div class="icon-circle icon-circle-warning">
+          <i class="fas fa-search-minus"></i>
+        </div>
+      </div>
+      <h5 class="police-dialog-title">Police introuvable</h5>
+      <p class="police-dialog-message">
+        Le numéro de police
+        <strong class="text-danger">« {{ policeChecked }} »</strong>
+        n'existe pas dans notre base de données.
+      </p>
+      <p class="police-dialog-hint">
+        <i class="fas fa-info-circle mr-1 text-info"></i>
+        Vérifiez le numéro saisi ou continuez pour créer une nouvelle production.
+      </p>
+      <div class="police-dialog-actions">
+        <button class="btn btn-outline-secondary" (click)="closePoliceDialog()">
+          <i class="fas fa-edit mr-1"></i>Corriger le numéro
+        </button>
+        <button class="btn btn-primary" (click)="continueWithNewPolice()">
+          <i class="fas fa-plus mr-1"></i>Créer nouvelle production
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════
+         DIALOG DE CONFIRMATION JSON
+         ══════════════════════════════════════════════════════ -->
+    <div class="confirm-overlay" *ngIf="showConfirmDialog" (click)="cancelConfirm()"></div>
+
+    <div class="confirm-dialog" *ngIf="showConfirmDialog">
+
+      <!-- En-tête -->
+      <div class="confirm-dialog-header">
+        <div class="confirm-dialog-title">
+          <div class="confirm-icon-wrap">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">Confirmation avant soumission</h5>
+            <small class="text-muted">
+              {{ viewMode === 'fleet'
+              ? selectedCount + ' certificat(s) à émettre — vérifiez les données ci-dessous'
+              : 'Vérifiez les informations avant de valider' }}
+            </small>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelConfirm()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Corps — JSON formaté -->
+      <div class="confirm-dialog-body">
+
+        <!-- Résumé rapide MONO -->
+        <ng-container *ngIf="viewMode === 'form'">
+          <div class="confirm-summary-strip">
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Police</span>
+              <span class="confirm-summary-value">
+                {{ productionForm.get('police_number')?.value || '—' }}
+              </span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Variante</span>
+              <span class="badge badge-warning">
+                {{ productionForm.get('certificate_variant_code')?.value || '—' }}
+              </span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Immatriculation</span>
+              <span class="confirm-summary-value text-primary font-weight-bold">
+                {{ productionForm.get('licence_plate')?.value || '—' }}
+              </span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Client</span>
+              <span class="confirm-summary-value">
+                {{ productionForm.get('customer_name')?.value || '—' }}
+              </span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Prime RC</span>
+              <span class="confirm-summary-value text-success font-weight-bold">
+                {{ productionForm.get('rc')?.value | number }} FCFA
+              </span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Résumé rapide FLOTTE -->
+        <ng-container *ngIf="viewMode === 'fleet'">
+          <div class="confirm-summary-strip">
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Police</span>
+              <span class="confirm-summary-value">{{ policeChecked }}</span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Véhicules</span>
+              <span class="confirm-summary-value text-primary font-weight-bold">
+                {{ selectedCount }} sélectionné(s)
+              </span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Prime RC totale</span>
+              <span class="confirm-summary-value text-success font-weight-bold">
+                {{ getTotalRc() | number }} FCFA
+              </span>
+            </div>
+            <div class="confirm-summary-item">
+              <span class="confirm-summary-label">Complets</span>
+              <span class="confirm-summary-value">
+                {{ completeCount }} / {{ foundProductions.length }}
+              </span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Bloc JSON -->
+        <div class="confirm-json-wrap">
+          <div class="confirm-json-toolbar">
+            <span class="confirm-json-label">
+              <i class="fas fa-code mr-1"></i>Données JSON à soumettre
+            </span>
+            <button type="button" class="btn btn-xs btn-outline-secondary" (click)="copyJsonToClipboard()">
+              <i class="fas fa-copy mr-1"></i>Copier
+            </button>
+          </div>
+          <pre class="confirm-json-block"><code>{{ confirmJsonString }}</code></pre>
+        </div>
+
+      </div>
+
+      <!-- Pied — boutons d'action -->
+      <div class="confirm-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="cancelConfirm()">
+          <i class="fas fa-arrow-left mr-2"></i>Retour au formulaire
+        </button>
+        <button type="button" class="btn btn-primary btn-confirm-submit elevation-2" [disabled]="isSubmitting"
+          (click)="confirmSubmit()">
+          <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm mr-2"></span>
+          <i *ngIf="!isSubmitting" class="fas fa-check-circle mr-2"></i>
+          {{ isSubmitting ? 'Envoi en cours...' :
+          (viewMode === 'fleet'
+          ? 'Confirmer et émettre ' + selectedCount + ' certificat(s)'
+          : 'Confirmer et soumettre') }}
+        </button>
+      </div>
+
+    </div>
+    <!-- ══ FIN DIALOG CONFIRMATION ══ -->
+
+
+    <!-- ══ FORMULAIRE PRINCIPAL ══════════════════════════════ -->
+    <form [formGroup]="productionForm" (ngSubmit)="onSubmit()">
+      <div class="row">
+
+        <!-- ── Colonne principale ──────────────────────────── -->
+        <div class="col-lg-8 col-12">
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               ÉTAPE 1 — Contrat  (TOUJOURS VISIBLE)
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <div class="card card-primary card-outline elevation-1 mb-3">
+            <div class="card-header">
+              <h3 class="card-title">
+                <span class="step-badge">1</span>
+                {{ 'CERT_FORM.CONTRACT' | translate }}
+              </h3>
+              <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                  <i class="fas fa-minus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="row">
+
+                <!-- Champ police -->
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-hashtag mr-1 text-primary"></i>
+                      {{ 'CERT_FORM.POLICE_NUMBER' | translate }} <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group police-input-group" [class.police-checking]="policeStatus === 'checking'"
+                      [class.police-found]="policeStatus === 'found'"
+                      [class.police-not-found]="policeStatus === 'not_found'"
+                      [class.police-error]="policeStatus === 'error'">
+                      <input type="text" id="police_number" class="form-control form-control-rounded"
+                        placeholder="ex: 1000-1030000009" formControlName="police_number"
+                        [class.is-invalid]="isInvalid('police_number')" (input)="onPoliceNumberInput($event)"
+                        autocomplete="off" style="text-transform:uppercase">
+                      <div class="input-group-append">
+                        <span class="input-group-text police-status-icon">
+                          <i class="fas fa-search text-muted" *ngIf="policeStatus === 'idle'"></i>
+                          <span class="spinner-border spinner-border-sm text-primary"
+                            *ngIf="policeStatus === 'checking'"></span>
+                          <i class="fas fa-check-circle text-success" *ngIf="policeStatus === 'found'"
+                            [title]="viewMode === 'fleet' ? 'Flotte trouvée' : 'Police trouvée'"></i>
+                          <i class="fas fa-times-circle text-danger" *ngIf="policeStatus === 'not_found'"></i>
+                          <i class="fas fa-exclamation-triangle text-warning" *ngIf="policeStatus === 'error'"></i>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="police-status-msg mt-1">
+                      <small class="text-muted" *ngIf="policeStatus === 'idle'">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        {{ 'CERT_FORM.POLICE_IDLE' | translate }}
+                      </small>
+                      <small class="text-primary" *ngIf="policeStatus === 'checking'">
+                        <i class="fas fa-circle-notch fa-spin mr-1"></i>{{ 'CERT_FORM.POLICE_CHECKING' | translate }}
+                      </small>
+                      <small class="text-success font-weight-bold"
+                        *ngIf="policeStatus === 'found' && viewMode === 'form'">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        {{ 'CERT_FORM.POLICE_FOUND_FORM' | translate }}
+                      </small>
+                      <small class="text-success font-weight-bold"
+                        *ngIf="policeStatus === 'found' && viewMode === 'fleet'">
+                        <i class="fas fa-layer-group mr-1"></i>
+                        Flotte détectée — {{ foundProductions.length }} véhicule(s) trouvé(s)
+                      </small>
+                      <small class="text-danger" *ngIf="policeStatus === 'not_found'">
+                        <i class="fas fa-times-circle mr-1"></i>{{ 'CERT_FORM.POLICE_NOT_FOUND' | translate }}
+                      </small>
+                      <small class="text-warning" *ngIf="policeStatus === 'error'">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>{{ 'CERT_FORM.POLICE_ERROR' | translate }}
+                      </small>
+                    </div>
+                    <div class="prefill-banner" *ngIf="policeStatus === 'found' && viewMode === 'form'">
+                      <i class="fas fa-magic mr-1"></i>
+                      {{ 'CERT_FORM.PREFILL' | translate }}
+                    </div>
+                    <div class="invalid-feedback">
+                      {{ getFieldError('police_number') || 'Obligatoire' }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Variante — masquée en mode flotte -->
+                <div class="col-md-6" *ngIf="viewMode === 'form'">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-tag mr-1 text-primary"></i>
+                      {{ 'CERT_FORM.VARIANT' | translate }} <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-control form-control-rounded" formControlName="certificate_variant_code"
+                      [class.is-invalid]="isInvalid('certificate_variant_code')">
+                      <option value="">-- Choisir --</option>
+                      <option value="auto">🔵 Auto</option>
+                      <option value="jaune">🟡 Jaune</option>
+                      <option value="verte">🟢 Verte</option>
+                    </select>
+                    <div class="invalid-feedback">Obligatoire</div>
+                  </div>
+                </div>
+
+                <!-- Dates & RC — masqués en mode flotte -->
+                <ng-container *ngIf="viewMode === 'form'">
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>
+                        <i class="fas fa-calendar-alt mr-1 text-primary"></i>
+                        {{ 'CERT_FORM.STARTS_AT' | translate }} <span class="text-danger">*</span>
+                      </label>
+                      <input type="date" class="form-control form-control-rounded" formControlName="starts_at"
+                        [class.is-invalid]="isInvalid('starts_at')">
+                      <div class="invalid-feedback">Obligatoire</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>
+                        <i class="fas fa-calendar-check mr-1 text-primary"></i>
+                        {{ 'CERT_FORM.ENDS_AT' | translate }} <span class="text-danger">*</span>
+                      </label>
+                      <input type="date" class="form-control form-control-rounded" formControlName="ends_at"
+                        [class.is-invalid]="isInvalid('ends_at')">
+                      <div class="invalid-feedback">{{ getFieldError('ends_at') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>
+                        <i class="fas fa-coins mr-1 text-primary"></i>
+                        {{ 'CERT_FORM.RC' | translate }} <span class="text-danger">*</span>
+                      </label>
+                      <input type="number" class="form-control form-control-rounded" placeholder="63784"
+                        formControlName="rc" [class.is-invalid]="isInvalid('rc')">
+                      <div class="invalid-feedback">{{ getFieldError('rc') || 'Obligatoire' }}</div>
+                    </div>
+                  </div>
+                </ng-container>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               VUE FLOTTE
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <ng-container *ngIf="viewMode === 'fleet'">
+
+            <!-- Variante globale flotte — inclut AUTO -->
+            <div class="card card-primary card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <i class="fas fa-tag mr-2"></i>Variante pour toute la sélection
+                </h3>
+              </div>
+              <div class="card-body">
+                <div class="row align-items-center">
+                  <div class="col-md-4">
+                    <select class="form-control form-control-rounded" [(ngModel)]="fleetVariantCode"
+                      [ngModelOptions]="{standalone: true}">
+                      <option value="auto">🔵 Auto</option>
+                      <option value="jaune">🟡 Jaune</option>
+                      <option value="verte">🟢 Verte</option>
+                    </select>
+                  </div>
+                  <div class="col-md-8 text-muted">
+                    <small>
+                      <i class="fas fa-info-circle mr-1"></i>
+                      Appliquée à tous les véhicules sélectionnés (modifiable par véhicule dans les détails).
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tableau véhicules -->
+            <div class="card card-outline elevation-1 mb-3">
+              <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title">
+                  <i class="fas fa-car mr-2"></i>
+                  Véhicules de la flotte
+                  <span class="badge badge-primary ml-2">
+                    {{ selectedCount }} / {{ foundProductions.length }} sélectionné(s)
+                  </span>
+                </h3>
+                <button type="button" class="btn btn-sm btn-outline-secondary" (click)="backToForm()">
+                  <i class="fas fa-edit mr-1"></i>Saisie manuelle
+                </button>
+              </div>
+
+              <div class="fleet-legend px-3 py-2 border-bottom">
+                <small class="text-muted mr-3">
+                  <span class="badge badge-success mr-1">✓</span>Champs complets
+                </small>
+                <small class="text-muted">
+                  <span class="badge badge-danger mr-1"><i class="fas fa-exclamation-circle"></i></span>
+                  Infos manquantes — ouvrez les détails pour compléter
+                </small>
+              </div>
+
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover table-sm mb-0">
+                    <thead class="thead-light">
+                      <tr>
+                        <th style="width:40px">
+                          <input type="checkbox" [checked]="allSelected" (change)="toggleAll($event)">
+                        </th>
+                        <th style="width:30px">#</th>
+                        <th>Immatriculation</th>
+                        <th>Marque / Modèle</th>
+                        <th>Client</th>
+                        <th>Période</th>
+                        <th>Prime RC</th>
+                        <th style="width:120px">Statut</th>
+                        <th style="width:100px">Détails</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <ng-container *ngFor="let p of foundProductions; let i = index">
+
+                        <tr [class.table-success]="isSelected(i)" (click)="toggleSelection(i)" style="cursor:pointer">
+                          <td>
+                            <input type="checkbox" [checked]="isSelected(i)" (click)="$event.stopPropagation()"
+                              (change)="toggleSelection(i)">
+                          </td>
+                          <td><small class="text-muted">{{ i + 1 }}</small></td>
+                          <td><strong class="text-primary">{{ p.licence_plate || '—' }}</strong></td>
+                          <td><small>{{ p.vehicle_brand }} {{ p.vehicle_model }}</small></td>
+                          <td><small>{{ p.customer_name || '—' }}</small></td>
+                          <td>
+                            <small>
+                              {{ p.starts_at | date:'dd/MM/yy' }} → {{ p.ends_at | date:'dd/MM/yy' }}
+                            </small>
+                          </td>
+                          <td>
+                            <small class="text-success font-weight-bold">{{ p.rc | number }} F</small>
+                          </td>
+                          <td>
+                            <span *ngIf="isComplete(p)" class="badge badge-success">
+                              <i class="fas fa-check mr-1"></i>Complet
+                            </span>
+                            <span *ngIf="!isComplete(p)" class="badge badge-danger">
+                              <i class="fas fa-exclamation-circle mr-1"></i>{{ getMissingCount(p) }} manquant(s)
+                            </span>
+                          </td>
+                          <td>
+                            <button type="button" class="btn btn-xs btn-outline-primary"
+                              (click)="$event.stopPropagation(); toggleDetailPanel(i)">
+                              <i class="fas" [class.fa-chevron-down]="expandedIndex !== i"
+                                [class.fa-chevron-up]="expandedIndex === i"></i>
+                              {{ expandedIndex === i ? 'Fermer' : 'Détails' }}
+                            </button>
+                          </td>
+                        </tr>
+
+                        <!-- ══ PANNEAU DÉTAIL INLINE ══ -->
+                        <tr *ngIf="expandedIndex === i" class="fleet-detail-row">
+                          <td colspan="9" class="p-0">
+                            <div class="fleet-detail-panel" [class.fleet-detail-panel--missing]="!isComplete(p)">
+
+                              <div class="fleet-detail-header">
+                                <div>
+                                  <i class="fas fa-car mr-2"></i>
+                                  <strong>{{ p.licence_plate || '—' }}</strong>
+                                  <span class="text-muted ml-1">— {{ p.vehicle_brand }} {{ p.vehicle_model }}</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                  <span *ngIf="!isComplete(p)" class="badge badge-danger mr-2">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    {{ getMissingCount(p) }} champ(s) requis manquant(s)
+                                  </span>
+                                  <span *ngIf="isComplete(p)" class="badge badge-success mr-2">
+                                    <i class="fas fa-check-circle mr-1"></i>Tous les champs sont renseignés
+                                  </span>
+                                  <button type="button" class="btn btn-xs btn-outline-secondary"
+                                    (click)="toggleDetailPanel(i)">
+                                    <i class="fas fa-chevron-up mr-1"></i>Réduire
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div class="fleet-detail-body">
+                                <div class="row">
+
+                                  <!-- Section Contrat -->
+                                  <div class="col-12">
+                                    <p class="fleet-section-title">
+                                      <i class="fas fa-file-contract mr-1 text-primary"></i>Contrat
+                                    </p>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Variante <span class="text-danger">*</span></label>
+                                      <select class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].certificate_variant_code"
+                                        [ngModelOptions]="{standalone: true}">
+                                        <option value="auto">🔵 Auto</option>
+                                        <option value="jaune">🟡 Jaune</option>
+                                        <option value="verte">🟢 Verte</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Prime RC (FCFA)</label>
+                                      <input type="number" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].rc" [ngModelOptions]="{standalone: true}">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Date d'effet</label>
+                                      <input type="date" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].starts_at"
+                                        [ngModelOptions]="{standalone: true}">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Date d'échéance</label>
+                                      <input type="date" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].ends_at" [ngModelOptions]="{standalone: true}">
+                                    </div>
+                                  </div>
+
+                                  <!-- Section Client -->
+                                  <div class="col-12">
+                                    <p class="fleet-section-title">
+                                      <i class="fas fa-user mr-1 text-info"></i>Client & Assuré
+                                    </p>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Nom du client <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].customer_name"
+                                        [(ngModel)]="foundProductions[i].customer_name"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Obligatoire">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Type client <span class="text-danger">*</span></label>
+                                      <select class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].customer_type"
+                                        [(ngModel)]="foundProductions[i].customer_type"
+                                        [ngModelOptions]="{standalone: true}">
+                                        <option value="">-- Choisir --</option>
+                                        <option value="TSPM">Personne Morale</option>
+                                        <option value="TSPP">Personne Physique</option>
+                                      </select>
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Téléphone <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].customer_phone"
+                                        [(ngModel)]="foundProductions[i].customer_phone"
+                                        [ngModelOptions]="{standalone: true}" placeholder="+237690000000">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Email <span class="text-danger">*</span></label>
+                                      <input type="email" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].customer_email"
+                                        [(ngModel)]="foundProductions[i].customer_email"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Obligatoire">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Date naissance assuré <span
+                                          class="text-danger">*</span></label>
+                                      <input type="date" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].insured_birthdate"
+                                        [(ngModel)]="foundProductions[i].insured_birthdate"
+                                        [ngModelOptions]="{standalone: true}">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Email assuré</label>
+                                      <input type="email" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].insured_email"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Même que client si vide">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Téléphone assuré</label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].insured_phone"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Même que client si vide">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">N° Contribuable</label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].taxpayer_number"
+                                        [ngModelOptions]="{standalone: true}">
+                                    </div>
+                                  </div>
+
+                                  <!-- Section Véhicule -->
+                                  <div class="col-12">
+                                    <p class="fleet-section-title">
+                                      <i class="fas fa-car mr-1 text-warning"></i>Véhicule
+                                    </p>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Immatriculation <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].licence_plate"
+                                        [(ngModel)]="foundProductions[i].licence_plate"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Obligatoire"
+                                        style="text-transform:uppercase">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Châssis <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].vehicle_chassis"
+                                        [(ngModel)]="foundProductions[i].vehicle_chassis"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Obligatoire">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Marque <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].vehicle_brand"
+                                        [(ngModel)]="foundProductions[i].vehicle_brand"
+                                        [ngModelOptions]="{standalone: true}" placeholder="TOYOTA">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Modèle <span class="text-danger">*</span></label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].vehicle_model"
+                                        [(ngModel)]="foundProductions[i].vehicle_model"
+                                        [ngModelOptions]="{standalone: true}" placeholder="COROLLA">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Catégorie <span class="text-danger">*</span></label>
+                                      <select class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].vehicle_category"
+                                        [(ngModel)]="foundProductions[i].vehicle_category"
+                                        [ngModelOptions]="{standalone: true}">
+                                        <option value="">-- Choisir --</option>
+                                        <option value="01">01 - Véhicule léger</option>
+                                        <option value="02">02 - Utilitaire</option>
+                                        <option value="03">03 - Poids lourd</option>
+                                        <option value="04">04 - Moto</option>
+                                        <option value="05">05 - Engin spécial</option>
+                                      </select>
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Nb de places <span class="text-danger">*</span></label>
+                                      <input type="number" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].nb_of_seats"
+                                        [(ngModel)]="foundProductions[i].nb_of_seats"
+                                        [ngModelOptions]="{standalone: true}">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Puissance (CV) <span class="text-danger">*</span></label>
+                                      <input type="number" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].fiscal_power"
+                                        [(ngModel)]="foundProductions[i].fiscal_power"
+                                        [ngModelOptions]="{standalone: true}">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-2">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Zone <span class="text-danger">*</span></label>
+                                      <select class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].circulation_zone"
+                                        [ngModelOptions]="{standalone: true}">
+                                        <option value="A">Zone A</option>
+                                        <option value="B">Zone B</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Date mise en circulation <span
+                                          class="text-danger">*</span></label>
+                                      <input type="date" class="form-control form-control-sm"
+                                        [class.is-invalid]="!foundProductions[i].vehicle_first_registration_date"
+                                        [(ngModel)]="foundProductions[i].vehicle_first_registration_date"
+                                        [ngModelOptions]="{standalone: true}">
+                                      <div class="invalid-feedback">Obligatoire</div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Poids autorisé (kg)</label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].vehicle_gross_weight"
+                                        [ngModelOptions]="{standalone: true}" placeholder="3500">
+                                    </div>
+                                  </div>
+
+                                  <!-- Section Conducteur -->
+                                  <div class="col-12">
+                                    <p class="fleet-section-title">
+                                      <i class="fas fa-id-card mr-1 text-success"></i>Conducteur
+                                    </p>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Nom du conducteur</label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].driver_name"
+                                        [ngModelOptions]="{standalone: true}" placeholder="Paul Kamga">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">N° permis</label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].driver_permis"
+                                        [ngModelOptions]="{standalone: true}" placeholder="B450245">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Catégorie permis</label>
+                                      <input type="text" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].driver_permis_categorie"
+                                        [ngModelOptions]="{standalone: true}" placeholder="A, B, C...">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Date de naissance</label>
+                                      <input type="date" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].driver_birthdate"
+                                        [ngModelOptions]="{standalone: true}">
+                                    </div>
+                                  </div>
+                                  <div class="col-md-3">
+                                    <div class="form-group form-group-sm">
+                                      <label class="small">Date obtention permis</label>
+                                      <input type="date" class="form-control form-control-sm"
+                                        [(ngModel)]="foundProductions[i].driver_licence_issued_at"
+                                        [ngModelOptions]="{standalone: true}">
+                                    </div>
+                                  </div>
+
+                                </div>
+                              </div>
+
+                              <div class="fleet-detail-footer">
+                                <button type="button" class="btn btn-sm btn-outline-secondary"
+                                  (click)="toggleDetailPanel(i)">
+                                  <i class="fas fa-chevron-up mr-1"></i>Réduire ce véhicule
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- ══ FIN PANNEAU DÉTAIL ══ -->
+
+                      </ng-container>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </ng-container><!-- /fleet -->
+
+
+          <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               ÉTAPES 2, 3, 4 — masquées en mode flotte
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+          <ng-container *ngIf="viewMode === 'form'">
+
+            <!-- ÉTAPE 2 — Client & Assuré -->
+            <div class="card card-info card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-badge step-badge-info">2</span>{{ 'CERT_FORM.CUSTOMER' | translate }}
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.CUSTOMER_NAME' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="Entreprise ABC SARL"
+                        formControlName="customer_name" [class.is-invalid]="isInvalid('customer_name')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.TAXPAYER' | translate }}</label>
+                      <input type="text" class="form-control form-control-rounded" [placeholder]="'CERT_FORM.TAXPAYER' | translate"
+                        formControlName="taxpayer_number">
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.BIRTHDATE' | translate }} <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control form-control-rounded" formControlName="insured_birthdate"
+                        [class.is-invalid]="isInvalid('insured_birthdate')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.CUSTOMER_TYPE' | translate }} <span class="text-danger">*</span></label>
+                      <select class="form-control form-control-rounded" formControlName="customer_type"
+                        [class.is-invalid]="isInvalid('customer_type')">
+                        <option value="">-- Choisir --</option>
+                        <option value="TSPM">Personne Morale</option>
+                        <option value="TSPP">Personne Physique</option>
+                      </select>
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.CUSTOMER_PHONE' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="+237690000000"
+                        formControlName="customer_phone" [class.is-invalid]="isInvalid('customer_phone')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.CUSTOMER_EMAIL' | translate }} <span class="text-danger">*</span></label>
+                      <input type="email" class="form-control form-control-rounded" placeholder="contact@abc.cm"
+                        formControlName="customer_email" [class.is-invalid]="isInvalid('customer_email')">
+                      <div class="invalid-feedback">
+                        {{ productionForm.get('customer_email')?.errors?.['email']
+                        ? ('COMMON.EMAIL_INVALID' | translate)
+                        : ('CERT_FORM.REQUIRED' | translate) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 3 — Véhicule (TOUS OBLIGATOIRES sauf remorque) -->
+            <div class="card card-warning card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-badge step-badge-warning">3</span>{{ 'CERT_FORM.VEHICLE' | translate }}
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.PLATE' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="LT-1234-AB"
+                        formControlName="licence_plate" [class.is-invalid]="isInvalid('licence_plate')"
+                        style="text-transform:uppercase">
+                      <div class="invalid-feedback">{{ getFieldError('licence_plate') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.CHASSIS' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="WVWZZZ3CZWE123456"
+                        formControlName="vehicle_chassis" [class.is-invalid]="isInvalid('vehicle_chassis')">
+                      <div class="invalid-feedback">{{ getFieldError('vehicle_chassis') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.BRAND' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="TOYOTA"
+                        formControlName="vehicle_brand" [class.is-invalid]="isInvalid('vehicle_brand')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.MODEL' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="COROLLA"
+                        formControlName="vehicle_model" [class.is-invalid]="isInvalid('vehicle_model')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.GROSS_WEIGHT' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="3500"
+                        formControlName="vehicle_gross_weight" [class.is-invalid]="isInvalid('vehicle_gross_weight')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.CATEGORY' | translate }} <span class="text-danger">*</span></label>
+                      <select class="form-control form-control-rounded" formControlName="vehicle_category"
+                        [class.is-invalid]="isInvalid('vehicle_category')">
+                        <option value="">-- Choisir --</option>
+                        <option value="01">01 - Véhicule léger</option>
+                        <option value="02">02 - Utilitaire</option>
+                        <option value="03">03 - Poids lourd</option>
+                        <option value="04">04 - Moto</option>
+                        <option value="05">05 - Engin spécial</option>
+                      </select>
+                      <div class="invalid-feedback">{{ getFieldError('vehicle_category') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.SEATS' | translate }} <span class="text-danger">*</span></label>
+                      <input type="number" class="form-control form-control-rounded" formControlName="nb_of_seats"
+                        [class.is-invalid]="isInvalid('nb_of_seats')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.POWER' | translate }} <span class="text-danger">*</span></label>
+                      <input type="number" class="form-control form-control-rounded" formControlName="fiscal_power"
+                        [class.is-invalid]="isInvalid('fiscal_power')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.ZONE' | translate }} <span class="text-danger">*</span></label>
+                      <select class="form-control form-control-rounded" formControlName="circulation_zone"
+                        [class.is-invalid]="isInvalid('circulation_zone')">
+                        <option value="A">Zone A</option>
+                        <option value="B">Zone B</option>
+                      </select>
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.FIRST_REG' | translate }} <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control form-control-rounded"
+                        formControlName="vehicle_first_registration_date"
+                        [class.is-invalid]="isInvalid('vehicle_first_registration_date')">
+                      <div class="invalid-feedback">{{ 'CERT_FORM.REQUIRED' | translate }}</div>
+                    </div>
+                  </div>
+                  <!-- Remorque — optionnel -->
+                  <div class="col-12">
+                    <div class="custom-control custom-switch mb-2">
+                      <input type="checkbox" class="custom-control-input" id="hasTrailer"
+                        formControlName="vehicle_has_trailer">
+                      <label class="custom-control-label" for="hasTrailer">
+                        {{ 'CERT_FORM.HAS_TRAILER' | translate }}
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6" *ngIf="productionForm.get('vehicle_has_trailer')?.value">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.TRAILER_PLATE' | translate }} <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="LT-9999-RQ"
+                        formControlName="trailer_licence_plate" [class.is-invalid]="isInvalid('trailer_licence_plate')">
+                      <div class="invalid-feedback">{{ getFieldError('trailer_licence_plate') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ÉTAPE 4 — Conducteur -->
+            <div class="card card-success card-outline elevation-1 mb-3">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <span class="step-badge step-badge-success">4</span>{{ 'CERT_FORM.DRIVER' | translate }}
+                </h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        {{ 'CERT_FORM.DRIVER_NAME' | translate }}
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="Paul Kamga"
+                        formControlName="driver_name" [class.is-invalid]="isInvalid('driver_name')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_name') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        {{ 'CERT_FORM.DRIVER_LICENSE' | translate }}
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="B450245"
+                        formControlName="driver_permis" [class.is-invalid]="isInvalid('driver_permis')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_permis') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        {{ 'CERT_FORM.DRIVER_LICENSE_CAT' | translate }}
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="text" class="form-control form-control-rounded" placeholder="A,B,C..."
+                        formControlName="driver_permis_categorie"
+                        [class.is-invalid]="isInvalid('driver_permis_categorie')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_permis_categorie') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>
+                        {{ 'CERT_FORM.DRIVER_BIRTHDATE' | translate }}
+                        <span class="text-danger" *ngIf="isPhysique()">*</span>
+                      </label>
+                      <input type="date" class="form-control form-control-rounded" formControlName="driver_birthdate"
+                        [class.is-invalid]="isInvalid('driver_birthdate')">
+                      <div class="invalid-feedback">{{ getFieldError('driver_birthdate') || ('CERT_FORM.REQUIRED' | translate) }}</div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label>{{ 'CERT_FORM.DRIVER_LICENSE_DATE' | translate }}</label>
+                      <input type="date" class="form-control form-control-rounded"
+                        formControlName="driver_licence_issued_at">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </ng-container><!-- /form -->
+
+        </div><!-- /col-lg-8 -->
+
+
+        <!-- ── Résumé sticky ─────────────────────────────── -->
+        <div class="col-lg-4 col-12">
+          <div class="card elevation-1 mb-3 sticky-top" style="top:70px">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-receipt mr-2"></i>{{ 'CERT_FORM.CONFIRM' | translate }}
+              </h3>
+              <div class="card-tools">
+                <span class="badge badge-success" *ngIf="policeStatus === 'found' && viewMode === 'form'">
+                  <i class="fas fa-magic mr-1"></i>Auto-rempli
+                </span>
+                <span class="badge badge-primary" *ngIf="viewMode === 'fleet'">
+                  <i class="fas fa-layer-group mr-1"></i>Flotte
+                </span>
+              </div>
+            </div>
+
+            <div class="card-body p-0">
+
+              <!-- Résumé FLOTTE -->
+              <ul class="list-group list-group-flush" *ngIf="viewMode === 'fleet'">
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.POLICE_NUMBER' | translate }}</small>
+                  <small class="font-weight-bold">{{ policeChecked }}</small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.GLOBAL_VARIANT' | translate }}</small>
+                  <span class="badge badge-warning">{{ fleetVariantCode }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.SELECTED_VEHICLES' | translate }}</small>
+                  <strong class="text-primary">{{ selectedCount }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.TOTAL_FLEET' | translate }}</small>
+                  <small>{{ foundProductions.length }} véhicule(s)</small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.COMPLETE' | translate }}</small>
+                  <small class="font-weight-bold text-success">
+                    {{ completeCount }} / {{ foundProductions.length }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.TOTAL_RC' | translate }}</small>
+                  <small class="font-weight-bold text-success">
+                    {{ getTotalRc() | number }} FCFA
+                  </small>
+                </li>
+              </ul>
+
+              <!-- Résumé MONO -->
+              <ul class="list-group list-group-flush" *ngIf="viewMode === 'form'">
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.POLICE_NUMBER' | translate }}</small>
+                  <small class="font-weight-bold">
+                    {{ productionForm.get('police_number')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.VARIANT' | translate }}</small>
+                  <span class="badge badge-warning">
+                    {{ productionForm.get('certificate_variant_code')?.value || '—' }}
+                  </span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.PLATE' | translate }}</small>
+                  <small class="font-weight-bold text-primary">
+                    {{ productionForm.get('licence_plate')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.VEHICLE_LABEL' | translate }}</small>
+                  <small>
+                    {{ productionForm.get('vehicle_brand')?.value }}
+                    {{ productionForm.get('vehicle_model')?.value }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.PERIOD' | translate }}</small>
+                  <small>
+                    {{ productionForm.get('starts_at')?.value || '—' }}
+                    → {{ productionForm.get('ends_at')?.value || '—' }}
+                  </small>
+                </li>
+                <li class="list-group-item d-flex justify-content-between py-2">
+                  <small class="text-muted">{{ 'CERT_FORM.RC' | translate }}</small>
+                  <small class="font-weight-bold text-success">
+                    {{ productionForm.get('rc')?.value | number }} FCFA
+                  </small>
+                </li>
+              </ul>
+
+            </div>
+
+            <div class="card-footer p-3">
+              <button type="submit" class="btn btn-primary btn-block btn-submit elevation-2"
+                [disabled]="isSubmitting || (viewMode === 'fleet' && selectedCount === 0)">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm mr-2"></span>
+                <i *ngIf="!isSubmitting" class="fas fa-paper-plane mr-2"></i>
+                <ng-container *ngIf="!isSubmitting">
+                  {{ viewMode === 'fleet'
+                  ? (('CERT_FORM.SUBMIT' | translate) + ' ' + selectedCount + ' cert(s)')
+                  : ('CERT_FORM.SUBMIT' | translate) }}
+                </ng-container>
+                <ng-container *ngIf="isSubmitting">{{ 'COMMON.LOADING' | translate }}</ng-container>
+              </button>
+              <button type="button" class="btn btn-outline-secondary btn-block mt-2" (click)="resetForm()">
+                <i class="fas fa-redo mr-2"></i>{{ 'CERT_FORM.RESET' | translate }}
+              </button>
+            </div>
+
+          </div>
+        </div><!-- /col-lg-4 -->
+
+      </div>
+    </form>
+
+  </div>
+</section>

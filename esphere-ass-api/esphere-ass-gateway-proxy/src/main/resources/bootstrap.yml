@@ -1,0 +1,19 @@
+# ==============================================================================
+# BOOTSTRAP — Gateway Proxy
+# Chargé AVANT application.properties
+# ==============================================================================
+
+spring:
+  application:
+    name: esphere-ass-gateway-proxy
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+  cloud:
+    config:
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+      enabled: false        # Activer uniquement si le Config Server est opérationnel
+      fail-fast: false
+      retry:
+        max-attempts: 3
+        initial-interval: 1000
+        max-interval: 5000

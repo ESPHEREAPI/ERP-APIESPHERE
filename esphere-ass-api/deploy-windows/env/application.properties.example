@@ -1,0 +1,41 @@
+# ==============================================================================
+# ESPHERE-ASS — Variables de production (Windows Server)
+#
+# Copier ce fichier :
+#   cp application.properties.example application.properties
+# Placer le fichier résultant dans :
+#   C:\esphere-ass\admin-api\application.properties
+#
+# NE JAMAIS COMMITER application.properties dans Git
+# ==============================================================================
+
+# ── Serveur ───────────────────────────────────────────────────────────────────
+SERVER_IP=77.68.94.193
+
+# ── Oracle Database  [OBLIGATOIRE] ────────────────────────────────────────────
+# Format thin : jdbc:oracle:thin:@//HOST:PORT/SERVICE_NAME
+ORACLE_URL=jdbc:oracle:thin:@//77.68.94.193:1521/ORCL
+ORACLE_USER=esphere_user
+ORACLE_PASSWORD=change_me_strong_password
+
+# ── JWT  [OBLIGATOIRE] ────────────────────────────────────────────────────────
+# Clé secrète HS256 — min 64 caractères hex
+# Générer avec : openssl rand -hex 64
+JWT_SECRET=change_me_generate_with_openssl_rand_hex_64
+
+# ── SSL Gateway  [OBLIGATOIRE] ────────────────────────────────────────────────
+# Mot de passe du keystore PKCS12 (gateway uniquement)
+# Doit correspondre à ce qui a été utilisé dans generate-cert.bat
+KEYSTORE_PASSWORD=change_me_keystore_password
+KEY_ALIAS=gateway
+
+# ── Config Server — Dépôt Git  [OBLIGATOIRE] ──────────────────────────────────
+GIT_CONFIG_URI=https://github.com/ESPHEREAPI/esphere-ass-erp.git
+GIT_CONFIG_BRANCH=main
+# Laisser vide si le dépôt est public
+GIT_USERNAME=
+GIT_PASSWORD=
+
+# ── Services externes (optionnel) ─────────────────────────────────────────────
+SERVICE_BIOMETRIE_URL=http://77.68.94.193:8081
+SERVICE_BIOMETRIE_PART_URL=http://77.68.94.193:8082

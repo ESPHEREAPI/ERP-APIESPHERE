@@ -1,0 +1,5 @@
+.align-middle td { vertical-align: middle; }
+
+.badge-pill { font-size: .78rem; padding: .35em .7em; }
+
+.progress-sm { height: 6px; border-radius: 3px; }

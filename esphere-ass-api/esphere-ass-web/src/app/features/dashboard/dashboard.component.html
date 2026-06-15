@@ -1,0 +1,148 @@
+<!-- Dashboard Administration -->
+<app-content-header [pageTitle]="pageTitle" [breadcrumbItems]="breadcrumbItems"></app-content-header>
+
+<!-- Message bienvenue -->
+<div class="row mb-3" *ngIf="stats.connectedUser">
+  <div class="col-12">
+    <div class="callout callout-info">
+      <h5><i class="fas fa-user-circle mr-2"></i>Bienvenue, <strong>{{ stats.connectedUser }}</strong></h5>
+      <p class="mb-0 text-muted" style="font-size:.85rem">Tableau de bord Administration — vue en temps réel</p>
+    </div>
+  </div>
+</div>
+
+<!-- Spinner -->
+<div class="row" *ngIf="isLoading">
+  <div class="col-12 text-center py-4">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="mt-2 text-muted">Chargement des statistiques…</p>
+  </div>
+</div>
+
+<!-- Small boxes statistiques réelles -->
+<div class="row" *ngIf="!isLoading">
+
+  <!-- Utilisateurs total -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ stats.totalUsers }}</h3>
+        <p>Utilisateurs enregistrés</p>
+      </div>
+      <div class="icon"><i class="fas fa-users"></i></div>
+      <a routerLink="/users" class="small-box-footer">
+        Gérer <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Utilisateurs actifs -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>{{ stats.activeUsers }}</h3>
+        <p>Utilisateurs actifs</p>
+      </div>
+      <div class="icon"><i class="fas fa-user-check"></i></div>
+      <a routerLink="/users" class="small-box-footer">
+        Voir tout <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Rôles -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ stats.totalRoles }}</h3>
+        <p>Rôles configurés</p>
+      </div>
+      <div class="icon"><i class="fas fa-user-tag"></i></div>
+      <a routerLink="/role" class="small-box-footer">
+        Gérer <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Accès rapide création -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-danger">
+      <div class="inner">
+        <h3><i class="fas fa-plus" style="font-size:2rem"></i></h3>
+        <p>Nouvel utilisateur</p>
+      </div>
+      <div class="icon"><i class="fas fa-user-plus"></i></div>
+      <a routerLink="/create" class="small-box-footer">
+        Créer <i class="fas fa-arrow-circle-right"></i>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Accès rapides -->
+<div class="row mt-2" *ngIf="!isLoading">
+
+  <div class="col-lg-6">
+    <div class="card card-primary card-outline">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-bolt mr-2"></i>Accès rapides</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-6 mb-3">
+            <a routerLink="/users" class="btn btn-block btn-outline-primary">
+              <i class="fas fa-users mr-2"></i>Utilisateurs
+            </a>
+          </div>
+          <div class="col-6 mb-3">
+            <a routerLink="/role" class="btn btn-block btn-outline-success">
+              <i class="fas fa-user-tag mr-2"></i>Rôles
+            </a>
+          </div>
+          <div class="col-6 mb-3">
+            <a routerLink="/create" class="btn btn-block btn-outline-info">
+              <i class="fas fa-user-plus mr-2"></i>Créer utilisateur
+            </a>
+          </div>
+          <div class="col-6 mb-3">
+            <a routerLink="/general" class="btn btn-block btn-outline-secondary">
+              <i class="fas fa-cog mr-2"></i>Paramètres
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card card-success card-outline">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>Informations système</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <tbody>
+            <tr>
+              <td class="text-muted pl-3">Service</td>
+              <td><span class="badge badge-success">esphere-ass-microservice-admin</span></td>
+            </tr>
+            <tr>
+              <td class="text-muted pl-3">Version</td>
+              <td>Spring Boot 3.4.4 — Angular 18</td>
+            </tr>
+            <tr>
+              <td class="text-muted pl-3">Utilisateurs chargés</td>
+              <td>{{ stats.totalUsers }} enregistrés / {{ stats.activeUsers }} actifs</td>
+            </tr>
+            <tr>
+              <td class="text-muted pl-3">Rôles disponibles</td>
+              <td>{{ stats.totalRoles }} rôle(s)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>

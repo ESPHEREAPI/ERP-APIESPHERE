@@ -1,0 +1,43 @@
+# ==============================================================================
+# PROFIL DÉVELOPPEMENT — esphere-ass-config-serveur
+# Activer avec : -Dspring.profiles.active=dev
+# ==============================================================================
+
+spring:
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${GIT_CONFIG_URI:https://github.com/ESPHEREAPI/esphere-ass-erp.git}
+          default-label: main
+          clone-on-start: true
+          force-pull: true
+          # En dev : tolérer les erreurs Git (travail hors ligne possible)
+          skip-ssl-validation: true
+        # Activer le mode natif en fallback si Git inaccessible
+        # native:
+        #   search-locations: file:///E:/zenithe/ERP_Projet_Esphere/config
+
+# ── Serveur dev (HTTP) ────────────────────────────────────────────────────────
+server:
+  port: 8888
+
+# ── Actuator verbeux en dev ───────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# ── Logging verbeux en dev ────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.config: DEBUG
+    org.springframework.boot: INFO
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{40}) - %msg%n"

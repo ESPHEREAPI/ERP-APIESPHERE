@@ -1,0 +1,751 @@
+/* ═══════════════════════════════════════════════════════════
+   CHAMPS VERROUILLÉS (canEdit = false)
+   ═══════════════════════════════════════════════════════════ */
+
+/* Champ désactivé — style grisé lisible */
+.form-control:disabled,
+.form-control[disabled],
+select.form-control:disabled {
+  background-color: #f0f0f0 !important;
+  color: #888 !important;
+  cursor: not-allowed !important;
+  border-color: #d0d0d0 !important;
+  opacity: 1 !important; /* évite le double-grisé du browser */
+}
+
+/* Icône cadenas sur le groupe input désactivé */
+.input-group:has(.form-control:disabled) .input-group-text {
+  background-color: #e8e8e8;
+  color: #aaa;
+  border-color: #d0d0d0;
+}
+
+/* Badge de permission affiché en haut du formulaire */
+.badge-no-edit {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIALOG DE CONFIRMATION JSON
+   ═══════════════════════════════════════════════════════════ */
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1049;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirm-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1050;
+  width: min(760px, 96vw);
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+}
+
+/* ── En-tête ─────────────────────────────────────────────── */
+.confirm-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.confirm-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.confirm-icon-wrap {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Corps ───────────────────────────────────────────────── */
+.confirm-dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+
+/* Bande de résumé rapide */
+.confirm-summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.confirm-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.confirm-summary-label {
+  font-size: 0.70rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.confirm-summary-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #212529;
+}
+
+/* Bloc JSON */
+.confirm-json-wrap {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.confirm-json-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #f1f3f5;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.confirm-json-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.confirm-json-block {
+  margin: 0;
+  padding: 14px 16px;
+  background: #1e1e2e;
+  color: #cdd6f4;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  max-height: 380px;
+  overflow-y: auto;
+  white-space: pre;
+}
+
+.confirm-json-block code {
+  color: inherit;
+  background: none;
+  font-size: inherit;
+}
+
+/* ── Pied ────────────────────────────────────────────────── */
+.confirm-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #e9ecef;
+  flex-shrink: 0;
+}
+
+.btn-confirm-submit {
+  min-width: 220px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translate(-50%, -45%); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DIALOG POLICE INTROUVABLE
+   ═══════════════════════════════════════════════════════════ */
+
+.police-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1049;
+}
+
+.police-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1050;
+  width: min(440px, 94vw);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  padding: 32px 28px 24px;
+  text-align: center;
+  animation: slideUp 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.police-dialog-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.icon-circle-warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.police-dialog-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #212529;
+}
+
+.police-dialog-message {
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.police-dialog-hint {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 20px;
+}
+
+.police-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STATUT POLICE (input group)
+   ═══════════════════════════════════════════════════════════ */
+
+.police-input-group.police-found .input-group-text  { border-color: #28a745; }
+.police-input-group.police-found input              { border-color: #28a745; }
+.police-input-group.police-not-found .input-group-text { border-color: #dc3545; }
+.police-input-group.police-not-found input          { border-color: #dc3545; }
+.police-input-group.police-error .input-group-text  { border-color: #ffc107; }
+.police-input-group.police-checking .input-group-text { border-color: #007bff; }
+
+.police-status-msg { min-height: 18px; }
+
+.prefill-banner {
+  margin-top: 6px;
+  padding: 6px 10px;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #155724;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLOTTE — TABLEAU & PANNEAU DÉTAIL
+   ═══════════════════════════════════════════════════════════ */
+
+.fleet-legend {
+  background: #f8f9fa;
+  font-size: 0.82rem;
+}
+
+.fleet-detail-row td { padding: 0 !important; }
+
+.fleet-detail-panel {
+  border-top: 3px solid #007bff;
+  background: #f0f4ff;
+  padding: 0;
+}
+
+.fleet-detail-panel--missing {
+  border-top-color: #dc3545;
+  background: #fff8f8;
+}
+
+.fleet-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.04);
+  border-bottom: 1px solid #dee2e6;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fleet-detail-body {
+  padding: 16px;
+}
+
+.fleet-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6c757d;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 4px;
+  margin-top: 12px;
+  margin-bottom: 10px;
+}
+
+.fleet-detail-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #dee2e6;
+  background: rgba(0,0,0,0.02);
+  text-align: right;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STEP BADGES
+   ═══════════════════════════════════════════════════════════ */
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #007bff;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.step-badge-info    { background: #17a2b8; }
+.step-badge-warning { background: #ffc107; color: #212529; }
+.step-badge-success { background: #28a745; }
+
+/* ═══════════════════════════════════════════════════════════
+   BOUTON SOUMETTRE
+   ═══════════════════════════════════════════════════════════ */
+
+.btn-submit {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.35) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 576px) {
+  .confirm-dialog-footer {
+    flex-direction: column-reverse;
+  }
+  .confirm-dialog-footer .btn {
+    width: 100%;
+  }
+  .btn-confirm-submit {
+    min-width: unset;
+  }
+  .confirm-summary-strip {
+    gap: 8px 12px;
+  }
+  .police-dialog-actions {
+    flex-direction: column;
+  }
+  .police-dialog-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BLOC ERREUR API — FORMATÉ ET LISIBLE
+   À ajouter dans certificate-form.component.css
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Conteneur principal ─────────────────────────────────── */
+.api-error-block {
+  background: #fff;
+  border: 1px solid #f5c6cb;
+  border-left: 5px solid #dc3545;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.12);
+  overflow: hidden;
+  animation: errorSlideIn 0.3s ease;
+}
+
+@keyframes errorSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── En-tête ─────────────────────────────────────────────── */
+.api-error-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #fff;
+}
+
+.api-error-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.api-error-icon-wrap {
+  width: 36px;
+  height: 36px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.api-error-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.api-error-subtitle {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.8);
+}
+
+.api-error-close {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.api-error-close:hover { background: rgba(255,255,255,0.3); }
+
+/* ── Corps ───────────────────────────────────────────────── */
+.api-error-body {
+  padding: 16px 18px;
+}
+
+.api-error-intro {
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-radius: 6px;
+  border-left: 3px solid #ffc107;
+}
+
+/* ── Liste des erreurs ───────────────────────────────────── */
+.api-error-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.api-error-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff5f5;
+  border: 1px solid #f8d7da;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.api-error-item:hover { background: #fee2e2; }
+
+/* Icône du champ */
+.api-error-item-icon {
+  width: 32px;
+  height: 32px;
+  background: #dc3545;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Corps texte */
+.api-error-item-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.api-error-field-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #721c24;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.api-error-field-message {
+  font-size: 0.875rem;
+  color: #495057;
+  line-height: 1.45;
+}
+
+/* Numéro de l'erreur */
+.api-error-item-badge {
+  flex-shrink: 0;
+}
+
+/* ── Fallback texte brut ─────────────────────────────────── */
+.api-error-raw {
+  padding: 14px 18px;
+  font-size: 0.875rem;
+  color: #721c24;
+  background: #f8d7da;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .api-error-item {
+    flex-wrap: wrap;
+  }
+  .api-error-item-badge {
+    order: -1;
+    margin-left: auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BLOC ERREUR API — FORMATÉ ET LISIBLE
+   Ajouter à la fin de certificate-form.component.css
+   ═══════════════════════════════════════════════════════════ */
+
+.api-error-block {
+  border: 1px solid #f5c6cb;
+  border-left: 5px solid #dc3545;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(220,53,69,0.13);
+  animation: errorSlideIn 0.3s ease;
+}
+
+@keyframes errorSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── En-tête ─────────────────────────────────────────────── */
+.api-error-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 18px;
+  background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%);
+  color: #fff;
+}
+
+.api-error-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.api-error-icon-wrap {
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.api-error-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.api-error-subtitle {
+  font-size: 0.80rem;
+  color: rgba(255,255,255,0.82);
+  margin-left: 4px;
+}
+
+.api-error-close {
+  background: rgba(255,255,255,0.18);
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.api-error-close:hover { background: rgba(255,255,255,0.35); }
+
+/* ── Barre intro ─────────────────────────────────────────── */
+.api-error-intro-bar {
+  padding: 9px 18px;
+  background: #fff8e1;
+  border-bottom: 1px solid #ffe082;
+  font-size: 0.84rem;
+  color: #6d4c00;
+  font-weight: 500;
+}
+
+/* ── Corps ───────────────────────────────────────────────── */
+.api-error-body {
+  padding: 14px 16px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Chaque item erreur ──────────────────────────────────── */
+.api-error-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.api-error-item:hover { background: #fee2e2; }
+
+/* Numéro dans cercle */
+.api-error-num {
+  width: 24px;
+  height: 24px;
+  background: #dc3545;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Icône du champ */
+.api-error-item-icon {
+  width: 34px;
+  height: 34px;
+  background: #dc3545;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Texte */
+.api-error-item-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.api-error-field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #991b1b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.api-error-field-message {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 576px) {
+  .api-error-item { flex-wrap: wrap; }
+  .api-error-field-message { font-size: 0.82rem; }
+}

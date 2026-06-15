@@ -1,0 +1,82 @@
+# ==============================================================================
+# PROFIL DÉVELOPPEMENT — application-dev.yml
+# Activer avec : -Dspring.profiles.active=dev
+# ==============================================================================
+
+spring:
+  cloud:
+    config:
+      enabled: false   # Config Server optionnel en dev
+
+  # Flyway permissif en dev
+  flyway:
+    out-of-order: true
+    repair-on-migrate: true
+    ignore-migration-patterns:
+      - "*:missing"
+      - "*:future"
+      - "*:ignored"
+      - "*:pending"
+
+  # Afficher les requêtes SQL en dev — Hibernate ne touche JAMAIS au schéma
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+# ── Serveur dev (HTTP simple) ─────────────────────────────────────────────────
+server:
+  port: 8083
+  # Pas de SSL en développement
+
+# ── Eureka dev ────────────────────────────────────────────────────────────────
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8762/eureka/
+  instance:
+    hostname: localhost
+    ip-address: 127.0.0.1
+    prefer-ip-address: true
+
+# ── Zipkin désactivé en dev (évite les erreurs Connection refused) ────────────
+management:
+  tracing:
+    enabled: false
+    sampling:
+      probability: 0.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  endpoint:
+    health:
+      show-details: always
+
+# ── CORS dev : autoriser le frontend Angular ──────────────────────────────────
+cors:
+  allowed-origins: "http://localhost:4200,http://localhost:4141"
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+  allowed-headers: "*"
+  exposed-headers: Authorization,X-Refresh-Token
+  allow-credentials: true
+  max-age: 3600
+
+# ── Logging verbeux en dev ────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    service_administration_api: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: INFO
+    com.zaxxer.hikari: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %highlight(%-5level) %cyan(%logger{40}) - %msg%n"
+  file:
+    name: logs/esphere-ass-admin-dev.log

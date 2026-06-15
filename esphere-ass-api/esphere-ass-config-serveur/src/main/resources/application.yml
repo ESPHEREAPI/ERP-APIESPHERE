@@ -1,0 +1,64 @@
+# ==============================================================================
+# ESPHERE-ASS CONFIG SERVER — Configuration principale
+# Port : 8888
+# Rôle : Centralise la configuration de tous les microservices
+# Les profils dev/prod surchargent ce fichier.
+# ==============================================================================
+spring:
+  application:
+    name: esphere-ass-config-serveur
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:prod}
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    config:
+      # Le Config Server ne lit pas sa propre configuration depuis un autre serveur
+      enabled: false
+      discovery:
+        enabled: false
+      # ── Source de configuration Git ──────────────────────────────────────────
+      server:
+        git:
+          uri: ${GIT_CONFIG_URI:https://github.com/ESPHEREAPI/ERP-APIESPHERE.git}
+          username: ${GIT_USERNAME:ESPHEREAPI}
+          password: ${GIT_PASSWORD:esphere14101987}
+          default-label: ${GIT_CONFIG_BRANCH:main}
+          timeout: 30
+          clone-on-start: true
+          force-pull: true
+          # Credentials pour dépôt privé (injectés par variable d'env en prod)
+          username: ${GIT_USERNAME:}
+          password: ${GIT_PASSWORD:}
+          # search-paths: config  # décommenter si les fichiers sont dans un sous-dossier
+        # Fallback natif si Git est indisponible (optionnel)
+        # native:
+        #   search-locations: classpath:/config
+# ── Serveur ───────────────────────────────────────────────────────────────────
+server:
+  port: 8888
+  error:
+    include-message: always
+    include-exception: false
+    include-stacktrace: never
+# ── Eureka — désactivé, le Config Server ne s'enregistre pas ─────────────────
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+# ── Actuator ──────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.config: INFO
+    org.springframework.boot: INFO

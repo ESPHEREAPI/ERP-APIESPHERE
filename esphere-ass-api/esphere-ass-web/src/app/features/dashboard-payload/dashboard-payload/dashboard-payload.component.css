@@ -1,0 +1,130 @@
+/* ── Tableau dashboard ───────────────────────────────────────── */
+.licence-code {
+  background: #f4f4f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: .82rem;
+  color: #444;
+}
+
+/* ── Modal détail ────────────────────────────────────────────── */
+.modal.show {
+  z-index: 1055;
+}
+
+.modal-backdrop.show {
+  z-index: 1050;
+  opacity: .5;
+}
+
+.modal-header.bg-primary small {
+  opacity: .85;
+  font-size: .78rem;
+}
+
+.modal-header .close {
+  padding: .25rem .5rem;
+  font-size: 1.4rem;
+  line-height: 1;
+  opacity: .8;
+}
+
+.modal-header .close:hover {
+  opacity: 1;
+}
+
+/* ── Cartes info ─────────────────────────────────────────────── */
+.detail-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: .84rem;
+}
+
+.detail-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 3px 0;
+  border-bottom: 1px dashed #dee2e6;
+}
+
+.detail-card-row:last-child {
+  border-bottom: none;
+}
+
+/* ── Labels / Valeurs ────────────────────────────────────────── */
+.detail-label {
+  display: block;
+  font-size: .7rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 2px;
+}
+
+.detail-value {
+  font-size: .88rem;
+  color: #343a40;
+  font-weight: 500;
+}
+
+/* ── Table certificats ───────────────────────────────────────── */
+.table-sm td,
+.table-sm th {
+  vertical-align: middle !important;
+}
+
+/* ── Welcome card ────────────────────────────────────────────── */
+.card-welcome {
+  background: linear-gradient(135deg, #ffffff 60%, #e8f0fe 100%);
+  border-left: 4px solid #007bff;
+}
+
+.welcome-avatar-lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #007bff;
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.welcome-title {
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.session-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: .78rem;
+  font-weight: 500;
+}
+
+.chip-blue  { background: #e8f0fe; color: #1a56db; }
+.chip-green { background: #e3f9e5; color: #1a7f3c; }
+
+.chip-code {
+  background: rgba(0,0,0,.08);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: .7rem;
+  font-weight: 600;
+}
+
+.btn-action {
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}

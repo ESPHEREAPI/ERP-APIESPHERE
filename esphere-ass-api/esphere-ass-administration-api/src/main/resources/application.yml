@@ -1,0 +1,212 @@
+# ==============================================================================
+# ESPHERE ASS ADMINISTRATION API — Configuration principale
+# Les profils dev/prod surchargent ce fichier.
+# ==============================================================================
+
+spring:
+  application:
+    name: esphere-ass-microservice-admin
+
+  profiles:
+    active: prod
+
+  config:
+    import: "optional:configserver:"
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    config:
+      enabled: false
+      fail-fast: false
+      retry:
+        max-attempts: 3
+        initial-interval: 1000
+        max-interval: 5000
+
+  # ── Datasource Oracle 11g ──────────────────────────────────────────────────
+  datasource:
+    url: ${ORACLE_URL}
+    username: ${ORACLE_USER}
+    password: ${ORACLE_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+    sql-script-encoding: UTF-8
+
+    hikari:
+      connection-timeout: 120000
+      initialization-fail-timeout: 60000
+      minimum-idle: 2
+      maximum-pool-size: 10
+      idle-timeout: 120000
+      max-lifetime: 600000
+      keepalive-time: 60000
+      validation-timeout: 5000
+      connection-test-query: SELECT 1 FROM DUAL
+      connection-init-sql: >
+        ALTER SESSION SET
+          NLS_DATE_FORMAT='DD/MM/YYYY'
+          NLS_TIMESTAMP_FORMAT='DD/MM/YYYY HH24:MI:SS'
+      data-source-properties:
+        oracle.net.CONNECT_TIMEOUT: 15000
+        oracle.net.READ_TIMEOUT: 300000
+        oracle.jdbc.ReadTimeout: 300000
+
+  # ── JPA / Hibernate ────────────────────────────────────────────────────────
+  jpa:
+    database-platform: org.hibernate.dialect.OracleDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: false
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        enable_lazy_load_no_trans: true
+        event:
+          merge:
+            entity_copy_observer: allow
+        id:
+          new_generator_mappings: true
+        query:
+          startup_check: false
+    open-in-view: false
+
+  data:
+    jpa:
+      repositories:
+        query-lookup-strategy: create-if-not-found
+
+  # ── Flyway — Oracle 11g ────────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    url: ${ORACLE_URL}
+    user: ${ORACLE_USER}
+    password: ${ORACLE_PASSWORD}
+    schemas: ${ORACLE_USER}
+    default-schema: ${ORACLE_USER}
+    baseline-on-migrate: true
+    baseline-version: 1
+    repair-on-migrate: false
+    out-of-order: false
+    ignore-migration-patterns:
+      - "*:missing"
+      - "*:future"
+      - "*:ignored"
+    locations: classpath:db/migration
+    encoding: UTF-8
+    placeholder-replacement: false
+
+  # ── Jackson ────────────────────────────────────────────────────────────────
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+# ── Serveur ───────────────────────────────────────────────────────────────────
+server:
+  port: 8083
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-exception: false
+    include-stacktrace: never
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+    min-response-size: 1024
+
+# ── JWT ───────────────────────────────────────────────────────────────────────
+jwt:
+  secret: ${JWT_SECRET:zenithe-insurance-super-secret-key-change-in-production-minimum-256-bits}
+  expiration: ${JWT_EXPIRATION_MS:86400000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:86400000}
+
+# ── Eureka ────────────────────────────────────────────────────────────────────
+eureka:
+  client:
+    enabled: true
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    instance-id: ${spring.application.name}:${server.port}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+    prefer-ip-address: false
+
+# ── Actuator ──────────────────────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,loggers,flyway
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+  tracing:
+    sampling:
+      probability: 1.0
+  info:
+    env:
+      enabled: true
+
+# ── OpenAPI / Swagger ─────────────────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: alpha
+    tagsSorter: alpha
+
+# ── Paramètres métier ─────────────────────────────────────────────────────────
+administration:
+  service:
+    batch-size: 1000
+    cache:
+      ttl: 3600
+
+mes-configs:
+  limitDeProduits: 6
+
+# ── Intégrations externes ─────────────────────────────────────────────────────
+app:
+  url:
+    pooltpv:
+      login: http://41.211.108.123:8112/pooltpv/jwt/login
+      data: http://41.211.108.123:1819/pooltpv/api/conf/
+      police: http://41.211.108.123:1819/pooltpv/api/police_risque/
+      risque: http://41.211.108.123:1819/pooltpv/api/risque/
+      encaissement: http://41.211.108.123:1819/pooltpv/api/encaissement/
+  login:
+    pooltpv: ${ZENITHE_LOGIN_POOLTPV}
+  password:
+    pooltpv: ${ZENITHE_PASSWORD_POOLTPV}
+
+api:
+  external:
+    url:
+      production: https://ppeatt-api.asac.cm/api/v1/productions
+    token: https://ppeatt-api.asac.cm/api/v1/auth/tokens/app-key
+  compagny:
+    name: "117"
+  X-App-Id: ${ASAC_APP_ID:uF75y6t9Q7euKIsZG4LxVyVpv9pQTbyJzXDKokCCUaTLQRrjAGcoXYdF13IiMRTK}
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    org.hibernate: WARN
+    org.hibernate.resource.transaction: WARN
+    org.hibernate.orm.jdbc.mutation: WARN
+    org.springframework.orm.jpa: WARN
+    org.springframework.data: WARN
+    org.flywaydb: INFO
+    com.zaxxer.hikari: INFO
