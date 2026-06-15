@@ -10,12 +10,9 @@ spring:
     name: esphere-ass-gateway-proxy
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:prod}
-  config:
-    import: "optional:configserver:"
   cloud:
     config:
       enabled: false
-      fail-fast: false
     compatibility-verifier:
       enabled: false
     gateway:
