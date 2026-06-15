@@ -21,8 +21,12 @@ spring:
       server:
         git:
           uri: ${GIT_CONFIG_URI:https://github.com/ESPHEREAPI/ERP-APIESPHERE.git}
-          username: ${GIT_USERNAME:ESPHEREAPI}
-          password: ${GIT_PASSWORD:esphere14101987}
+          default-label: ${GIT_CONFIG_BRANCH:main}
+          search-paths: esphere-ass-api/**/resources
+          username: ${GIT_USERNAME:}
+          password: ${GIT_PASSWORD:}
+          clone-on-start: true
+          force-pull: true
           default-label: ${GIT_CONFIG_BRANCH:main}
           timeout: 30
           clone-on-start: true
