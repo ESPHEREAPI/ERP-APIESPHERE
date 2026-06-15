@@ -156,7 +156,7 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] %logger{36} - %msg%n"
   file:
-    name: ${LOG_PATH:/var/log/esphere}/esphere-ass-gateway.log
+    name: ${LOG_PATH:C:/zen-it-biometrie/logs}/esphere-ass-gateway.log
     max-size: 50MB
     max-history: 30
 

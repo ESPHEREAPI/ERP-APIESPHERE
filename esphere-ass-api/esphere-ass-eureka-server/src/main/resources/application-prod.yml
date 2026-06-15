@@ -33,9 +33,9 @@ eureka:
     hostname: ${EUREKA_INSTANCE_HOSTNAME:77.68.94.193}
     ip-address: ${EUREKA_INSTANCE_IP:77.68.94.193}
     prefer-ip-address: false
-    secure-port: ${server.port}
-    secure-port-enabled: true
-    non-secure-port-enabled: false
+    non-secure-port: ${server.port}
+    secure-port-enabled: false
+    non-secure-port-enabled: true
     status-page-url: http://${eureka.instance.hostname}:${server.port}/actuator/info
     health-check-url: http://${eureka.instance.hostname}:${server.port}/actuator/health
     home-page-url: http://${eureka.instance.hostname}:${server.port}/
@@ -68,6 +68,6 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] %logger{36} - %msg%n"
   file:
-    name: ${LOG_PATH:/var/log/esphere}/esphere-ass-eureka-server.log
+    name: ${LOG_PATH:C:/zen-it-biometrie/logs}/esphere-ass-eureka-server.log
     max-size: 50MB
     max-history: 30

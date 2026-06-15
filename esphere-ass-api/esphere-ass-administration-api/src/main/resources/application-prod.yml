@@ -12,7 +12,7 @@ spring:
   cloud:
     config:
       enabled: true
-      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+      uri: ${CONFIG_SERVER_URL:http://77.68.94.193:8888}
       fail-fast: true
       retry:
         max-attempts: 5
@@ -81,12 +81,12 @@ eureka:
     hostname: ${EUREKA_INSTANCE_HOSTNAME:77.68.94.193}
     ip-address: ${EUREKA_INSTANCE_IP:77.68.94.193}
     prefer-ip-address: false
-    secure-port: ${server.port}
-    secure-port-enabled: true
-    non-secure-port-enabled: false
-    status-page-url: https://${eureka.instance.hostname}:${server.port}/actuator/info
-    health-check-url: https://${eureka.instance.hostname}:${server.port}/actuator/health
-    home-page-url: https://${eureka.instance.hostname}:${server.port}/
+    non-secure-port: ${server.port}
+    secure-port-enabled: false
+    non-secure-port-enabled: true
+    status-page-url: http://${eureka.instance.hostname}:${server.port}/actuator/info
+    health-check-url: http://${eureka.instance.hostname}:${server.port}/actuator/health
+    home-page-url: http://${eureka.instance.hostname}:${server.port}/
 
 # ── CORS production : origines autorisées explicites ─────────────────────────
 cors:
@@ -137,6 +137,6 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
   file:
-    name: ${LOG_PATH:/var/log/esphere}/esphere-ass-admin.log
+    name: ${LOG_PATH:C:/zen-it-biometrie/logs}/esphere-ass-admin.log
     max-size: 50MB
     max-history: 30
