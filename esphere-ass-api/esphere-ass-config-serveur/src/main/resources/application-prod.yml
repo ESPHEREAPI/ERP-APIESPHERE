@@ -12,13 +12,9 @@
 # ==============================================================================
 
 spring:
-  profiles:
-    include: native
   cloud:
     config:
       server:
-        native:
-          search-locations: file:${CONFIG_FILES_PATH:C:/zen-it-biometrie/config}
         git:
           uri: ${GIT_CONFIG_URI:https://github.com/ESPHEREAPI/ERP-APIESPHERE.git}
           default-label: ${GIT_CONFIG_BRANCH:main}

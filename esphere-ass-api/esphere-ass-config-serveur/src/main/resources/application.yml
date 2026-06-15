@@ -23,21 +23,11 @@ spring:
           uri: ${GIT_CONFIG_URI:https://github.com/ESPHEREAPI/ERP-APIESPHERE.git}
           default-label: ${GIT_CONFIG_BRANCH:main}
           search-paths: esphere-ass-api/**/resources
-          username: ${GIT_USERNAME:}
-          password: ${GIT_PASSWORD:}
-          clone-on-start: true
-          force-pull: true
-          default-label: ${GIT_CONFIG_BRANCH:main}
           timeout: 30
           clone-on-start: true
           force-pull: true
-          # Credentials pour dépôt privé (injectés par variable d'env en prod)
           username: ${GIT_USERNAME:}
           password: ${GIT_PASSWORD:}
-          # search-paths: config  # décommenter si les fichiers sont dans un sous-dossier
-        # Fallback natif si Git est indisponible (optionnel)
-        # native:
-        #   search-locations: classpath:/config
 # ── Serveur ───────────────────────────────────────────────────────────────────
 server:
   port: 8888
