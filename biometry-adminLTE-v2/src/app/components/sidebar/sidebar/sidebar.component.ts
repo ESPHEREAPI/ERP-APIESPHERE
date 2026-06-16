@@ -170,13 +170,15 @@ private loadBadgeCounts(): void {
                   'SUP_ADMIN'].includes(profilCode);
     const isPrestataire = !isSS;
 
+    const bgHeaders = { 'X-Background-Poll': 'true' };
+
     // ── Service Santé → prestations en attente ──────────
     if (isSS) {
         const employeId = this.user?.utilisateurId;
         const annee     = new Date().getFullYear();
         this.http.get<any>(
-            `/reporting/dashboard/ss/${employeId}` +
-            `?annee=${annee}`)
+            `/reporting/dashboard/ss/${employeId}?annee=${annee}`,
+            { headers: bgHeaders })
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next:  d => this.updateBadgesSS(d),
@@ -187,8 +189,8 @@ private loadBadgeCounts(): void {
     // ── Prestataire → prestations validées à encaisser ──
     if (isPrestataire && this.prestataireId) {
         this.http.get<any>(
-            `/validations/dashboard/prestataire/` +
-            `${this.prestataireId}/a-encaisser`)
+            `/validations/dashboard/prestataire/${this.prestataireId}/a-encaisser`,
+            { headers: bgHeaders })
             .pipe(takeUntil(this.destroy$))
             .subscribe({
                 next:  d => this.updateBadgesPrestataire(d),

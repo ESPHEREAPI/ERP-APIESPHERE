@@ -15,9 +15,15 @@
   padding: 10px 0;
 }
 
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 body.login-page {
   background-color: #f2f4f5;
-  min-height: 100vh;
+  flex: 1;
   display: flex;
   flex-direction: column;
   padding-top: 70px;
@@ -54,11 +60,23 @@ body {
   margin-top: auto;
   background: #00334e;
   color: #fff;
-  padding: 15px 0;
+  padding: 15px 30px;
+  position: relative;
+  text-align: center;
 }
 
-.footer p {
+.footer-copyright {
   margin: 0;
+  display: inline-block;
+}
+
+.footer-version {
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .brand-main {

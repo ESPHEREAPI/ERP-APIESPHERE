@@ -175,8 +175,14 @@ export class ExamenDetailComponent implements OnInit, OnDestroy {
     return etat === 'attente_validation' || etat === 'enregistre';
   }
 
+  isDecidable(etat: string): boolean {
+    return this.isEnAttente(etat) || (this.isSS && etat === 'valide');
+  }
+
   setDecision(ligne: LigneExamen, decision: 'valide' | 'rejete'): void {
-    if (!this.isEnAttente(ligne.etat)) return;
+    const modifiable = this.isEnAttente(ligne.etat)
+      || (this.isSS && ligne.etat === 'valide');
+    if (!modifiable) return;
     ligne.decisionLocale =
       ligne.decisionLocale === decision ? null : decision;
     this.recalculerTotaux();
@@ -196,7 +202,9 @@ export class ExamenDetailComponent implements OnInit, OnDestroy {
   }
 
   get lignesEnAttente(): LigneExamen[] {
-    return this.lignes.filter(l => this.isEnAttente(l.etat));
+    return this.lignes.filter(l =>
+      this.isEnAttente(l.etat) || (this.isSS && l.etat === 'valide')
+    );
   }
 
   get toutesDecidees(): boolean {
@@ -268,7 +276,9 @@ export class ExamenDetailComponent implements OnInit, OnDestroy {
     const user      = this.authService.getStoredUser();
     const employeId = user?.utilisateurId ?? 0;
 
-    const appels = lignesATraiter.map(l => {
+    const appels = lignesATraiter
+      .filter(l => this.isEnAttente(l.etat) || l.decisionLocale !== l.etat)
+      .map(l => {
       const valeurModifLocal        = l.valeurModifLocal != null ? Number(l.valeurModifLocal) : null;
       const nbreModifLocal          = l.nbreModifLocal   != null ? Number(l.nbreModifLocal)   : null;
       const tauxLocal               = l.tauxLocal        != null ? Number(l.tauxLocal)        : null;

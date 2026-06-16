@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, takeUntil } from 'rxjs';
 import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
 import { AuthService } from '../../../auth/auth.service';
@@ -36,7 +36,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private dashboardService: DashboardService
+    private dashboardService: DashboardService,
+    private translate: TranslateService
   ) {
     for (let y = 2018; y <= 2034; y++) this.anneesDisponibles.push(y);
   }
@@ -91,41 +92,42 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private buildChartSS(data: DashboardSsResponse): void {
-    const mois = data.consultationsParMois || [];
+    const titre = `${this.translate.instant('graphique_ss_titre')}: ${this.anneeSelectionnee}`;
+    const labelMois = this.translate.instant('mois_label');
+    const labelNombre = this.translate.instant('nombre_label');
+    const labelConsultations = this.translate.instant('consultations');
+    const labelOrdonnances = this.translate.instant('ordonnances');
+    const labelExamens = this.translate.instant('examens');
+
     this.chartOptions = {
       animationEnabled: true,
       theme: 'light2',
-      title: {
-        text: `Consommation par type de prestations, Année: ${this.anneeSelectionnee}`,
-        fontSize: 18,
-        fontFamily: 'Arial',
-        fontWeight: 'bold'
-      },
-      axisX: { title: 'Mois', labelAngle: -30, labelFontSize: 11 },
-      axisY: { title: 'Nombre', includeZero: true, gridThickness: 1, gridColor: '#E8E8E8' },
+      title: { text: titre, fontSize: 18, fontFamily: 'Arial', fontWeight: 'bold' },
+      axisX: { title: labelMois, labelAngle: -30, labelFontSize: 11 },
+      axisY: { title: labelNombre, includeZero: true, gridThickness: 1, gridColor: '#E8E8E8' },
       toolTip: { shared: true },
       legend: { cursor: 'pointer', fontSize: 13 },
       data: [
         {
           type: 'column',
-          name: 'Consultations',
-          legendText: 'Consultations',
+          name: labelConsultations,
+          legendText: labelConsultations,
           showInLegend: true,
           color: '#00C0EF',
           dataPoints: this.toDataPoints(data.consultationsParMois)
         },
         {
           type: 'column',
-          name: 'Ordonnances',
-          legendText: 'Ordonnances',
+          name: labelOrdonnances,
+          legendText: labelOrdonnances,
           showInLegend: true,
           color: '#00A65A',
           dataPoints: this.toDataPoints(data.ordonnancesParMois)
         },
         {
           type: 'column',
-          name: 'Examens',
-          legendText: 'Examens',
+          name: labelExamens,
+          legendText: labelExamens,
           showInLegend: true,
           color: '#F39C12',
           dataPoints: this.toDataPoints(data.examensParMois)
@@ -135,30 +137,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private buildChartPrestataire(data: DashboardPrestataireResponse): void {
+    const titre = `${this.translate.instant('graphique_prest_titre')} — ${this.anneeSelectionnee}`;
+    const labelMontant = `${this.translate.instant('montant')} (FCFA)`;
+    const labelEncaisse = this.translate.instant('montant_encaisse_label');
+
     this.chartOptions = {
       animationEnabled: true,
       theme: 'light2',
-      title: {
-        text: `Encaissements par mois — ${this.anneeSelectionnee}`,
-        fontSize: 18,
-        fontFamily: 'Arial'
-      },
+      title: { text: titre, fontSize: 18, fontFamily: 'Arial' },
       axisX: { labelAngle: -30, labelFontSize: 11 },
-      axisY: { title: 'Montant (FCFA)', includeZero: true },
+      axisY: { title: labelMontant, includeZero: true },
       data: [{
         type: 'column',
-        name: 'Montant encaissé',
+        name: labelEncaisse,
         color: '#00A65A',
         dataPoints: (data.encaissementsParMois || []).map(s => ({
-          label: s.libelleMois,
+          label: this.localizeMonth(s.mois),
           y: s.montant
         }))
       }]
     };
   }
 
+  private localizeMonth(moisNum: number): string {
+    const lang = this.translate.currentLang || this.translate.defaultLang || 'fr';
+    const date = new Date(2000, moisNum - 1, 1);
+    return date.toLocaleString(lang, { month: 'long' });
+  }
+
   private toDataPoints(stats: StatMoisResponse[]): any[] {
-    return (stats || []).map(s => ({ label: s.libelleMois, y: s.nombre }));
+    return (stats || []).map(s => ({
+      label: this.localizeMonth(s.mois),
+      y: s.nombre
+    }));
   }
 
   onAnneeChange(event: Event): void {

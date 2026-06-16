@@ -235,7 +235,7 @@
                         <input type="text"
                                class="form-control"
                                [(ngModel)]="searchExamen"
-                               placeholder="Rechercher..."
+                               placeholder="{{ 'rechercher' | translate }}..."
                                (ngModelChange)=
                                  "onSearchExamen($event)"
                                (click)=
@@ -261,7 +261,7 @@
                     <div *ngIf="!isLoadingExamens
                               && examensFiltres.length > 0"
                          class="exm-count">
-                      {{ examensFiltres.length }} résultat(s)
+                      {{ examensFiltres.length }} {{ 'resultats' | translate }}
                     </div>
 
                     <ul class="exm-list">
@@ -291,7 +291,7 @@
                           class="exm-empty">
                         <i class="fa fa-exclamation-circle">
                         </i>
-                        Aucun examen trouvé
+                        {{ 'aucun_examen_trouve' | translate }}
                       </li>
                     </ul>
                   </div>
@@ -348,7 +348,7 @@
                           class="btn btn-danger btn-xs"
                           [disabled]="lignes.length === 1"
                           (click)="supprimerLigne(i)"
-                          title="Supprimer">
+                          [title]="'supprimer' | translate">
                     <i class="fa fa-minus"></i>
                   </button>
                   <button type="button"
@@ -448,32 +448,32 @@
       <div style="padding:20px;">
         <div class="form-group">
           <label>
-            Nom de l'examen / acte
+            {{ 'nom_examen_label' | translate }}
             <span class="text-danger">*</span>
           </label>
           <input type="text"
                  class="form-control"
                  [(ngModel)]="dialogNom"
-                 placeholder="Ex: ECHOGRAPHIE ABDOMINALE..."
+                 placeholder="{{ 'ex_examen' | translate }}"
                  (keyup.enter)="confirmerAjoutExamen()" />
         </div>
         <div *ngIf="dialogStatut==='local'"
              class="alert alert-success"
              style="padding:8px;font-size:12px;">
           <i class="fa fa-check-circle"></i>
-          Trouvé dans la liste locale.
+          {{ 'trouvé_local' | translate }}
         </div>
         <div *ngIf="dialogStatut==='bdd'"
              class="alert alert-info"
              style="padding:8px;font-size:12px;">
           <i class="fa fa-database"></i>
-          Trouvé dans la base de données.
+          {{ 'trouvé_bdd' | translate }}
         </div>
         <div *ngIf="dialogStatut==='nouveau'"
              class="alert alert-warning"
              style="padding:8px;font-size:12px;">
           <i class="fa fa-plus-circle"></i>
-          Nouvel examen créé.
+          {{ 'nouvel_examen' | translate }}
         </div>
         <div *ngIf="dialogErreur"
              class="alert alert-danger"
@@ -500,7 +500,7 @@
              *ngIf="dialogLoading"></i>
           <i class="fa fa-search"
              *ngIf="!dialogLoading"></i>
-          Rechercher / Ajouter
+          {{ 'rechercher_ajouter' | translate }}
         </button>
       </div>
     </div>

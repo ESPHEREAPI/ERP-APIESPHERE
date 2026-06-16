@@ -8,6 +8,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
+      // Les requêtes de polling en arrière-plan (sidebar badges) ne doivent jamais
+      // déclencher une navigation globale — elles échouent silencieusement.
+      if (req.headers.has('X-Background-Poll')) {
+        return throwError(() => error);
+      }
+
       const errorCode = error.status;
       const errorDetails = {
         url: req.url,

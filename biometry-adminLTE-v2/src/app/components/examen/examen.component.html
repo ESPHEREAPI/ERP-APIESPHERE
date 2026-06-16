@@ -2,10 +2,10 @@
 <div class="row" style="margin-bottom:10px;">
   <div class="col-sm-12 text-right">
     <button class="btn btn-default btn-sm" style="margin-right:5px;">
-      <i class="fa fa-file-excel-o"></i> Export Détaillé
+      <i class="fa fa-file-excel-o"></i> {{ 'export_detaille' | translate }}
     </button>
     <button class="btn btn-default btn-sm" style="margin-right:5px;">
-      <i class="fa fa-file-text-o"></i> Export simple
+      <i class="fa fa-file-text-o"></i> {{ 'export_simple' | translate }}
     </button>
   </div>
 </div>
@@ -14,12 +14,12 @@
 <div class="box box-default">
   <div class="box-header with-border" style="padding:8px 15px;">
     <h3 class="box-title" style="font-size:13px;">
-      <i class="fa fa-filter text-muted"></i> Filtres
+      <i class="fa fa-filter text-muted"></i> {{ 'filtres' | translate }}
     </h3>
     <div class="box-tools pull-right">
       <button class="btn btn-default btn-xs"
               (click)="reinitialiserFiltres()">
-        <i class="fa fa-times"></i> Réinitialiser
+        <i class="fa fa-times"></i> {{ 'reinitialiser' | translate }}
       </button>
     </div>
   </div>
@@ -34,7 +34,7 @@
           </span>
           <input type="text" class="form-control"
                  [(ngModel)]="filtrePrestataire"
-                 placeholder="Prestataire"
+                 placeholder="{{ 'prestataire' | translate }}"
                  (keyup)="onFiltreTexteChange()">
         </div>
       </div>
@@ -45,7 +45,7 @@
           </span>
           <input type="text" class="form-control"
                  [(ngModel)]="filtreAdherent"
-                 placeholder="Assuré principal"
+                 placeholder="{{ 'assure_principal' | translate }}"
                  (keyup)="onFiltreTexteChange()">
         </div>
       </div>
@@ -56,7 +56,7 @@
           </span>
           <input type="text" class="form-control"
                  [(ngModel)]="filtreAyantDroit"
-                 placeholder="Ayant droit"
+                 placeholder="{{ 'ayant_droit' | translate }}"
                  (keyup)="onFiltreTexteChange()">
         </div>
       </div>
@@ -67,7 +67,7 @@
           </span>
           <input type="text" class="form-control"
                  [(ngModel)]="filtreSouscripteur"
-                 placeholder="Souscripteur"
+                 placeholder="{{ 'souscripteur' | translate }}"
                  (keyup)="onFiltreTexteChange()">
         </div>
       </div>
@@ -85,7 +85,7 @@
                  (change)="appliquerFiltres()">
           <span class="input-group-addon"
                 style="padding:0 6px;font-size:11px;color:#888;">
-            Enreg. min
+            {{ 'enreg_min' | translate }}
           </span>
         </div>
       </div>
@@ -99,7 +99,7 @@
                  (change)="appliquerFiltres()">
           <span class="input-group-addon"
                 style="padding:0 6px;font-size:11px;color:#888;">
-            Enreg. max
+            {{ 'enreg_max' | translate }}
           </span>
         </div>
       </div>
@@ -113,7 +113,7 @@
                  (change)="appliquerFiltres()">
           <span class="input-group-addon"
                 style="padding:0 6px;font-size:11px;color:#888;">
-            Enc. min
+            {{ 'enc_min' | translate }}
           </span>
         </div>
       </div>
@@ -127,7 +127,7 @@
                  (change)="appliquerFiltres()">
           <span class="input-group-addon"
                 style="padding:0 6px;font-size:11px;color:#888;">
-            Enc. max
+            {{ 'enc_max' | translate }}
           </span>
         </div>
       </div>
@@ -138,49 +138,49 @@
       <div class="col-md-6">
         <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
           <span style="font-size:12px; color:#777; margin-right:4px;">
-            <i class="fa fa-filter"></i> État :
+            <i class="fa fa-filter"></i> {{ 'etat_filtre' | translate }} :
           </span>
           <button type="button" class="btn btn-xs"
                   [class.btn-primary]="filtreEtat === ''"
                   [class.btn-default]="filtreEtat !== ''"
                   (click)="filtreEtat = ''; appliquerFiltres()">
-            Tous
+            {{ 'tous' | translate }}
           </button>
           <button type="button" class="btn btn-xs"
                   [class.btn-warning]="filtreEtat === 'attente_validation'"
                   [class.btn-default]="filtreEtat !== 'attente_validation'"
                   (click)="filtreEtat = 'attente_validation'; appliquerFiltres()">
-            <i class="fa fa-clock-o"></i> En attente
+            <i class="fa fa-clock-o"></i> {{ 'en_attente' | translate }}
           </button>
           <button type="button" class="btn btn-xs"
                   [class.btn-info]="filtreEtat === 'partiel'"
                   [class.btn-default]="filtreEtat !== 'partiel'"
                   (click)="filtreEtat = 'partiel'; appliquerFiltres()">
-            <i class="fa fa-adjust"></i> Partiel
+            <i class="fa fa-adjust"></i> {{ 'partiel' | translate }}
           </button>
           <button type="button" class="btn btn-xs"
                   [class.btn-success]="filtreEtat === 'valide'"
                   [class.btn-default]="filtreEtat !== 'valide'"
                   (click)="filtreEtat = 'valide'; appliquerFiltres()">
-            <i class="fa fa-check"></i> Validé
+            <i class="fa fa-check"></i> {{ 'valide' | translate }}
           </button>
           <button type="button" class="btn btn-xs"
                   [class.btn-primary]="filtreEtat === 'encaisse'"
                   [class.btn-default]="filtreEtat !== 'encaisse'"
                   (click)="filtreEtat = 'encaisse'; appliquerFiltres()">
-            <i class="fa fa-dollar"></i> Encaissé
+            <i class="fa fa-dollar"></i> {{ 'encaisse' | translate }}
           </button>
         </div>
       </div>
       <div class="col-md-6 text-right">
         <button class="btn btn-primary btn-sm"
                 (click)="appliquerFiltres()">
-          <i class="fa fa-search"></i> Rechercher
+          <i class="fa fa-search"></i> {{ 'rechercher' | translate }}
         </button>
         &nbsp;
         <button class="btn btn-default btn-sm"
                 (click)="reinitialiserFiltres()">
-          <i class="fa fa-times"></i> Réinitialiser
+          <i class="fa fa-times"></i> {{ 'reinitialiser' | translate }}
         </button>
       </div>
     </div>
@@ -193,7 +193,7 @@
   <div class="box-header with-border">
     <h3 class="box-title">
       <i class="fa fa-flask"></i>
-      Liste des examens
+      {{ 'liste_examens' | translate }}
       <span *ngIf="filtreEtat" class="label"
             style="margin-left:8px; font-size:11px;"
             [class.label-warning]="filtreEtat === 'attente_validation'"
@@ -206,7 +206,7 @@
     </h3>
     <div class="box-tools pull-right">
       <button class="btn btn-default btn-sm">
-        <i class="fa fa-print"></i> Exporter
+        <i class="fa fa-print"></i> {{ 'exporter' | translate }}
       </button>
     </div>
   </div>
@@ -216,7 +216,7 @@
     <div class="row" style="margin-bottom:10px;">
       <div class="col-sm-4">
         <label>
-          Afficher
+          {{ 'afficher' | translate }}
           <select class="form-control input-sm"
                   style="width:auto;display:inline-block;margin:0 5px;"
                   [(ngModel)]="pageSize"
@@ -226,7 +226,7 @@
             <option [value]="50">50</option>
             <option [value]="100">100</option>
           </select>
-          entrées
+          {{ 'entrees' | translate }}
         </label>
       </div>
       <div class="col-sm-8 text-right" style="padding-top:6px;">
@@ -236,7 +236,7 @@
 
     <div *ngIf="isLoading" class="text-center" style="padding:40px;">
       <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
-      <p class="text-muted" style="margin-top:8px;">Chargement...</p>
+      <p class="text-muted" style="margin-top:8px;">{{ 'chargement_data' | translate }}</p>
     </div>
 
     <div *ngIf="!isLoading" style="overflow-x:auto; overflow-y:visible;">
@@ -244,17 +244,17 @@
              style="font-size:12px; margin-bottom:0;">
         <thead>
           <tr style="background:#3c8dbc; color:#fff;">
-            <th style="color:#fff;">Prestataire</th>
-            <th style="color:#fff;">Souscripteur</th>
-            <th style="color:#fff;">Assuré principal</th>
-            <th style="color:#fff;">Ayant droit</th>
-            <th style="color:#fff;">Nature affection</th>
-            <th style="color:#fff;">Date</th>
-            <th class="text-center" style="color:#fff;">Lignes</th>
-            <th style="color:#fff;">État</th>
+            <th style="color:#fff;">{{ 'prestataire' | translate }}</th>
+            <th style="color:#fff;">{{ 'souscripteur' | translate }}</th>
+            <th style="color:#fff;">{{ 'assure_principal' | translate }}</th>
+            <th style="color:#fff;">{{ 'ayant_droit' | translate }}</th>
+            <th style="color:#fff;">{{ 'nature_affection' | translate }}</th>
+            <th style="color:#fff;">{{ 'date' | translate }}</th>
+            <th class="text-center" style="color:#fff;">{{ 'lignes_nb' | translate }}</th>
+            <th style="color:#fff;">{{ 'etat' | translate }}</th>
             <th class="text-center"
                 style="width:130px; color:#fff;">
-              Actions
+              {{ 'actions' | translate }}
             </th>
           </tr>
         </thead>
@@ -297,7 +297,7 @@
                         [class.btn-default]="isGrise(p.etatGlobal)"
                         [disabled]="isGrise(p.etatGlobal)"
                         (click)="ouvrirDetail(p, $event)">
-                  Sélectionner
+                  {{ 'selectionner' | translate }}
                 </button>
                 <button type="button"
                         class="btn btn-xs dropdown-toggle"
@@ -327,7 +327,7 @@
                        (click)="ouvrirDetail(p, $event)">
                       <i class="fa fa-list-alt text-info"
                          style="margin-right:7px;"></i>
-                      Détails
+                      {{ 'details' | translate }}
                     </a>
                   </li>
                 </ul>
@@ -340,7 +340,7 @@
             <td colspan="9" class="text-center text-muted"
                 style="padding:30px;">
               <i class="fa fa-inbox fa-2x"></i><br><br>
-              Aucun résultat
+              {{ 'aucun_resultat' | translate }}
             </td>
           </tr>
         </tbody>

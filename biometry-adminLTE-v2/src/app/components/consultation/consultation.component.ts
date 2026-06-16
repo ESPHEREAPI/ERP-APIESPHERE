@@ -75,6 +75,7 @@ export class ConsultationComponent implements OnInit, OnDestroy {
 
   // Modal rejeter
   showModalRejeter = false;
+  erreurRejet = '';
 
   // Modal encaisser
   showModalEncaisser = false;
@@ -330,6 +331,7 @@ appliquerFiltresClient(): void {
     event.preventDefault();
     this.dropdownOuvertId = null;
     this.consultationSelectionnee = { ...consultation };
+    this.erreurRejet = '';
     this.chargerInfosAdherentModal(consultation);
     this.showModalRejeter = true;
   }
@@ -451,6 +453,7 @@ appliquerFiltresClient(): void {
 
   confirmerRejet(): void {
     if (!this.consultationSelectionnee) return;
+    this.erreurRejet = '';
     const user = this.authService.getStoredUser();
     const request: ValidationConsultationRequest = {
       decision: 'rejete',
@@ -464,7 +467,10 @@ appliquerFiltresClient(): void {
     ).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => { this.fermerModals(); this.chargerPage(this.currentPage); },
-        error: () => { }
+        error: (err) => {
+          this.erreurRejet = err?.error?.message
+            || 'Impossible de rejeter cette consultation.';
+        }
       });
   }
 

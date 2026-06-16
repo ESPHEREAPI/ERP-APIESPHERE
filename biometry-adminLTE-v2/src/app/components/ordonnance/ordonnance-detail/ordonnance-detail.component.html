@@ -243,7 +243,7 @@
 
             <!-- Taux -->
             <td class="text-center">
-              <div *ngIf="isEnAttente(l.etat)" [class.has-error]="(l.tauxLocal ?? 0) > 100">
+              <div *ngIf="isDecidable(l.etat)" [class.has-error]="(l.tauxLocal ?? 0) > 100">
                 <input type="number" class="form-control input-sm"
                   style="width:65px; display:inline-block;"
                   [(ngModel)]="l.tauxLocal" min="0" max="100"
@@ -252,7 +252,7 @@
                   {{ 'max_taux' | translate }}
                 </div>
               </div>
-              <span *ngIf="!isEnAttente(l.etat)">{{ l.taux }}</span>
+              <span *ngIf="!isDecidable(l.etat)">{{ l.taux }}</span>
             </td>
 
             <!-- P.U original -->
@@ -263,48 +263,48 @@
 
             <!-- P.U validé -->
             <td class="text-right">
-              <input *ngIf="isEnAttente(l.etat)" type="number"
+              <input *ngIf="isDecidable(l.etat)" type="number"
                 class="form-control input-sm"
                 style="width:90px; display:inline-block;"
                 [(ngModel)]="l.valeurModifLocal" min="0">
-              <span *ngIf="!isEnAttente(l.etat)">
+              <span *ngIf="!isDecidable(l.etat)">
                 {{ formatMontant(l.valeurModif ?? l.valeur) }}
               </span>
             </td>
 
             <!-- Qté validée -->
             <td class="text-center">
-              <input *ngIf="isEnAttente(l.etat)" type="number"
+              <input *ngIf="isDecidable(l.etat)" type="number"
                 class="form-control input-sm"
                 style="width:65px; display:inline-block;"
                 [(ngModel)]="l.nbreModifLocal" min="0">
-              <span *ngIf="!isEnAttente(l.etat)">
+              <span *ngIf="!isDecidable(l.etat)">
                 {{ l.nbreModif ?? l.nbre }}
               </span>
             </td>
 
             <!-- Observations -->
             <td>
-              <textarea *ngIf="isEnAttente(l.etat)" class="form-control"
+              <textarea *ngIf="isDecidable(l.etat)" class="form-control"
                 style="width:120px; height:50px; font-size:11px;"
                 [(ngModel)]="l.observationsLocal">
               </textarea>
-              <span *ngIf="!isEnAttente(l.etat)">{{ l.observations || '-' }}</span>
+              <span *ngIf="!isDecidable(l.etat)">{{ l.observations || '-' }}</span>
             </td>
 
             <!-- État -->
             <td style="white-space:nowrap;">
-              <span *ngIf="!isEnAttente(l.etat)" [ngClass]="getEtatClass(l.etat)">
+              <span *ngIf="!isDecidable(l.etat)" [ngClass]="getEtatClass(l.etat)">
                 <i [class]="getEtatIcon(l.etat)"></i>
                 {{ getEtatLabel(l.etat) }}
               </span>
-              <span *ngIf="isEnAttente(l.etat) && l.decisionLocale === 'valide'" class="text-success">
+              <span *ngIf="isDecidable(l.etat) && l.decisionLocale === 'valide'" class="text-success">
                 <i class="fa fa-check"></i> {{ 'valide' | translate }}
               </span>
-              <span *ngIf="isEnAttente(l.etat) && l.decisionLocale === 'rejete'" class="text-danger">
+              <span *ngIf="isDecidable(l.etat) && l.decisionLocale === 'rejete'" class="text-danger">
                 <i class="fa fa-times"></i> {{ 'rejete' | translate }}
               </span>
-              <span *ngIf="isEnAttente(l.etat) && !l.decisionLocale" class="text-warning">
+              <span *ngIf="isDecidable(l.etat) && !l.decisionLocale" class="text-warning">
                 <i class="fa fa-clock-o"></i> {{ 'en_attente' | translate }}
               </span>
             </td>
@@ -313,7 +313,7 @@
             <td class="text-center" style="white-space:nowrap;">
 
               <!-- SS : valider / rejeter -->
-              <ng-container *ngIf="isSS && isEnAttente(l.etat)">
+              <ng-container *ngIf="isSS && isDecidable(l.etat)">
                 <button type="button" class="btn btn-xs"
                   [class.btn-success]="l.decisionLocale === 'valide'"
                   [class.btn-default]="l.decisionLocale !== 'valide'"

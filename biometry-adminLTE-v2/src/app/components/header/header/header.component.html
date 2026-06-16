@@ -19,10 +19,10 @@
             <span class="label label-info">{{ consultationCount }}</span>
           </a>
           <ul class="dropdown-menu">
-            <li class="header">{{ consultationCount }} consultations en attente</li>
+            <li class="header">{{ consultationCount }} {{ 'consultations_en_attente' | translate }}</li>
             <li><ul class="menu"><li>
               <a href="#" (click)="goToConsultations(); $event.preventDefault()">
-                <i class="ion ion-ios-pulse-strong text-info"></i> Voir toutes
+                <i class="ion ion-ios-pulse-strong text-info"></i> {{ 'voir_toutes' | translate }}
               </a>
             </li></ul></li>
           </ul>
@@ -35,10 +35,10 @@
             <span class="label label-success">{{ ordonnanceCount }}</span>
           </a>
           <ul class="dropdown-menu">
-            <li class="header">{{ ordonnanceCount }} ordonnances en attente</li>
+            <li class="header">{{ ordonnanceCount }} {{ 'ordonnances_en_attente' | translate }}</li>
             <li><ul class="menu"><li>
               <a href="#" (click)="goToOrdonnances(); $event.preventDefault()">
-                <i class="fa fa-file-text-o text-success"></i> Voir toutes
+                <i class="fa fa-file-text-o text-success"></i> {{ 'voir_toutes' | translate }}
               </a>
             </li></ul></li>
           </ul>
@@ -51,10 +51,10 @@
             <span class="label label-warning">{{ examenCount }}</span>
           </a>
           <ul class="dropdown-menu">
-            <li class="header">{{ examenCount }} examens en attente</li>
+            <li class="header">{{ examenCount }} {{ 'examens_en_attente' | translate }}</li>
             <li><ul class="menu"><li>
               <a href="#" (click)="goToExamens(); $event.preventDefault()">
-                <i class="ion ion-beaker text-warning"></i> Voir tous
+                <i class="ion ion-beaker text-warning"></i> {{ 'voir_tous' | translate }}
               </a>
             </li></ul></li>
           </ul>
@@ -89,12 +89,12 @@
               <div class="pull-left">
                 <a routerLink="/public/admin/parametre" class="btn btn-default btn-flat"
                   (click)="closeAllDropdowns()">
-                  Paramètres
+                  {{ 'parametre' | translate }}
                 </a>
               </div>
               <div class="pull-right">
                 <a (click)="logout()" class="btn btn-default btn-flat" style="cursor:pointer;">
-                  Déconnexion
+                  {{ 'deconnexion' | translate }}
                 </a>
               </div>
             </li>

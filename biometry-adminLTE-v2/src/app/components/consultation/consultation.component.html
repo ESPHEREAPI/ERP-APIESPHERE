@@ -974,6 +974,9 @@
           <p style="font-size:14px;">
             {{ 'confirmer_rejet_consultation' | translate }}
           </p>
+          <div *ngIf="erreurRejet" class="alert alert-danger" style="margin-top:10px;">
+            <i class="fa fa-exclamation-triangle"></i> {{ erreurRejet }}
+          </div>
         </div>
       </div>
 

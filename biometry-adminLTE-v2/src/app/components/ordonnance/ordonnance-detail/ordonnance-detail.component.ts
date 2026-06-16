@@ -125,12 +125,12 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
               this.visiteId = premiere.visiteId;
               this.chargerConsommation(premiere.visiteId);
             }
-            this.nomAssure = premiere.codeAdherent || '';
+            this.nomAssure = premiere.nomAssure || premiere.codeAdherent || '';
             this.souscripteur = premiere.souscripteur || '';
             this.groupe = premiere.groupe || null;
             this.natureAffection = premiere.natureAffection || '';
             this.nomPrestataire = premiere.nomPrestataire || premiere.prestataireId || '';
-            this.nomAyantDroit = premiere.codeAyantDroit || '';
+            this.nomAyantDroit = premiere.nomAyantDroit || premiere.codeAyantDroit || '';
           }
         },
         error: () => { this.isLoading = false; }
@@ -153,8 +153,15 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
     return etat === 'attente_validation' || etat === 'enregistre';
   }
 
+  // Ligne sur laquelle l'agent SS peut encore prendre une décision
+  isDecidable(etat: string): boolean {
+    return this.isEnAttente(etat) || (this.isSS && etat === 'valide');
+  }
+
   setDecision(ligne: LigneOrdonnance, decision: 'valide' | 'rejete'): void {
-    if (!this.isEnAttente(ligne.etat)) return;
+    const modifiable = this.isEnAttente(ligne.etat)
+      || (this.isSS && ligne.etat === 'valide');
+    if (!modifiable) return;
     ligne.decisionLocale = ligne.decisionLocale === decision ? null : decision;
   }
 
@@ -171,7 +178,9 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
   }
 
   get lignesEnAttente(): LigneOrdonnance[] {
-    return this.lignes.filter(l => this.isEnAttente(l.etat));
+    return this.lignes.filter(l =>
+      this.isEnAttente(l.etat) || (this.isSS && l.etat === 'valide')
+    );
   }
 
   get toutesDecidees(): boolean {
@@ -196,7 +205,7 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
     const employeId = user?.utilisateurId ?? 0;
 
     const appels = this.lignesEnAttente
-      .filter(l => l.decisionLocale !== null)
+      .filter(l => l.decisionLocale !== null && (this.isEnAttente(l.etat) || l.decisionLocale !== l.etat))
       .map(l => {
         // ✅ Conversion en number pour comparaison fiable
         const valeurModifLocal = l.valeurModifLocal != null ? Number(l.valeurModifLocal) : null;

@@ -59,8 +59,8 @@
               placeholder="{{ 'username' | translate }}" autocomplete="username" />
             <span class="glyphicon glyphicon-user form-control-feedback"></span>
             <div *ngIf="f['username'].touched && f['username'].invalid" class="text-danger small">
-              <div *ngIf="f['username'].errors?.['required']">Login requis</div>
-              <div *ngIf="f['username'].errors?.['minlength']">Minimum 2 caractères</div>
+              <div *ngIf="f['username'].errors?.['required']">{{ 'login_requis' | translate }}</div>
+              <div *ngIf="f['username'].errors?.['minlength']">{{ 'minimum_2_car' | translate }}</div>
             </div>
           </div>
 
@@ -70,8 +70,8 @@
               placeholder="{{ 'password' | translate }}" autocomplete="current-password" />
             <span class="glyphicon glyphicon-lock form-control-feedback"></span>
             <div *ngIf="f['password'].touched && f['password'].invalid" class="text-danger small">
-              <div *ngIf="f['password'].errors?.['required']">Mot de passe requis</div>
-              <div *ngIf="f['password'].errors?.['minlength']">Minimum 4 caractères</div>
+              <div *ngIf="f['password'].errors?.['required']">{{ 'mdp_requis' | translate }}</div>
+              <div *ngIf="f['password'].errors?.['minlength']">{{ 'minimum_4_car' | translate }}</div>
             </div>
           </div>
 
@@ -97,9 +97,9 @@
           <div class="form-group text-center">
             <button type="submit" class="btn btn-primary btn-flat btn-block"
               [disabled]="loginForm.invalid || isLoading">
-              <span *ngIf="!isLoading"><i class="fa fa-sign-in"></i> Se connecter</span>
+              <span *ngIf="!isLoading"><i class="fa fa-sign-in"></i> {{ 'se_connecter' | translate }}</span>
               <span *ngIf="isLoading">
-                <i class="fa fa-spinner fa-spin"></i> Connexion...
+                <i class="fa fa-spinner fa-spin"></i> {{ 'connexion_en_cours' | translate }}...
               </span>
             </button>
           </div>
@@ -110,11 +110,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="container text-center">
-      <div class="pull-right hidden-xs">
-        <b>Version</b> {{ appVersion }}
-      </div>
-      <p>&copy; 2018-{{ currentYear }} <b>ZENITHE Insurance</b>. Tous droits réservés.</p>
-    </div>
+    <p class="footer-copyright">&copy; 2018-{{ currentYear }} <b>ZENITHE Insurance</b>. Tous droits réservés.</p>
+    <span class="footer-version hidden-xs"><b>Version</b> {{ appVersion }}</span>
   </footer>
 </body>
