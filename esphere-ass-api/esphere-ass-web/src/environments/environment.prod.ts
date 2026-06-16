@@ -6,8 +6,8 @@ export const environment = {
   // Apache proxifie /gateway-proxy/ → https://localhost:4141 (gateway interne)
   // URL finale : /gateway-proxy/api/... → https://77.68.94.193/gateway-proxy/api/...
   // NE PAS mettre
-   apiUrl: 'https://77.68.94.193:4141',
-  //apiUrl: '',
+   //apiUrl: 'https://77.68.94.193:4141',
+  apiUrl: '',
 
   //adminServiceUrl: '',
 

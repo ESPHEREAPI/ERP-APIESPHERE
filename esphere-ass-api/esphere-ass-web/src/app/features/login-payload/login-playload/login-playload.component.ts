@@ -24,8 +24,24 @@ export class LoginPlayloadComponent {
   isLoading      = false;
   showPassword   = false;
   errorMessage   = '';
-  sessionExpired = false;             // Affiché si redirigé après expiration
+  sessionExpired = false;
   currentYear    = new Date().getFullYear();
+
+  // ── Toast notification ────────────────────────────────────────
+  toast: { visible: boolean; type: 'success' | 'error'; message: string } = {
+    visible: false, type: 'error', message: ''
+  };
+  private toastTimer?: ReturnType<typeof setTimeout>;
+
+  showToast(type: 'success' | 'error', message: string): void {
+    clearTimeout(this.toastTimer);
+    this.toast = { visible: true, type, message };
+    this.toastTimer = setTimeout(() => this.dismissToast(), 4500);
+  }
+
+  dismissToast(): void {
+    this.toast = { ...this.toast, visible: false };
+  }
  
   get currentLang(): AppLang { return this.languageService.current; }
 
@@ -47,10 +63,11 @@ export class LoginPlayloadComponent {
       password: ['', [Validators.required, Validators.minLength(2)]]
     });
  
-    // ── Détection session expirée (?expired=true dans l'URL) ──
-    // Ajouté par l'intercepteur HTTP quand le token expire (401)
-    if(this.authService.isLoggedIn()===false){
- this.sessionExpired = true;
+    if (!this.authService.isLoggedIn()) {
+      const msg = this.currentLang === 'fr'
+        ? 'Session expirée. Veuillez vous reconnecter.'
+        : 'Session expired. Please sign in again.';
+      setTimeout(() => this.showToast('error', msg), 300);
     }
    
  
@@ -72,26 +89,25 @@ export class LoginPlayloadComponent {
     if (this.loginForm.invalid) return;
  
     // Active le spinner de chargement
-    this.isLoading    = true;
-    this.errorMessage = '';
+    this.isLoading      = true;
+    this.errorMessage   = '';
     this.sessionExpired = false;
-    const profilType=ProfilType.PAYLOAD;
- 
+    const profilType   = ProfilType.PAYLOAD;
+    const currentLang  = this.currentLang;
+
     const { username, password } = this.loginForm.value;
  
     this.authService.login(username, password,profilType).subscribe({
  
-      // ── Succès → redirection vers le dashboard ──────────────
       next: () => {
         this.isLoading = false;
-        // Le session_payload est déjà stocké dans AuthService.login()
-        this.router.navigate(['/dashboard-payload']);
+        this.showToast('success', currentLang === 'fr' ? 'Connexion réussie. Redirection…' : 'Login successful. Redirecting…');
+        setTimeout(() => this.router.navigate(['/dashboard-payload']), 900);
       },
- 
-      // ── Erreur → affiche le message sous le formulaire ──────
+
       error: (err: Error) => {
-        this.isLoading    = false;
-        this.errorMessage = err.message || 'Identifiants incorrects';
+        this.isLoading = false;
+        this.showToast('error', err.message || (currentLang === 'fr' ? 'Identifiants incorrects.' : 'Invalid credentials.'));
       }
     });
   }

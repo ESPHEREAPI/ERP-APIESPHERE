@@ -21,15 +21,7 @@
 server:
   port: ${SERVER_PORT:4141}
   ssl:
-    enabled: true
-    key-store: ${KEYSTORE_PATH:C:/zen-it-biometrie/keystore.p12}
-    key-store-password: ${KEYSTORE_PASSWORD:zenithe}
-    key-store-type: PKCS12
-    key-alias: ${KEY_ALIAS:gateway}
-#    protocol: TLS
-#    enabled-protocols: TLSv1.2,TLSv1.3
-  http2:
-    enabled: true
+    enabled: false
   error:
     include-message: never
     include-exception: false
@@ -65,27 +57,27 @@ spring:
         connect-timeout: 30000
         response-timeout: 120000
 
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns:
-              - "https://77.68.94.193:4141"
-              - "https://77.68.94.193"
-              - "https://77.68.94.193:*"
-            allowedMethods:
-              - GET
-              - POST
-              - PUT
-              - PATCH
-              - DELETE
-              - OPTIONS
-            allowedHeaders:
-              - "*"
-            exposedHeaders:
-              - Authorization
-              - X-Refresh-Token
-            allowCredentials: true
-            maxAge: 3600
+#      globalcors:
+#        corsConfigurations:
+#          '[/**]':
+#            allowedOriginPatterns:
+#              - "https://77.68.94.193:4141"
+#              - "https://77.68.94.193"
+#              - "https://77.68.94.193:*"
+#            allowedMethods:
+#              - GET
+#              - POST
+#              - PUT
+#              - PATCH
+#              - DELETE
+#              - OPTIONS
+#            allowedHeaders:
+#              - "*"
+#            exposedHeaders:
+#              - Authorization
+#              - X-Refresh-Token
+#            allowCredentials: true
+#            maxAge: 3600
 
       routes:
         # Route 0 : Service Biométrie
@@ -145,8 +137,11 @@ management:
 logging:
   level:
     root: WARN
-    org.springframework.cloud.gateway: INFO
-    reactor.netty: WARN
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.web.cors: DEBUG
+    org.springframework.security.web.cors: DEBUG
+    reactor.netty.http.client: DEBUG
+    reactor.netty.http.server: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] %logger{36} - %msg%n"
   file:

@@ -20,7 +20,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 export class SidebarComponent implements OnInit, OnDestroy {
 
   @Input() user: User | null = null;
-  imagePath    = './img/user2-160x160.jpg';
+  imagePath    = 'img/user2-160x160.jpg';
   userSession: UserSession | null = null;
   profilType:  string | null = '';
 
@@ -56,9 +56,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     if (this.user) {
-      this.imagePath = this.user.profileImageUrl ?? '../img/user2-160x160.jpg';
+      this.imagePath = this.user.profileImageUrl ?? 'img/user2-160x160.jpg';
     } else {
-      this.imagePath = './img/user2-160x160.jpg';
+      this.imagePath = 'img/user2-160x160.jpg';
     }
 
     // Souscription réactive — se met à jour quand enrichProfileAfterLogin() complète

@@ -4,8 +4,8 @@ export const environment = {
 
   // URL de la gateway — vide en dev : le proxy Angular (proxy.conf.json) forward
   // /gateway-proxy/** → http://localhost:4141 (gateway Spring Cloud)
-  apiUrl: 'https://77.68.94.193:4141',
-
+  //apiUrl: 'https://77.68.94.193:4141',
+apiUrl:'',
   // URL directe du microservice admin (si connexion sans gateway)
   //adminServiceUrl: 'http://localhost:8083',
 

@@ -21,8 +21,8 @@ spring:
         locator:
           enabled: false
       # Déduplication des headers CORS
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+#      default-filters:
+#        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
       # SSL sortant (appels vers microservices)
       httpclient:
         ssl:

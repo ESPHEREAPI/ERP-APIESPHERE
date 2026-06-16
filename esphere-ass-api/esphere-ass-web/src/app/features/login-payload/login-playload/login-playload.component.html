@@ -6,6 +6,15 @@
   ╚══════════════════════════════════════════════════════════════╝
 -->
 
+<!-- ══ TOAST NOTIFICATION (haut de page) ════════════════════════ -->
+<div class="toast-container" [class.toast-visible]="toast.visible">
+  <div class="toast-inner" [class.toast-success]="toast.type === 'success'" [class.toast-error]="toast.type === 'error'">
+    <i class="toast-icon fas" [class.fa-check-circle]="toast.type === 'success'" [class.fa-exclamation-circle]="toast.type === 'error'"></i>
+    <span class="toast-message">{{ toast.message }}</span>
+    <button class="toast-close" (click)="dismissToast()"><i class="fas fa-times"></i></button>
+  </div>
+</div>
+
 <div class="hold-transition login-page" style="min-height:100vh;">
 
   <div class="login-wrapper">
@@ -44,28 +53,7 @@
           {{ 'LOGIN.SUBTITLE' | translate }}
         </p>
 
-        <!-- Alerte session expirée -->
-        <div class="alert alert-warning alert-dismissible fade show"
-             *ngIf="sessionExpired"
-             role="alert">
-          <i class="fas fa-clock mr-1"></i>
-          <strong>{{ currentLang === 'fr' ? 'Session expirée.' : 'Session expired.' }}</strong>
-          {{ currentLang === 'fr' ? 'Veuillez vous reconnecter.' : 'Please sign in again.' }}
-          <button type="button" class="close" (click)="sessionExpired = false">
-            <span>&times;</span>
-          </button>
-        </div>
-
-        <!-- Alerte erreur connexion -->
-        <div class="alert alert-danger alert-dismissible fade show"
-             *ngIf="errorMessage"
-             role="alert">
-          <i class="fas fa-exclamation-triangle mr-1"></i>
-          {{ errorMessage }}
-          <button type="button" class="close" (click)="errorMessage = ''">
-            <span>&times;</span>
-          </button>
-        </div>
+        <!-- Session expirée → toast automatique géré dans ngOnInit -->
 
         <!-- ══ FORMULAIRE RÉACTIF ══════════════════════════════════ -->
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
