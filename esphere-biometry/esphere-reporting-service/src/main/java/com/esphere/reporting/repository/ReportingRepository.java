@@ -664,6 +664,97 @@ public class ReportingRepository {
                 .getResultList();
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAT DES PRESTATIONS — PRESTATAIRE (liste paginée + montants)
+    // ══════════════════════════════════════════════════════════════
+
+    @SuppressWarnings("unchecked")
+    public List<Object[]> etatPrestationsPrestataire(
+            String prestataireId, String nature, String statut,
+            Integer mois, int annee, int page, int size) {
+
+        // etat_global et nbre_lignes sont calculés depuis les lignes
+        // (ces colonnes n'existent pas dans dbx45ty_prestation)
+        StringBuilder sql = new StringBuilder(
+            "SELECT p.id, p.nature_prestation, p.date, "
+            + "  v.code_adherent, v.code_ayant_droit, "
+            + "  a.assure_principal as nom_assure, "
+            + "  ad.nom as nom_ayant_droit, "
+            + "  a.souscripteur, "
+            + "  COALESCE(a.taux, 100) as taux, "
+            + "  COUNT(l.id) as nbre_lignes, "
+            + "  COALESCE(SUM(l.valeur * l.nbre), 0) as montant_soumis, "
+            + "  COALESCE(SUM(CASE WHEN l.etat IN ('valide','encaisse') "
+            + "    THEN COALESCE(l.valeur_modif, l.valeur) * COALESCE(l.nbre_modif, l.nbre) "
+            + "    ELSE 0 END), 0) as montant_valide, "
+            + "  CASE "
+            + "    WHEN SUM(CASE WHEN l.etat = 'encaisse'          THEN 1 ELSE 0 END) = COUNT(l.id) AND COUNT(l.id) > 0 THEN 'encaisse' "
+            + "    WHEN SUM(CASE WHEN l.etat IN ('valide','encaisse') THEN 1 ELSE 0 END) = COUNT(l.id) AND COUNT(l.id) > 0 THEN 'valide' "
+            + "    WHEN SUM(CASE WHEN l.etat = 'rejete'             THEN 1 ELSE 0 END) = COUNT(l.id) AND COUNT(l.id) > 0 THEN 'rejete' "
+            + "    ELSE 'attente_validation' "
+            + "  END as etat_calcule "
+            + "FROM dbx45ty_prestation p "
+            + "LEFT JOIN dbx45ty_visite v ON v.id = p.visite_id "
+            + "LEFT JOIN dbx45ty_adherent a ON a.code_adherent = v.code_adherent "
+            + "LEFT JOIN dbx45ty_ayant_droit ad ON ad.code_ayant_droit = v.code_ayant_droit "
+            + "LEFT JOIN dbx45ty_ligne_prestation l ON l.prestation_id = p.id AND l.supprime = '-1' "
+            + "WHERE p.prestataire_id = :prestataireId "
+            + "  AND YEAR(p.date) = :annee "
+            + "  AND p.supprime = '-1' "
+        );
+        if (nature != null && !nature.isBlank()) sql.append("AND p.nature_prestation = :nature ");
+        if (mois != null && mois > 0)            sql.append("AND MONTH(p.date) = :mois ");
+        sql.append("GROUP BY p.id, p.nature_prestation, p.date, v.code_adherent, v.code_ayant_droit, a.assure_principal, ad.nom, a.souscripteur, a.taux ");
+        if (statut != null && !statut.isBlank())  sql.append("HAVING etat_calcule = :statut ");
+        sql.append("ORDER BY p.date DESC ");
+        sql.append("LIMIT :size OFFSET :offset");
+
+        var q = em.createNativeQuery(sql.toString())
+                .setParameter("prestataireId", prestataireId)
+                .setParameter("annee", annee)
+                .setParameter("size", size)
+                .setParameter("offset", page * size);
+        if (nature != null && !nature.isBlank()) q.setParameter("nature", nature);
+        if (statut != null && !statut.isBlank())  q.setParameter("statut", statut);
+        if (mois != null && mois > 0)             q.setParameter("mois", mois);
+        return q.getResultList();
+    }
+
+    public Long countEtatPrestationsPrestataire(
+            String prestataireId, String nature, String statut,
+            Integer mois, int annee) {
+
+        // Pour le count avec filtre statut on utilise une sous-requête
+        StringBuilder inner = new StringBuilder(
+            "SELECT p.id, "
+            + "CASE "
+            + "  WHEN SUM(CASE WHEN l.etat = 'encaisse'             THEN 1 ELSE 0 END) = COUNT(l.id) AND COUNT(l.id) > 0 THEN 'encaisse' "
+            + "  WHEN SUM(CASE WHEN l.etat IN ('valide','encaisse')  THEN 1 ELSE 0 END) = COUNT(l.id) AND COUNT(l.id) > 0 THEN 'valide' "
+            + "  WHEN SUM(CASE WHEN l.etat = 'rejete'                THEN 1 ELSE 0 END) = COUNT(l.id) AND COUNT(l.id) > 0 THEN 'rejete' "
+            + "  ELSE 'attente_validation' "
+            + "END as etat_calcule "
+            + "FROM dbx45ty_prestation p "
+            + "LEFT JOIN dbx45ty_ligne_prestation l ON l.prestation_id = p.id AND l.supprime = '-1' "
+            + "WHERE p.prestataire_id = :prestataireId "
+            + "  AND YEAR(p.date) = :annee "
+            + "  AND p.supprime = '-1' "
+        );
+        if (nature != null && !nature.isBlank()) inner.append("AND p.nature_prestation = :nature ");
+        if (mois != null && mois > 0)            inner.append("AND MONTH(p.date) = :mois ");
+        inner.append("GROUP BY p.id ");
+        if (statut != null && !statut.isBlank())  inner.append("HAVING etat_calcule = :statut ");
+
+        String sql = "SELECT COUNT(*) FROM (" + inner + ") AS sub";
+
+        var q = em.createNativeQuery(sql)
+                .setParameter("prestataireId", prestataireId)
+                .setParameter("annee", annee);
+        if (nature != null && !nature.isBlank()) q.setParameter("nature", nature);
+        if (statut != null && !statut.isBlank())  q.setParameter("statut", statut);
+        if (mois != null && mois > 0)             q.setParameter("mois", mois);
+        return ((Number) q.getSingleResult()).longValue();
+    }
+
     @SuppressWarnings("unchecked")
     public List<Object[]> consommationAyantsDroit(
             String codeAdherent, int annee) {

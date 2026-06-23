@@ -40,11 +40,17 @@ eureka:
     service-url:
       defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:8761/eureka/
 
+esphere:
+  validation:
+    url: http://localhost:8085
+  service-sante:
+    telephones: ${SS_TELEPHONES:694923568,686086116}
+
 sms:
   api:
-    url: ${SMS_API_URL}
-    user: ${SMS_API_USER}
-    password: ${SMS_API_PASSWORD}
+    url: ${SMS_API_URL:https://smsvas.com/bulk/public/index.php/api/v1/sendsms}
+    user: ${SMS_API_USER:info@zenitheinsurance.com}
+    password: ${SMS_API_PASSWORD:biometrie2023}
     senderid: ${SMS_SENDER_ID:ZENITHE}
 
 logging:

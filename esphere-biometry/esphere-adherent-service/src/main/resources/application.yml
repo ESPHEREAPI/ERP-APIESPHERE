@@ -5,7 +5,7 @@ spring:
   application:
     name: esphere-adherent-service
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    active: ${SPRING_PROFILES_ACTIVE:prod}
   jpa:
     open-in-view: false
   flyway:

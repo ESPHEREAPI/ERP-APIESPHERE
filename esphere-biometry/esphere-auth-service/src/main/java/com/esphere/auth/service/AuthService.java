@@ -170,9 +170,10 @@ public class AuthService {
     @Transactional(readOnly = true)
     public OtpResponse generateOtp(OtpRequest request) {
 
-        // 1. Charger le prestataire
+        // 1. Charger le prestataire (plusieurs comptes possibles → premier actif)
         Utilisateur utilisateur = utilisateurRepository
             .findActiveByPrestataireId(request.getPrestataireId())
+            .stream().findFirst()
             .orElseThrow(() -> {
                 log.warn("Prestataire inconnu : {}",
                          request.getPrestataireId());
@@ -258,9 +259,10 @@ public class AuthService {
             throw new AuthException("OTP invalide ou expiré");
         }
 
-        // 2. Charger l'utilisateur du prestataire
+        // 2. Charger l'utilisateur du prestataire (premier actif)
         Utilisateur utilisateur = utilisateurRepository
             .findActiveByPrestataireId(entry.prestataireId())
+            .stream().findFirst()
             .orElseThrow(() ->
                 new AuthException("Prestataire introuvable"));
 

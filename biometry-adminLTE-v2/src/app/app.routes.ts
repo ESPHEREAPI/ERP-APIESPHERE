@@ -26,6 +26,10 @@ import { visiteInfoResolver } from './services/visite-info.resolver';
 import { OrdonnanceAjouterComponent } from './components/prestataire/ordonnance-ajouter/ordonnance-ajouter.component';
 import { ExamenAjouterComponent } from './components/prestataire/examen-ajouter/examen-ajouter/examen-ajouter.component';
 import { ConsultationAjouterComponent } from './components/prestataire/consultation-ajouter/consultation-ajouter/consultation-ajouter.component';
+import { MobileCaptureComponent } from './pages/mobile-capture/mobile-capture.component';
+import { ConsultationBonComponent } from './components/consultation/consultation-bon/consultation-bon.component';
+import { PrestationBonComponent } from './components/prestation-bon/prestation-bon.component';
+import { EtatPrestationsComponent } from './components/reporting/etat-prestations/etat-prestations.component';
 
 export const routes: Routes = [
 
@@ -48,7 +52,22 @@ export const routes: Routes = [
   {
     path: 'network-error',
     component: NetworkErrorComponent,
-    //  canActivate: [PublicGuard]  // ⭐ NOUVEAU
+  },
+  // ── Page mobile de capture — accessible sans auth ─────────────
+  {
+    path: 'mobile/capture/:codeCourt/:prestationId/:nature',
+    component: MobileCaptureComponent
+  },
+  // ── Bons de prise en charge — pages d'impression sans layout ──
+  {
+    path: 'public/admin/consultation/bon/:id',
+    component: ConsultationBonComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'public/prestataire/prestation/bon/:id',
+    component: PrestationBonComponent,
+    canActivate: [AuthGuard]
   },
   {
     path: 'error',
@@ -226,6 +245,15 @@ export const routes: Routes = [
         breadcrumb:   'BREADCRUMB.VILLE',
         pageTitle:    'PAGE.VILLE.TITLE',
         pageSubtitle: 'PAGE.VILLE.SUBTITLE'
+      }
+    },
+    {
+      path: 'reporting/mes-prestations',
+      component: EtatPrestationsComponent,
+      data: {
+        breadcrumb:   'BREADCRUMB.ETAT_PRESTATIONS',
+        pageTitle:    'PAGE.ETAT_PRESTATIONS.TITLE',
+        pageSubtitle: 'PAGE.ETAT_PRESTATIONS.SUBTITLE'
       }
     }
   ]

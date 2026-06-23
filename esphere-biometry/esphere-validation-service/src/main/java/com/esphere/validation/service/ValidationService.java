@@ -7,8 +7,10 @@ import com.esphere.validation.dto.request.ValidationLigneRequest;
 import com.esphere.validation.dto.response.AdherentExterneDTO;
 import com.esphere.validation.dto.response.ConsultationEnAttenteResponse;
 import com.esphere.validation.dto.response.LigneEnAttenteResponse;
+import com.esphere.validation.dto.response.PrestationBonResponse;
 import com.esphere.validation.dto.response.PrestationResponse;
 import com.esphere.validation.dto.response.VisiteInfoResponse;
+import com.esphere.validation.client.NotificationClient;
 import com.esphere.validation.entity.*;
 import com.esphere.validation.exception.ValidationException;
 import com.esphere.validation.repository.*;
@@ -40,6 +42,9 @@ public class ValidationService {
     private final AdherentRepository adherentRepository;
     private final AdherentExterneService adherentExterneService;
     private final TauxPrestationRepository tauxPrestationRepository;
+    private final NotificationClient notificationClient;
+    private final ParametreService parametreService;
+    private final AyantDroitRepository ayantDroitRepository;
 
     // ── CONSULTATIONS ─────────────────────────────────────────────
     @Transactional(readOnly = true)
@@ -59,6 +64,13 @@ public class ValidationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public ConsultationEnAttenteResponse getConsultationById(Integer id) {
+        Consultation consultation = consultationRepository.findById(id)
+                .orElseThrow(() -> new ValidationException("Consultation introuvable : " + id, 404));
+        return toConsultationResponse(consultation);
+    }
+
     @Transactional
     public ConsultationEnAttenteResponse validerConsultation(
             Integer consultationId,
@@ -68,25 +80,47 @@ public class ValidationService {
                 .orElseThrow(() -> new ValidationException(
                 "Consultation introuvable : " + consultationId, 404));
 
-        if (!"attente_validation".equals(consultation.getEtatConsultation())) {
-            throw new ValidationException(
-                    "Cette consultation n'est pas en attente de validation. "
-                    + "Etat actuel : " + consultation.getEtatConsultation(), 400);
+        String etatActuel = consultation.getEtatConsultation();
+        boolean transitionAutorisee =
+                "attente_validation".equals(etatActuel) ||
+                ("valide".equals(etatActuel) && "rejete".equals(request.getDecision()));
+
+        if (!transitionAutorisee) {
+            String msg = "encaisse".equals(etatActuel)
+                    ? "Impossible de modifier une consultation déjà encaissée."
+                    : "Transition non autorisée : état actuel '" + etatActuel
+                      + "', décision '" + request.getDecision() + "'.";
+            throw new ValidationException(msg, 400);
+        }
+
+        if ("rejete".equals(request.getDecision())
+                && parametreService.getBooleanValeur("OBSERVATION_REJET_OBLIGATOIRE", false)
+                && (request.getObservations() == null || request.getObservations().isBlank())) {
+            throw new ValidationException("L'observation est obligatoire pour un rejet.", 400);
         }
 
         consultation.setEtatConsultation(request.getDecision());
         consultation.setEmployeValideRejeteId(request.getEmployeId());
         consultation.setDateValideRejete(LocalDateTime.now());
         consultation.setObservations(request.getObservations());
-        consultation.setTaux(request.getTaux());
-        consultation.setMontantModif(
-                request.getMontantModif() != null
-                ? request.getMontantModif()
-                : consultation.getMontant());
+
+        // Lors d'un rejet depuis l'état 'valide', conserver le taux et montant
+        // déjà enregistrés — ne pas les écraser avec null.
+        if (request.getTaux() != null) {
+            consultation.setTaux(request.getTaux());
+        }
+        if (request.getMontantModif() != null) {
+            consultation.setMontantModif(request.getMontantModif());
+        } else if (!"valide".equals(etatActuel)) {
+            // Depuis attente_validation sans montantModif : utiliser le montant brut
+            consultation.setMontantModif(consultation.getMontant());
+        }
 
         consultationRepository.save(consultation);
         log.info("Consultation {} {} par employé {}",
                 consultationId, request.getDecision(), request.getEmployeId());
+
+        notifierConsultation(consultation, request.getDecision());
 
         return toConsultationResponse(consultation);
     }
@@ -124,6 +158,79 @@ public class ValidationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public PrestationBonResponse getPrestationBon(Integer prestationId) {
+        Prestation prestation = prestationRepository.findById(prestationId)
+                .orElseThrow(() -> new ValidationException("Prestation introuvable : " + prestationId, 404));
+
+        Visite visite = visiteRepository.findById(prestation.getVisiteId())
+                .orElseThrow(() -> new ValidationException("Visite introuvable : " + prestation.getVisiteId(), 404));
+
+        Adherent adherent = adherentRepository
+                .findActiveByCode(visite.getCodeAdherent())
+                .or(() -> adherentRepository.findNotActiveByCode(visite.getCodeAdherent()))
+                .orElseThrow(() -> new ValidateException("Assuré introuvable : " + visite.getCodeAdherent()));
+
+        AyantDroit ay = null;
+        if (visite.getCodeAyantDroit() != null) {
+            ay = adherent.getAyantsDroit().stream()
+                    .filter(a -> a.getCodeAyantDroit().equals(visite.getCodeAyantDroit()))
+                    .findFirst().orElse(null);
+        }
+
+        String prestataireNom = prestataireRepository
+                .findActiveById(visite.getPrestataireId())
+                .map(Prestataire::getNom)
+                .orElse(visite.getPrestataireId());
+
+        // Code court = dernière partie du visiteId
+        String[] parts = prestation.getVisiteId().split("_");
+        String codeCourt = parts[parts.length - 1];
+
+        List<LignePrestation> lignes = ligneRepository.findByPrestation(prestationId);
+
+        List<PrestationBonResponse.LigneBon> lignesBon = lignes.stream().map(l -> {
+            double val  = l.getValeurModif()  != null ? l.getValeurModif()  : (l.getValeur()  != null ? l.getValeur()  : 0.0);
+            double nbre = l.getNbreModif()     != null ? l.getNbreModif()     : (l.getNbre()     != null ? l.getNbre()     : 1.0);
+            double taux = l.getTaux()          != null ? l.getTaux()          : 0.0;
+            return PrestationBonResponse.LigneBon.builder()
+                    .nom(l.getNom())
+                    .typeExamen(l.getTypeExamen())
+                    .taux(taux)
+                    .montantValide(val)
+                    .quantite(nbre)
+                    .total(val * nbre)
+                    .build();
+        }).collect(Collectors.toList());
+
+        double montantTotal = lignesBon.stream().mapToDouble(PrestationBonResponse.LigneBon::getTotal).sum();
+        // taux moyen pondéré ou taux de la première ligne
+        double tauxMoyen = lignes.isEmpty() ? 0.0 :
+                (lignes.get(0).getTaux() != null ? lignes.get(0).getTaux() : 0.0);
+        double partZenithe = montantTotal * tauxMoyen / 100.0;
+        double partAssure  = montantTotal - partZenithe;
+
+        String nomAdherent = adherent.getAssurePrincipal();
+        String nomAyantDroit = ay != null ? ay.getNom() : null;
+
+        return PrestationBonResponse.builder()
+                .id(prestation.getId())
+                .visiteId(prestation.getVisiteId())
+                .codeCourt(codeCourt)
+                .naturePrestation(prestation.getNaturePrestation())
+                .date(prestation.getDate())
+                .prestataireNom(prestataireNom)
+                .nomAdherent(nomAdherent)
+                .nomAyantDroit(nomAyantDroit)
+                .malade(nomAyantDroit != null ? nomAyantDroit : nomAdherent)
+                .souscripteur(adherent.getSouscripteur())
+                .lignes(lignesBon)
+                .montantTotal(montantTotal)
+                .partZenithe(partZenithe)
+                .partAssure(partAssure)
+                .build();
+    }
+
     @Transactional
     public LigneEnAttenteResponse validerLigne(
             Integer ligneId,
@@ -133,28 +240,44 @@ public class ValidationService {
                 .orElseThrow(() -> new ValidationException(
                 "Ligne de prestation introuvable : " + ligneId, 404));
 
-        if (!"attente_validation".equals(ligne.getEtat())) {
-            throw new ValidationException(
-                    "Cette ligne n'est pas en attente de validation. "
-                    + "Etat actuel : " + ligne.getEtat(), 400);
+        String etatLigne = ligne.getEtat();
+        boolean transitionLigneAutorisee =
+                "attente_validation".equals(etatLigne) ||
+                "enregistre".equals(etatLigne) ||
+                ("valide".equals(etatLigne) && "rejete".equals(request.getDecision()));
+
+        if (!transitionLigneAutorisee) {
+            String msg = "encaisse".equals(etatLigne)
+                    ? "Impossible de modifier une ligne déjà encaissée."
+                    : "Transition non autorisée : état actuel '" + etatLigne
+                      + "', décision '" + request.getDecision() + "'.";
+            throw new ValidationException(msg, 400);
+        }
+
+        if ("rejete".equals(request.getDecision())
+                && parametreService.getBooleanValeur("OBSERVATION_REJET_OBLIGATOIRE", false)
+                && (request.getObservations() == null || request.getObservations().isBlank())) {
+            throw new ValidationException("L'observation est obligatoire pour un rejet.", 400);
         }
 
         ligne.setEtat(request.getDecision());
         ligne.setEmployeValideRejeteId(request.getEmployeId());
         ligne.setDateValideRejete(LocalDateTime.now());
         ligne.setObservations(request.getObservations());
-        ligne.setValeurModif(
-                request.getValeurModif() != null
-                ? request.getValeurModif()
-                : ligne.getValeur());
-        ligne.setNbreModif(
-                request.getNbreModif() != null
-                ? request.getNbreModif()
-                : ligne.getNbre());
-        ligne.setTaux(
-                request.getTaux() != null
-                ? request.getTaux()
-                : ligne.getTaux());
+        // Conserver valeur/nbre/taux existants si non fournis (rejet depuis 'valide')
+        if (request.getValeurModif() != null) {
+            ligne.setValeurModif(request.getValeurModif());
+        } else if (!"valide".equals(etatLigne)) {
+            ligne.setValeurModif(ligne.getValeur());
+        }
+        if (request.getNbreModif() != null) {
+            ligne.setNbreModif(request.getNbreModif());
+        } else if (!"valide".equals(etatLigne)) {
+            ligne.setNbreModif(ligne.getNbre());
+        }
+        if (request.getTaux() != null) {
+            ligne.setTaux(request.getTaux());
+        }
         if (request.getActePrelevementModif() != null) {
             ligne.setActePrelevementModif(request.getActePrelevementModif());
         }
@@ -169,6 +292,8 @@ public class ValidationService {
         Visite visite = visiteRepository.findById(pr.getVisiteId())
                 .orElseThrow(() -> new ValidationException(
                 "Visite introuvable", 400));
+
+        notifierLignePrestation(pr, visite);
 
         return toLigneResponse(ligne, visite);
     }
@@ -331,9 +456,10 @@ public class ValidationService {
 
     // ── MAPPERS ───────────────────────────────────────────────────
     private ConsultationEnAttenteResponse toConsultationResponse(Consultation c) {
-        Visite visite = visiteRepository.findById(c.getVisiteId()).orElse(null);
+        Visite visite = visiteRepository.findById(c.getVisiteId())
+                .orElseThrow(() -> new ValidateException("Visite introuvable : " + c.getVisiteId()));
 
-    Adherent adherent = adherentRepository
+        Adherent adherent = adherentRepository
     .findActiveByCode(visite.getCodeAdherent())
     .or(() -> adherentRepository.findNotActiveByCode(visite.getCodeAdherent()))
     .orElseThrow(() -> new ValidateException(
@@ -380,6 +506,8 @@ public class ValidationService {
                         ? c.getMontantModif() : c.getMontant(),
                         c.getTaux()))
                 .statutAdherent(adherent.getStatut())
+                .nomAdherent(adherent.getAssurePrincipal())
+                .nomAyantDroit(ay != null ? ay.getNom() : null)
                 .build();
     }
 
@@ -550,22 +678,20 @@ public class ValidationService {
 
         String etatGlobal;
         if (total == 0 || enAttente == total) {
-            // Toutes en attente ou aucune ligne
             etatGlobal = "attente_validation";
+        } else if (rejetes == total) {
+            etatGlobal = "rejete";
         } else if (encaisses == total) {
-            // Toutes encaissées
             etatGlobal = "encaisse";
-        } else if (enAttente == 0 && rejetes == 0 && encaisses == 0) {
-            // Toutes validées (pas encore encaissées)
+        } else if (valides == total) {
             etatGlobal = "valide";
-        } else if (enAttente == 0 && (encaisses + rejetes) == total) {
-            // Toutes traitées : mix encaissées + rejetées → encaissé partiel
+        } else if (enAttente == 0 && rejetes > 0 && (valides + encaisses) > 0) {
+            etatGlobal = "partiel";
+        } else if (enAttente == 0 && encaisses > 0 && rejetes == 0) {
             etatGlobal = "encaisse";
         } else if (enAttente == 0) {
-            // Plus d'attente mais mix valide/rejete/encaisse
-            etatGlobal = "valide";
+            etatGlobal = valides > 0 ? "valide" : "rejete";
         } else {
-            // Encore des lignes en attente + d'autres déjà traitées
             etatGlobal = "partiel";
         }
 
@@ -598,6 +724,174 @@ public class ValidationService {
                 .etatGlobal(etatGlobal)
                 .statutAdherent(statut)
                 .build();
+    }
+
+    // ── Rejet document → rejeter toutes les prestations ────────
+
+    @Transactional
+    public int rejeterParDocument(String visiteId, String commentaire) {
+        int count = 0;
+
+        // Rejeter la consultation (observations inchangées)
+        Optional<Consultation> optConsult = consultationRepository.findByVisite(visiteId);
+        List<Consultation> consultations = optConsult.map(List::of).orElse(List.of());
+        for (Consultation c : consultations) {
+            if (!"rejete".equals(c.getEtatConsultation()) && !"encaisse".equals(c.getEtatConsultation())) {
+                c.setEtatConsultation("rejete");
+                c.setDateValideRejete(LocalDateTime.now());
+                consultationRepository.save(c);
+                notifierConsultation(c, "rejete");
+                count++;
+            }
+        }
+
+        // Rejeter les lignes de prestation (observations inchangées)
+        List<Prestation> prestations = prestationRepository.findByVisite(visiteId);
+        for (Prestation pr : prestations) {
+            List<LignePrestation> lignes = ligneRepository.findByPrestation(pr.getId());
+            for (LignePrestation l : lignes) {
+                if (!"rejete".equals(l.getEtat()) && !"encaisse".equals(l.getEtat())) {
+                    l.setEtat("rejete");
+                    l.setDateValideRejete(LocalDateTime.now());
+                    ligneRepository.save(l);
+                    count++;
+                }
+            }
+            Visite visite = visiteRepository.findById(visiteId).orElse(null);
+            if (visite != null) {
+                notifierLignePrestation(pr, visite);
+            }
+        }
+
+        log.info("Rejet document visite {} — {} éléments rejetés, commentaire doc: {}", visiteId, count, commentaire);
+        return count;
+    }
+
+    // ── Notifications ────────────────────────────────────────────
+
+    private void notifierSoumissionSS(Visite visite, String nature, int nbLignes) {
+        try {
+            Prestataire prest = prestataireRepository.findById(visite.getPrestataireId()).orElse(null);
+
+            Map<String, Object> req = new HashMap<>();
+            req.put("prestataireId", visite.getPrestataireId());
+            req.put("prestataireNom", prest != null ? prest.getNom() : visite.getPrestataireId());
+            req.put("naturePrestation", nature);
+            req.put("codeVisite", visite.getCodeCourt());
+            req.put("codeAdherent", visite.getCodeAdherent());
+            req.put("codeAyantDroit", visite.getCodeAyantDroit());
+            req.put("nbLignes", nbLignes);
+
+            notificationClient.notifierPrestationSoumise(req);
+        } catch (Exception e) {
+            log.error("Erreur notification soumission SS : {}", e.getMessage());
+        }
+    }
+
+    private void notifierConsultation(Consultation c, String decision) {
+        try {
+            Visite visite = visiteRepository.findById(c.getVisiteId()).orElse(null);
+            if (visite == null) return;
+
+            Adherent adherent = adherentRepository.findById(visite.getCodeAdherent()).orElse(null);
+            if (adherent == null) return;
+
+            double montant = c.getMontantModif() != null ? c.getMontantModif() : c.getMontant();
+            double partZ = calculPartZenithe(montant, c.getTaux());
+            double partA = calculPartAssure(montant, c.getTaux());
+
+            String telAdherent = adherent.getTelephone();
+            String telAyantDroit = null;
+            if (visite.getCodeAyantDroit() != null) {
+                AyantDroit ad = ayantDroitRepository.findByCodeAyantDroit(visite.getCodeAyantDroit()).orElse(null);
+                if (ad != null) telAyantDroit = ad.getTelephone();
+            }
+
+            Prestataire prest = prestataireRepository.findById(visite.getPrestataireId()).orElse(null);
+
+            Map<String, Object> req = new HashMap<>();
+            req.put("prestationId", String.valueOf(c.getId()));
+            req.put("etat", decision);
+            req.put("codeAdherent", visite.getCodeAdherent());
+            req.put("codeAyantDroit", visite.getCodeAyantDroit());
+            req.put("prestataireId", visite.getPrestataireId());
+            req.put("prestataireNom", prest != null ? prest.getNom() : visite.getPrestataireId());
+            req.put("naturePrestation", "consultation");
+            req.put("codeVisite", visite.getCodeCourt());
+            req.put("montantValide", montant);
+            req.put("montantZenithe", partZ);
+            req.put("montantPartAssure", partA);
+            req.put("telephoneAdherent", telAdherent);
+            req.put("telephoneAyantDroit", telAyantDroit);
+            req.put("langueAssure", 2);
+
+            notificationClient.notifierPrestationTraitee(req);
+        } catch (Exception e) {
+            log.error("Erreur notification consultation {} : {}", c.getId(), e.getMessage());
+        }
+    }
+
+    private void notifierLignePrestation(Prestation pr, Visite visite) {
+        try {
+            List<LignePrestation> lignes = ligneRepository.findByPrestation(pr.getId());
+
+            boolean toutesTraitees = lignes.stream().allMatch(l ->
+                    "valide".equals(l.getEtat()) || "rejete".equals(l.getEtat()) || "encaisse".equals(l.getEtat()));
+            if (!toutesTraitees) return;
+
+            long nbValide = lignes.stream().filter(l -> "valide".equals(l.getEtat()) || "encaisse".equals(l.getEtat())).count();
+            long nbRejete = lignes.stream().filter(l -> "rejete".equals(l.getEtat())).count();
+
+            String etatGlobal;
+            if (nbRejete == 0) etatGlobal = "valide";
+            else if (nbValide == 0) etatGlobal = "rejete";
+            else etatGlobal = "partiel";
+
+            double totalMontant = 0, totalPartZ = 0;
+            for (LignePrestation l : lignes) {
+                if ("valide".equals(l.getEtat()) || "encaisse".equals(l.getEtat())) {
+                    double val = l.getValeurModif() != null ? l.getValeurModif() : (l.getValeur() != null ? l.getValeur() : 0);
+                    double nbre = l.getNbreModif() != null ? l.getNbreModif() : (l.getNbre() != null ? l.getNbre() : 0);
+                    double montantLigne = val * nbre;
+                    totalMontant += montantLigne;
+                    totalPartZ += calculPartZenithe(montantLigne, l.getTaux() != null ? l.getTaux() : 100.0);
+                }
+            }
+            double totalPartA = totalMontant - totalPartZ;
+
+            Adherent adherent = adherentRepository.findById(visite.getCodeAdherent()).orElse(null);
+            if (adherent == null) return;
+
+            String telAdherent = adherent.getTelephone();
+            String telAyantDroit = null;
+            if (visite.getCodeAyantDroit() != null) {
+                AyantDroit ad = ayantDroitRepository.findByCodeAyantDroit(visite.getCodeAyantDroit()).orElse(null);
+                if (ad != null) telAyantDroit = ad.getTelephone();
+            }
+
+            Prestataire prest = prestataireRepository.findById(visite.getPrestataireId()).orElse(null);
+
+            Map<String, Object> req = new HashMap<>();
+            req.put("prestationId", String.valueOf(pr.getId()));
+            req.put("etat", etatGlobal);
+            req.put("codeAdherent", visite.getCodeAdherent());
+            req.put("codeAyantDroit", visite.getCodeAyantDroit());
+            req.put("prestataireId", visite.getPrestataireId());
+            req.put("prestataireNom", prest != null ? prest.getNom() : visite.getPrestataireId());
+            req.put("naturePrestation", pr.getNaturePrestation());
+            req.put("codeVisite", visite.getCodeCourt());
+            req.put("montantValide", totalMontant);
+            req.put("montantZenithe", totalPartZ);
+            req.put("montantPartAssure", totalPartA);
+            req.put("telephoneAdherent", telAdherent);
+            req.put("telephoneAyantDroit", telAyantDroit);
+            req.put("langueAssure", 2);
+
+            notificationClient.notifierPrestationTraitee(req);
+            log.info("Notification prestation {} envoyée — etat={}", pr.getId(), etatGlobal);
+        } catch (Exception e) {
+            log.error("Erreur notification prestation {} : {}", pr.getId(), e.getMessage());
+        }
     }
 
     // ── Calculs ───────────────────────────────────────────────────
@@ -789,6 +1083,8 @@ public class ValidationService {
                 request.getTypeConsultation(),
                 request.getMontant());
 
+        notifierSoumissionSS(visite, "consultation", 1);
+
         return toConsultationResponse(consultation);
     }
 
@@ -904,7 +1200,7 @@ public class ValidationService {
     }
 
     @Transactional
-    public void soumettrePrestation(
+    public Integer soumettrePrestation(
             PrestationSoumissionRequest request) {
 
         // 1. Vérifier visite
@@ -1018,12 +1314,16 @@ public class ValidationService {
             ligneRepository.saveAll(lignes);
         }
 
+        int nbLignes = request.getLignes() != null ? request.getLignes().size() : 0;
         log.info("Prestation soumise ✓ — visite={} "
                 + "nature={} lignes={}",
                 visiteIdFinal,
                 request.getNaturePrestation(),
-                request.getLignes() != null
-                ? request.getLignes().size() : 0);
+                nbLignes);
+
+        notifierSoumissionSS(visite, request.getNaturePrestation(), nbLignes);
+
+        return prestationId;
     }
 // Renommez getTaux() en getTauxPublic() ou
 // ajoutez cette méthode publique

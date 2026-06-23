@@ -9,7 +9,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { TokenInterceptor } from './auth/token-interceptor';
 
 export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, './i18n/', '.json');
+  return new TranslateHttpLoader(http, './i18n/', '.json?v=20260619b');
 }
 
 export const appConfig: ApplicationConfig = {

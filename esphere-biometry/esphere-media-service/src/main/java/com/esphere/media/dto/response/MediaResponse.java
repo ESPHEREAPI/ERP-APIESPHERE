@@ -24,4 +24,8 @@ public class MediaResponse {
     private Boolean       demandeParSs;
     private Integer       employeId;
     private LocalDateTime dateUpload;
+    private Integer       prestationId;
+    private String        naturePrestation;
+    private String        statutDocument;
+    private String        commentaireRejet;
 }

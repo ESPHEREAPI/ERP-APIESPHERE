@@ -1,7 +1,5 @@
 export const environment = {
   production: true,
-    apiUrl: ''
- 
-  
- 
+  apiUrl:   '',
+  mediaUrl: '',   // En prod : même domaine, via gateway
 };

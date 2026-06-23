@@ -1,1 +1,102 @@
-<p>permission works!</p>
+<!-- Sélection du profil -->
+<div class="box box-primary">
+  <div class="box-header with-border">
+    <h3 class="box-title"><i class="fa fa-shield"></i> {{ 'perm_titre' | translate }}</h3>
+  </div>
+  <div class="box-body">
+    <div class="row">
+      <div class="col-md-6">
+        <label>{{ 'perm_select_profil' | translate }}</label>
+        <app-filterable-select
+          [options]="profilOptions"
+          [value]="selectedProfilId"
+          (valueChange)="onProfilChange($event)"
+          [placeholder]="'perm_select_profil' | translate"
+          placeholderOption="—">
+        </app-filterable-select>
+      </div>
+      <div class="col-md-6" style="padding-top:25px;" *ngIf="selectedProfilId">
+        <span class="label label-info" style="font-size:13px;">
+          {{ totalChecked }} {{ 'perm_menus_selectionnes' | translate }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chargement -->
+<div *ngIf="isLoading" class="text-center" style="padding:30px;">
+  <i class="fa fa-spinner fa-spin fa-2x"></i>
+</div>
+
+<!-- Arbre des menus -->
+<div class="box box-default" *ngIf="selectedProfilId && !isLoading">
+  <div class="box-header with-border">
+    <h3 class="box-title"><i class="fa fa-sitemap"></i> {{ 'perm_menus' | translate }}</h3>
+  </div>
+  <div class="box-body">
+
+    <div class="alert alert-success" *ngIf="saveSuccess">
+      <i class="fa fa-check"></i> {{ saveSuccess }}
+    </div>
+    <div class="alert alert-danger" *ngIf="saveError">
+      <i class="fa fa-exclamation-triangle"></i> {{ saveError }}
+    </div>
+
+    <!-- Arbre niveau 1 -->
+    <div *ngFor="let node of menuTree" class="perm-node perm-level-0">
+      <div class="perm-row">
+        <input type="checkbox" [checked]="isChecked(node.menu.id)"
+          (change)="toggle(node)">
+        <i [class]="node.menu.classImage || 'fa fa-folder'" style="margin: 0 6px; color:#3c8dbc;"></i>
+        <strong>{{ node.menu.nomModule }}</strong>
+        <span *ngIf="node.menu.nomAction" class="text-muted" style="margin-left:6px; font-size:11px;">
+          ({{ node.menu.nomAction }})
+        </span>
+        <button *ngIf="node.children.length > 0" class="btn btn-xs btn-default" style="margin-left:8px;"
+          (click)="toggleAll(node, !isChecked(node.menu.id))">
+          <i class="fa fa-check-square-o"></i>
+        </button>
+      </div>
+
+      <!-- Niveau 2 -->
+      <div *ngFor="let child of node.children" class="perm-node perm-level-1">
+        <div class="perm-row">
+          <input type="checkbox" [checked]="isChecked(child.menu.id)"
+            (change)="toggle(child)">
+          <i [class]="child.menu.classImage || 'fa fa-file-o'" style="margin: 0 6px; color:#777;"></i>
+          <span>{{ child.menu.nomModule }}</span>
+          <span *ngIf="child.menu.nomAction" class="text-muted" style="margin-left:6px; font-size:11px;">
+            ({{ child.menu.nomAction }})
+          </span>
+        </div>
+
+        <!-- Niveau 3 -->
+        <div *ngFor="let sub of child.children" class="perm-node perm-level-2">
+          <div class="perm-row">
+            <input type="checkbox" [checked]="isChecked(sub.menu.id)"
+              (change)="toggle(sub)">
+            <i class="fa fa-circle-o" style="margin: 0 6px; color:#aaa; font-size:10px;"></i>
+            <span style="font-size:12px;">{{ sub.menu.nomModule }}</span>
+            <span *ngIf="sub.menu.nomAction" class="text-muted" style="margin-left:4px; font-size:11px;">
+              ({{ sub.menu.nomAction }})
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box-footer text-right">
+    <button class="btn btn-primary" (click)="enregistrer()" [disabled]="isSaving">
+      <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+      {{ (isSaving ? 'perm_enregistrement' : 'perm_enregistrer') | translate }}
+    </button>
+  </div>
+</div>
+
+<!-- Pas de profil sélectionné -->
+<div *ngIf="!selectedProfilId && !isLoading" class="text-center" style="padding:40px; color:#aaa;">
+  <i class="fa fa-arrow-up fa-2x"></i>
+  <p style="margin-top:10px;">{{ 'perm_hint' | translate }}</p>
+</div>

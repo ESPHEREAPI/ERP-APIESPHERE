@@ -8,6 +8,7 @@ export interface User {
   profilCode: string;
   profilLibelle: string;
   prestataireId?: string;
+  langueDefaut?: number;
   menus: any[];
   // Champs legacy pour compatibilité avec header/sidebar
   nomcomplet?: string;

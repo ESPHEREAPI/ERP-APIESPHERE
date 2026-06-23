@@ -20,6 +20,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/parametres": {
+    "target": "http://127.0.0.1:8080",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/visites": {
     "target": "http://127.0.0.1:8080",
     "secure": false,
@@ -46,6 +51,16 @@
     "changeOrigin": true
   },
   "/prestataires": {
+    "target": "http://127.0.0.1:8080",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/admin": {
+    "target": "http://127.0.0.1:8080",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/biometry/logos": {
     "target": "http://127.0.0.1:8080",
     "secure": false,
     "changeOrigin": true

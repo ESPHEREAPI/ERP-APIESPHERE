@@ -1,0 +1,10 @@
+.perm-node { border-left: 2px solid #e8e8e8; }
+.perm-level-0 { margin-bottom: 8px; padding-left: 0; border-left: none; }
+.perm-level-1 { margin-left: 24px; }
+.perm-level-2 { margin-left: 24px; }
+.perm-row {
+  padding: 5px 8px; display: flex; align-items: center;
+  cursor: pointer; border-radius: 3px;
+}
+.perm-row:hover { background: #f5f9fd; }
+.perm-row input[type="checkbox"] { margin: 0; cursor: pointer; }

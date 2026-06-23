@@ -39,6 +39,9 @@ public class MediaService {
     @Value("${services.visite-url:http://localhost:8084}")
     private String visiteServiceUrl;
 
+    @Value("${services.validation-url:http://localhost:8085}")
+    private String validationUrl;
+
     @Value("${services.adherent-url:http://localhost:8082}")
     private String adherentServiceUrl;
 
@@ -49,17 +52,18 @@ public class MediaService {
             String codeCourt,
             MultipartFile fichier,
             Integer employeId,
-            boolean demandeParSs) {
+            boolean demandeParSs,
+            Integer prestationId,
+            String naturePrestation) {
 
-        // 1. Récupérer la visite via code_court
         Map<String, Object> visite = getVisiteParCodeCourt(codeCourt);
-        String visiteId      = (String) visite.get("id");
-        String codeAdherent  = (String) visite.get("codeAdherent");
+        String visiteId       = (String) visite.get("id");
+        String codeAdherent   = (String) visite.get("codeAdherent");
         String codeAyantDroit = (String) visite.get("codeAyantDroit");
-        String prestataireId = (String) visite.get("prestataireId");
+        String prestataireId  = (String) visite.get("prestataireId");
 
         return upload(fichier, visiteId, codeAdherent, codeAyantDroit,
-                prestataireId, employeId, demandeParSs);
+                prestataireId, employeId, demandeParSs, prestationId, naturePrestation);
     }
 
     // ── UPLOAD direct avec visiteId ───────────────────────────────
@@ -69,15 +73,69 @@ public class MediaService {
             String visiteId,
             MultipartFile fichier,
             Integer employeId,
-            boolean demandeParSs) {
+            boolean demandeParSs,
+            Integer prestationId,
+            String naturePrestation) {
 
         Map<String, Object> visite = getVisiteParId(visiteId);
-        String codeAdherent  = (String) visite.get("codeAdherent");
+        String codeAdherent   = (String) visite.get("codeAdherent");
         String codeAyantDroit = (String) visite.get("codeAyantDroit");
-        String prestataireId = (String) visite.get("prestataireId");
+        String prestataireId  = (String) visite.get("prestataireId");
 
         return upload(fichier, visiteId, codeAdherent, codeAyantDroit,
-                prestataireId, employeId, demandeParSs);
+                prestataireId, employeId, demandeParSs, prestationId, naturePrestation);
+    }
+
+    // ── APPROUVER un document ─────────────────────────────────────
+
+    @Transactional
+    public MediaResponse approuver(Integer mediaId, Integer employeId) {
+        MediaPrestation media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new MediaException("Média introuvable : " + mediaId, 404));
+        media.setStatutDocument("approuve");
+        media.setCommentaireRejet(null);
+        media.setEmployeId(employeId);
+        return toResponse(mediaRepository.save(media));
+    }
+
+    // ── REJETER un document ───────────────────────────────────────
+
+    @Transactional
+    public MediaResponse rejeter(Integer mediaId, String commentaire, Integer employeId) {
+        if (commentaire == null || commentaire.isBlank()) {
+            throw new MediaException("Un commentaire est obligatoire pour rejeter le document.", 400);
+        }
+        MediaPrestation media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> new MediaException("Média introuvable : " + mediaId, 404));
+        media.setStatutDocument("rejete");
+        media.setCommentaireRejet(commentaire);
+        media.setEmployeId(employeId);
+        MediaResponse response = toResponse(mediaRepository.save(media));
+
+        rejeterPrestationsVisite(media.getVisiteId(), commentaire);
+
+        return response;
+    }
+
+    private void rejeterPrestationsVisite(String visiteId, String commentaire) {
+        try {
+            String url = validationUrl + "/validations/rejet-document";
+            new org.springframework.web.client.RestTemplate().postForObject(
+                    url,
+                    java.util.Map.of("visiteId", visiteId, "commentaire", commentaire),
+                    java.util.Map.class);
+            log.info("Prestations rejetées suite rejet document visite {}", visiteId);
+        } catch (Exception e) {
+            log.error("Erreur rejet prestations visite {} : {}", visiteId, e.getMessage());
+        }
+    }
+
+    // ── Lecture par prestation ────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    public List<MediaResponse> getParPrestation(Integer prestationId) {
+        return mediaRepository.findByPrestationId(prestationId)
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     // ── Méthode principale d'upload ───────────────────────────────
@@ -89,7 +147,9 @@ public class MediaService {
             String codeAyantDroit,
             String prestataireId,
             Integer employeId,
-            boolean demandeParSs) {
+            boolean demandeParSs,
+            Integer prestationId,
+            String naturePrestation) {
 
         // 2. Extraire et valider l'extension
         String extension = MediaValidator.extraireExtension(
@@ -147,6 +207,8 @@ public class MediaService {
         // 7. Enregistrer les métadonnées en base
         MediaPrestation media = MediaPrestation.builder()
                 .visiteId(visiteId)
+                .prestationId(prestationId)
+                .naturePrestation(naturePrestation)
                 .codeAdherent(codeAdherent)
                 .codeAyantDroit(codeAyantDroit)
                 .prestataireId(prestataireId)
@@ -161,6 +223,7 @@ public class MediaService {
                 .employeId(employeId)
                 .dateUpload(LocalDateTime.now())
                 .supprime("-1")
+                .statutDocument("en_attente_revue")
                 .build();
 
         mediaRepository.save(media);
@@ -290,6 +353,8 @@ public class MediaService {
         return MediaResponse.builder()
                 .id(m.getId())
                 .visiteId(m.getVisiteId())
+                .prestationId(m.getPrestationId())
+                .naturePrestation(m.getNaturePrestation())
                 .codeAdherent(m.getCodeAdherent())
                 .codeAyantDroit(m.getCodeAyantDroit())
                 .prestataireId(m.getPrestataireId())
@@ -303,6 +368,8 @@ public class MediaService {
                 .demandeParSs(m.getDemandeParSs())
                 .employeId(m.getEmployeId())
                 .dateUpload(m.getDateUpload())
+                .statutDocument(m.getStatutDocument())
+                .commentaireRejet(m.getCommentaireRejet())
                 .build();
     }
 }

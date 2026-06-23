@@ -1,0 +1,61 @@
+/* ── Tableau ─────────────────────────────────────────────────── */
+.table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+.table > thead > tr > th {
+  background-color: #f9f9f9;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* ── Modal confirmation suppression ─────────────────────────── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirm-box {
+  background: #fff;
+  border-radius: 6px;
+  width: 380px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+.confirm-header {
+  background: #f9f9f9;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.confirm-body {
+  padding: 20px 18px;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.6;
+}
+
+.confirm-footer {
+  padding: 12px 18px;
+  border-top: 1px solid #f0f0f0;
+  text-align: right;
+}
+
+/* ── Logo preview ────────────────────────────────────────────── */
+.logo-preview-box {
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.logo-preview-box:hover {
+  border-color: #3c8dbc !important;
+}

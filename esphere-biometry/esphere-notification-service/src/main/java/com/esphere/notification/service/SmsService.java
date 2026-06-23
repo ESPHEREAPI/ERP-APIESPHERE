@@ -57,15 +57,16 @@ public class SmsService {
     }
 
     private String formaterTelephone(String telephone) {
-        // Supprimer espaces et tirets
         String tel = telephone.replaceAll("[\\s-]", "");
 
-        // Ajouter indicatif Cameroun si absent
+        if (tel.startsWith("+")) {
+            tel = tel.substring(1);
+        }
+        if (tel.startsWith("237")) {
+            return tel;
+        }
         if (tel.startsWith("6") || tel.startsWith("2")) {
             return "237" + tel;
-        }
-        if (tel.startsWith("+")) {
-            return tel.substring(1);
         }
         return tel;
     }

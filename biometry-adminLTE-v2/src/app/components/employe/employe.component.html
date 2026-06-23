@@ -1,1 +1,279 @@
-<p>employe works!</p>
+<div *ngIf="mode === 'liste'">
+
+  <!-- Barre d'actions -->
+  <div class="box box-default">
+    <div class="box-body" style="padding: 10px 15px;">
+      <div class="row">
+        <div class="col-sm-6">
+          <button class="btn btn-primary btn-sm" (click)="ouvrirAjouter()">
+            <i class="fa fa-plus"></i> {{ 'emp_ajouter' | translate }}
+          </button>
+        </div>
+        <div class="col-sm-6 text-right" style="line-height:30px; color:#777; font-size:12px;">
+          <span *ngIf="!isLoading">{{ total }} {{ 'emp_total' | translate }}</span>
+          <span *ngIf="isLoading"><i class="fa fa-spinner fa-spin"></i> {{ 'emp_chargement' | translate }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="box box-default">
+    <div class="box-body">
+      <div class="row">
+        <div class="col-sm-3">
+          <input type="text" class="form-control input-sm"
+            [placeholder]="'emp_rechercher' | translate" [(ngModel)]="filtreSearch"
+            (keyup.enter)="appliquerFiltres()">
+        </div>
+        <div class="col-sm-2">
+          <select class="form-control input-sm" [(ngModel)]="filtreStatut">
+            <option value="">{{ 'emp_select_statut' | translate }}</option>
+            <option value="1">{{ 'emp_actif' | translate }}</option>
+            <option value="0">{{ 'emp_inactif' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <select class="form-control input-sm" [(ngModel)]="filtreGenre">
+            <option value="">{{ 'emp_select_genre' | translate }}</option>
+            <option value="M">Masculin</option>
+            <option value="F">Féminin</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <select class="form-control input-sm" [(ngModel)]="filtreProfilId">
+            <option [ngValue]="null">{{ 'emp_select_profil' | translate }}</option>
+            <option *ngFor="let p of profils" [ngValue]="p.id">{{ p.typeProfil }}</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <button class="btn btn-primary btn-sm" (click)="appliquerFiltres()">
+            <i class="fa fa-search"></i> {{ 'emp_btn_rechercher' | translate }}
+          </button>
+          <button class="btn btn-default btn-sm" style="margin-left:5px;" (click)="reinitFiltres()">
+            <i class="fa fa-refresh"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="box box-default">
+    <div class="box-body no-padding">
+      <div class="row" style="padding: 8px 15px; border-bottom:1px solid #f4f4f4;">
+        <div class="col-sm-6" style="line-height:30px; font-size:12px; color:#777;">
+          {{ 'prest_de' | translate }} {{ currentPage * pageSize + 1 }} {{ 'prest_a' | translate }} {{ finPage }} {{ 'prest_sur' | translate }} {{ total }}
+        </div>
+        <div class="col-sm-6 text-right">
+          <select class="form-control input-sm" style="display:inline-block; width:auto;"
+            [(ngModel)]="pageSize" (change)="charger(0)">
+            <option *ngFor="let t of tailles" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="table table-hover table-striped table-condensed" style="margin-bottom:0;">
+        <thead>
+          <tr>
+            <th style="width:35px;">
+              <input type="checkbox" [checked]="allSelected" (change)="toggleAll($any($event.target).checked)">
+            </th>
+            <th>{{ 'emp_nom' | translate }}</th>
+            <th>{{ 'emp_prenom' | translate }}</th>
+            <th>{{ 'emp_profil' | translate }}</th>
+            <th>{{ 'emp_email' | translate }}</th>
+            <th>{{ 'emp_telephone' | translate }}</th>
+            <th>{{ 'emp_login' | translate }}</th>
+            <th>{{ 'emp_genre' | translate }}</th>
+            <th style="text-align:center;">{{ 'emp_statut' | translate }}</th>
+            <th style="text-align:right;">{{ 'emp_actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoading">
+            <td colspan="10" class="text-center" style="padding:20px;"><i class="fa fa-spinner fa-spin fa-2x"></i></td>
+          </tr>
+          <tr *ngIf="!isLoading && filteredItems.length === 0">
+            <td colspan="10" class="text-center" style="padding:20px; color:#aaa;">{{ 'emp_aucun' | translate }}</td>
+          </tr>
+          <tr *ngFor="let item of filteredItems">
+            <td><input type="checkbox" [checked]="selected.has(item.id)" (change)="toggleSelect(item.id)"></td>
+            <td><a href="javascript:void(0)" (click)="ouvrirModifier(item)" class="text-primary">{{ item.nom }}</a></td>
+            <td>{{ item.prenom || '—' }}</td>
+            <td>{{ item.profilLibelle || '—' }}</td>
+            <td>{{ item.email || '—' }}</td>
+            <td>{{ item.telephone || '—' }}</td>
+            <td>{{ item.login }}</td>
+            <td>{{ genreLib(item.genre) }}</td>
+            <td style="text-align:center;">
+              <span [class]="statutClass(item.statut)">
+                {{ (item.statut === '1' ? 'emp_actif' : 'emp_inactif') | translate }}
+              </span>
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="btn btn-xs btn-primary" (click)="ouvrirModifier(item)" style="margin-right:2px;">
+                <i class="fa fa-pencil"></i> {{ 'emp_modifier' | translate }}
+              </button>
+              <button *ngIf="item.statut !== '1'" class="btn btn-xs btn-success" (click)="activer(item)"
+                style="margin-right:2px;" [title]="'emp_activer' | translate">
+                <i class="fa fa-check"></i>
+              </button>
+              <button *ngIf="item.statut === '1'" class="btn btn-xs btn-warning" (click)="desactiver(item)"
+                style="margin-right:2px;" [title]="'emp_desactiver' | translate">
+                <i class="fa fa-ban"></i>
+              </button>
+              <button class="btn btn-xs btn-info" (click)="resetPassword(item)"
+                style="margin-right:2px;" [title]="'emp_reset_mdp' | translate">
+                <i class="fa fa-key"></i>
+              </button>
+              <button class="btn btn-xs btn-danger" (click)="demanderSuppression(item)"
+                [title]="'emp_supprimer' | translate">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="text-right" style="padding:10px 15px;" *ngIf="totalPages > 1">
+        <ul class="pagination pagination-sm" style="margin:0;">
+          <li [class.disabled]="currentPage === 0"><a href="javascript:void(0)" (click)="currentPage > 0 && charger(0)">&laquo;</a></li>
+          <li [class.disabled]="currentPage === 0"><a href="javascript:void(0)" (click)="currentPage > 0 && charger(currentPage-1)">&lsaquo;</a></li>
+          <li *ngFor="let p of pages" [class.active]="p === currentPage"
+            [style.display]="(p >= currentPage-2 && p <= currentPage+2) ? '' : 'none'">
+            <a href="javascript:void(0)" (click)="charger(p)">{{ p + 1 }}</a>
+          </li>
+          <li [class.disabled]="currentPage === totalPages-1"><a href="javascript:void(0)" (click)="currentPage < totalPages-1 && charger(currentPage+1)">&rsaquo;</a></li>
+          <li [class.disabled]="currentPage === totalPages-1"><a href="javascript:void(0)" (click)="currentPage < totalPages-1 && charger(totalPages-1)">&raquo;</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORMULAIRE ════════════════════════════════════════════════ -->
+<div *ngIf="mode === 'form'">
+  <div class="box box-primary">
+    <div class="box-header with-border">
+      <h3 class="box-title">
+        <i class="fa" [ngClass]="isEdit ? 'fa-pencil' : 'fa-plus'"></i>
+        {{ (isEdit ? 'emp_modifier_titre' : 'emp_ajouter_titre') | translate }}
+      </h3>
+    </div>
+    <div class="box-body">
+      <div class="alert alert-danger" *ngIf="formError">
+        <i class="fa fa-exclamation-triangle"></i> {{ formError }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'emp_nom' | translate }} <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="form.nom" [placeholder]="'emp_nom' | translate">
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_prenom' | translate }}</label>
+        <input type="text" class="form-control" [(ngModel)]="form.prenom" [placeholder]="'emp_prenom' | translate">
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_genre' | translate }} <span class="text-danger">*</span></label>
+        <select class="form-control" [(ngModel)]="form.genre">
+          <option value="">{{ 'emp_select_genre' | translate }}</option>
+          <option value="M">Masculin</option>
+          <option value="F">Féminin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_email' | translate }} <span class="text-danger">*</span></label>
+        <input type="email" class="form-control" [(ngModel)]="form.email" [placeholder]="'emp_email' | translate">
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_login' | translate }} <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="form.login" [placeholder]="'emp_login' | translate" [readonly]="isEdit">
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_mot_passe' | translate }} <span class="text-danger" *ngIf="!isEdit">*</span></label>
+        <input type="password" class="form-control" [(ngModel)]="form.motPasse" [placeholder]="'emp_mot_passe' | translate">
+        <span class="help-block" style="font-size:11px;" *ngIf="isEdit">{{ 'emp_mdp_hint' | translate }}</span>
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_confirm_mdp' | translate }}</label>
+        <input type="password" class="form-control" [(ngModel)]="form.confirmMotPasse" [placeholder]="'emp_confirm_mdp' | translate">
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_profil' | translate }} <span class="text-danger">*</span></label>
+        <app-filterable-select
+          [options]="profilOptions"
+          [value]="form.profilId"
+          (valueChange)="form.profilId = $event"
+          [placeholder]="'emp_select_profil' | translate"
+          placeholderOption="—">
+        </app-filterable-select>
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_prestataire' | translate }}</label>
+        <app-filterable-select
+          [options]="prestataireOptions"
+          [value]="form.prestataireId"
+          (valueChange)="form.prestataireId = $event"
+          [placeholder]="'emp_select_prestataire' | translate"
+          placeholderOption="— {{ 'emp_aucun_prestataire' | translate }} —">
+        </app-filterable-select>
+      </div>
+      <div class="form-group" *ngIf="isPrestataire">
+        <label>{{ 'emp_serial' | translate }} <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="form.serialBiometrie"
+          [placeholder]="'emp_serial_placeholder' | translate">
+        <span class="help-block" style="font-size:11px;">{{ 'emp_serial_hint' | translate }}</span>
+      </div>
+      <div class="form-group">
+        <label>{{ 'emp_langue' | translate }} <span class="text-danger">*</span></label>
+        <select class="form-control" [(ngModel)]="form.langueDefaut">
+          <option [ngValue]="2">Français</option>
+          <option [ngValue]="1">English</option>
+        </select>
+      </div>
+    </div>
+    <div class="box-footer text-right">
+      <button class="btn btn-default" (click)="annuler()" [disabled]="isSaving">
+        <i class="fa fa-times"></i> {{ 'emp_annuler' | translate }}
+      </button>
+      <button class="btn btn-primary" style="margin-left:8px;" (click)="enregistrer()" [disabled]="isSaving">
+        <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+        {{ (isSaving ? 'emp_enregistrement' : 'emp_valider') | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL SUPPRESSION ═══════════════════════════════════════ -->
+<div class="confirm-overlay" *ngIf="confirmItem" (click)="annulerSuppression()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-header"><i class="fa fa-trash-o text-danger"></i> {{ 'emp_confirmer_suppression' | translate }}</div>
+    <div class="confirm-body">
+      {{ 'emp_confirmer_msg' | translate }}
+      <strong>{{ confirmItem ? confirmItem.nom + ' ' + (confirmItem.prenom || '') : '' }}</strong> ?<br>
+      <span style="color:#e74c3c; font-size:12px;">{{ 'emp_action_irreversible' | translate }}</span>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-default btn-sm" (click)="annulerSuppression()"><i class="fa fa-times"></i> {{ 'emp_annuler' | translate }}</button>
+      <button class="btn btn-danger btn-sm" style="margin-left:8px;" (click)="confirmerSuppression()"><i class="fa fa-trash-o"></i> {{ 'emp_supprimer' | translate }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL RESET PASSWORD ═══════════════════════════════════ -->
+<div class="confirm-overlay" *ngIf="resetResult" (click)="fermerReset()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-header"><i class="fa fa-key text-info"></i> {{ 'emp_reset_mdp' | translate }}</div>
+    <div class="confirm-body">
+      <p>{{ 'emp_reset_msg' | translate }}</p>
+      <table class="table table-bordered" style="margin-top:10px;">
+        <tr><td><strong>Login</strong></td><td>{{ resetResult.login }}</td></tr>
+        <tr><td><strong>{{ 'emp_mot_passe' | translate }}</strong></td><td><code>{{ resetResult.password }}</code></td></tr>
+      </table>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-primary btn-sm" (click)="fermerReset()"><i class="fa fa-check"></i> OK</button>
+    </div>
+  </div>
+</div>

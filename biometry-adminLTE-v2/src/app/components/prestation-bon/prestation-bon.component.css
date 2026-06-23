@@ -1,0 +1,237 @@
+:host {
+  display: block;
+  background: #e8e8e8;
+  min-height: 100vh;
+  padding: 30px 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12.5px;
+  color: #000;
+}
+
+.bon-page {
+  width: 210mm;
+  margin: 0 auto;
+  background: #fff;
+  padding: 14mm 18mm 14mm 18mm;
+  box-sizing: border-box;
+  border: 1px solid #bbb;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12.5px;
+  color: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── FILIGRANE ── */
+.bon-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  text-align: center;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.07;
+  user-select: none;
+}
+.bon-watermark img {
+  width: 160mm;
+  display: block;
+  margin: 0 auto;
+}
+.bon-watermark-slogan {
+  font-size: 22px;
+  font-weight: bold;
+  font-style: italic;
+  color: #1a3a6e;
+  margin-top: 10px;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+/* S'assurer que le contenu passe au-dessus du filigrane */
+.bon-header, .bon-titre, .bon-bandeau,
+.bon-infos, .bon-montants, .bon-signatures,
+.bon-liste-titre, .bon-lignes {
+  position: relative;
+  z-index: 1;
+}
+
+/* EN-TÊTE */
+.bon-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #000;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+.bon-header-left {
+  font-size: 11px;
+  color: #000;
+  line-height: 1.6;
+}
+.bon-header-left strong { font-weight: bold; font-size: 12px; }
+.bon-header-center img { height: 58px; object-fit: contain; display: block; margin: 0 auto; }
+.bon-header-right {
+  font-size: 11px;
+  text-align: right;
+  line-height: 1.6;
+  color: #000;
+}
+.bon-header-right strong { font-weight: bold; font-size: 12px; }
+
+/* TITRE */
+.bon-titre {
+  text-align: center;
+  font-size: 17px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #000;
+  margin: 12px 0 10px;
+  letter-spacing: 0.5px;
+}
+
+/* BANDEAU */
+.bon-bandeau {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1.5px solid #000;
+  padding: 5px 10px;
+  margin-bottom: 14px;
+}
+.bon-bandeau-prest { font-weight: bold; font-size: 12.5px; text-transform: uppercase; }
+.bon-bandeau-date  { font-size: 11.5px; }
+
+/* INFOS ASSURE */
+.bon-infos {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 14px;
+}
+.bon-infos tr { border-bottom: 1px solid #ddd; }
+.bon-infos tr:last-child { border-bottom: none; }
+.bon-col-lib {
+  width: 44mm;
+  padding: 5px 8px 5px 0;
+  font-weight: bold;
+  color: #000;
+  font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.bon-col-val {
+  padding: 5px 0;
+  color: #000;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+/* TITRE LISTE */
+.bon-liste-titre {
+  font-size: 13px;
+  font-weight: normal;
+  margin-bottom: 6px;
+  color: #000;
+}
+
+/* TABLE LIGNES */
+.bon-lignes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+.bon-lignes thead tr {
+  background: #fff;
+  border-top: 1.5px solid #000;
+  border-bottom: 1.5px solid #000;
+}
+.bon-lignes th {
+  padding: 5px 8px;
+  font-weight: bold;
+  text-align: left;
+  color: #000;
+  white-space: nowrap;
+}
+.bon-lignes td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #ddd;
+  color: #000;
+  vertical-align: middle;
+}
+.bon-lignes tbody tr:last-child td { border-bottom: 1px solid #000; }
+
+/* MONTANTS */
+.bon-montants {
+  display: flex;
+  justify-content: flex-end;
+  margin: 10px 0 22px;
+}
+.bon-montants-table { border-collapse: collapse; min-width: 100mm; }
+.bon-mt-lib {
+  padding: 5px 20px 5px 0;
+  font-weight: bold;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.bon-mt-val {
+  padding: 5px 0;
+  font-weight: bold;
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* SIGNATURES */
+.bon-signatures {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 26px;
+  padding: 0 10mm;
+}
+.bon-sig { text-align: center; width: 65mm; }
+.bon-sig-titre { font-weight: bold; font-size: 12.5px; margin-bottom: 22px; }
+.bon-sig-ligne { border-top: 1.5px solid #000; width: 60mm; margin: 0 auto; }
+
+/* BOUTON */
+.bon-btn-print-wrapper { text-align: center; margin: 20px auto; width: 210mm; }
+.bon-btn-print {
+  background: #1a3a6e;
+  color: #fff;
+  border: none;
+  padding: 10px 36px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+}
+.bon-btn-print:hover { background: #154080; }
+
+.bon-loading, .bon-erreur {
+  text-align: center;
+  margin-top: 60px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+.bon-erreur { color: #c0392b; }
+
+@media print {
+  :host { background: #fff !important; padding: 0 !important; }
+  .bon-page {
+    width: 100%;
+    min-height: 270mm;
+    border: none;
+    box-shadow: none;
+    padding: 10mm 14mm;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .bon-signatures { margin-top: auto; padding-top: 16mm; }
+  .bon-btn-print-wrapper { display: none !important; }
+  @page { size: A4 portrait; margin: 0; }
+}

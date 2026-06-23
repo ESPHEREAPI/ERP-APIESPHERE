@@ -1,1 +1,338 @@
-<p>prestataire works!</p>
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  LISTE DES PRESTATAIRES                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div *ngIf="mode === 'liste'">
+
+  <!-- Barre d'actions -->
+  <div class="box box-default">
+    <div class="box-body" style="padding: 10px 15px;">
+      <div class="row">
+        <div class="col-sm-6">
+          <button class="btn btn-primary btn-sm" (click)="ouvrirAjouter()">
+            <i class="fa fa-plus"></i> {{ 'prest_ajouter' | translate }}
+          </button>
+          <button class="btn btn-danger btn-sm" style="margin-left:5px;"
+            *ngIf="selected.size > 0" (click)="demanderSuppression(items[0])">
+            <i class="fa fa-trash-o"></i> {{ 'prest_supprimer' | translate }} ({{ selected.size }})
+          </button>
+        </div>
+        <div class="col-sm-6 text-right" style="line-height:30px; color:#777; font-size:12px;">
+          <span *ngIf="!isLoading">
+            {{ total }} {{ 'prest_total' | translate }}
+          </span>
+          <span *ngIf="isLoading"><i class="fa fa-spinner fa-spin"></i> {{ 'prest_chargement' | translate }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="box box-default">
+    <div class="box-body">
+      <div class="row">
+        <div class="col-sm-4">
+          <input type="text" class="form-control input-sm"
+            [placeholder]="'prest_rechercher_nom' | translate" [(ngModel)]="filtreSearch"
+            (keyup.enter)="appliquerFiltres()">
+        </div>
+        <div class="col-sm-2">
+          <select class="form-control input-sm" [(ngModel)]="filtreCategorieId"
+            (change)="appliquerFiltres()">
+            <option value="">{{ 'prest_toutes_categories' | translate }}</option>
+            <option *ngFor="let c of categories" [value]="c.id">{{ c.nom }}</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <select class="form-control input-sm" [(ngModel)]="filtreVilleId"
+            (change)="appliquerFiltres()">
+            <option [ngValue]="null">{{ 'prest_toutes_villes' | translate }}</option>
+            <option *ngFor="let v of villes" [ngValue]="v.id">{{ decodeHtml(v.nom) }}</option>
+          </select>
+        </div>
+        <div class="col-sm-1">
+          <select class="form-control input-sm" [(ngModel)]="filtreStatut"
+            (change)="appliquerFiltres()">
+            <option value="">{{ 'prest_select_statut' | translate }}</option>
+            <option value="1">{{ 'prest_actif' | translate }}</option>
+            <option value="-1">{{ 'prest_inactif' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <button class="btn btn-primary btn-sm" (click)="appliquerFiltres()">
+            <i class="fa fa-search"></i> {{ 'prest_rechercher' | translate }}
+          </button>
+          <button class="btn btn-default btn-sm" style="margin-left:5px;" (click)="reinitFiltres()">
+            <i class="fa fa-refresh"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <div class="box box-default">
+    <div class="box-body no-padding">
+
+      <!-- pagination haut + taille -->
+      <div class="row" style="padding: 8px 15px; border-bottom:1px solid #f4f4f4;">
+        <div class="col-sm-6" style="line-height:30px; font-size:12px; color:#777;">
+          {{ 'prest_de' | translate }} {{ currentPage * pageSize + 1 }} {{ 'prest_a' | translate }} {{ finPage }} {{ 'prest_sur' | translate }} {{ total }}
+        </div>
+        <div class="col-sm-6 text-right">
+          <select class="form-control input-sm" style="display:inline-block; width:auto;"
+            [(ngModel)]="pageSize" (change)="charger(0)">
+            <option *ngFor="let t of tailles" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="table table-hover table-striped table-condensed" style="margin-bottom:0;">
+        <thead>
+          <tr>
+            <th style="width:35px;">
+              <input type="checkbox" [checked]="allSelected"
+                (change)="toggleAll($any($event.target).checked)">
+            </th>
+            <th>{{ 'prest_nom' | translate }}</th>
+            <th>{{ 'prest_categorie' | translate }}</th>
+            <th>{{ 'prest_ville' | translate }}</th>
+            <th>{{ 'prest_telephone' | translate }}</th>
+            <th>{{ 'prest_email' | translate }}</th>
+            <th>{{ 'prest_adresse' | translate }}</th>
+            <th style="text-align:center;">{{ 'prest_statut' | translate }}</th>
+            <th style="text-align:right;">{{ 'prest_actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoading">
+            <td colspan="9" class="text-center" style="padding:20px;">
+              <i class="fa fa-spinner fa-spin fa-2x"></i>
+            </td>
+          </tr>
+          <tr *ngIf="!isLoading && items.length === 0">
+            <td colspan="9" class="text-center" style="padding:20px; color:#aaa;">
+              {{ 'prest_aucun_resultat' | translate }}
+            </td>
+          </tr>
+          <tr *ngFor="let item of items">
+            <td>
+              <input type="checkbox" [checked]="selected.has(item.id)"
+                (change)="toggleSelect(item.id)">
+            </td>
+            <td>
+              <span *ngIf="hasLogo(item)" style="margin-right:6px;">
+                <img [src]="item.logo" style="height:22px; width:22px; border-radius:3px; object-fit:cover;"
+                  onerror="this.style.display='none'">
+              </span>
+              <a href="javascript:void(0)" (click)="ouvrirModifier(item)" class="text-primary">
+                {{ item.nom }}
+              </a>
+            </td>
+            <td>{{ item.categorieNom }}</td>
+            <td>{{ decodeHtml(item.villeNom) || '—' }}</td>
+            <td>{{ item.telephone ?? '—' }}</td>
+            <td>{{ item.email ?? '—' }}</td>
+            <td>{{ item.adresse ?? '—' }}</td>
+            <td style="text-align:center;">
+              <span [class]="statutClass(item.statut)">{{ (item.statut === '1' ? 'prest_actif' : 'prest_inactif') | translate }}</span>
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="btn btn-xs btn-primary" (click)="ouvrirModifier(item)"
+                style="margin-right:2px;" [title]="'prest_modifier' | translate">
+                <i class="fa fa-pencil"></i> {{ 'prest_modifier' | translate }}
+              </button>
+              <button *ngIf="item.statut !== '1'" class="btn btn-xs btn-success" (click)="activer(item)"
+                style="margin-right:2px;" [title]="'prest_activer' | translate">
+                <i class="fa fa-check"></i>
+              </button>
+              <button *ngIf="item.statut === '1'" class="btn btn-xs btn-warning" (click)="desactiver(item)"
+                style="margin-right:2px;" [title]="'prest_desactiver' | translate">
+                <i class="fa fa-ban"></i>
+              </button>
+              <button class="btn btn-xs btn-danger" (click)="demanderSuppression(item)"
+                [title]="'prest_supprimer' | translate">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination bas -->
+      <div class="text-right" style="padding:10px 15px;" *ngIf="totalPages > 1">
+        <ul class="pagination pagination-sm" style="margin:0;">
+          <li [class.disabled]="currentPage === 0">
+            <a href="javascript:void(0)" (click)="currentPage > 0 && charger(0)">&laquo;</a>
+          </li>
+          <li [class.disabled]="currentPage === 0">
+            <a href="javascript:void(0)" (click)="currentPage > 0 && charger(currentPage-1)">&lsaquo;</a>
+          </li>
+          <li *ngFor="let p of pages"
+            [class.active]="p === currentPage"
+            [style.display]="(p >= currentPage-2 && p <= currentPage+2) ? '' : 'none'">
+            <a href="javascript:void(0)" (click)="charger(p)">{{ p + 1 }}</a>
+          </li>
+          <li [class.disabled]="currentPage === totalPages-1">
+            <a href="javascript:void(0)" (click)="currentPage < totalPages-1 && charger(currentPage+1)">&rsaquo;</a>
+          </li>
+          <li [class.disabled]="currentPage === totalPages-1">
+            <a href="javascript:void(0)" (click)="currentPage < totalPages-1 && charger(totalPages-1)">&raquo;</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  FORMULAIRE AJOUT / MODIFICATION                               -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div *ngIf="mode === 'form'">
+  <div class="box box-primary">
+    <div class="box-header with-border">
+      <h3 class="box-title">
+        <i class="fa" [ngClass]="isEdit ? 'fa-pencil' : 'fa-plus'"></i>
+        {{ (isEdit ? 'prest_modifier_titre' : 'prest_ajouter_titre') | translate }}
+      </h3>
+    </div>
+    <div class="box-body">
+
+      <!-- Alerte erreur -->
+      <div class="alert alert-danger" *ngIf="formError">
+        <i class="fa fa-exclamation-triangle"></i> {{ formError }}
+      </div>
+
+      <div class="row">
+
+        <!-- Colonne gauche -->
+        <div class="col-md-8">
+
+          <!-- Identifiant -->
+          <div class="form-group">
+            <label>{{ 'prest_identifiant' | translate }} <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="form.id"
+              placeholder="Ex: DLA_BINGO, YDE_CLINIQUE_A"
+              style="text-transform:uppercase;"
+              [readonly]="isEdit">
+            <span class="help-block" style="font-size:11px;" *ngIf="!isEdit">
+              {{ 'prest_id_hint' | translate }}
+            </span>
+          </div>
+
+          <!-- Nom -->
+          <div class="form-group">
+            <label>{{ 'prest_nom' | translate }} <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="form.nom"
+              [placeholder]="'prest_nom' | translate">
+          </div>
+
+          <!-- Catégorie -->
+          <div class="form-group">
+            <label>{{ 'prest_categorie' | translate }} <span class="text-danger">*</span></label>
+            <app-filterable-select
+              [options]="categorieOptions"
+              [value]="form.categorieId"
+              (valueChange)="form.categorieId = $event"
+              [placeholder]="'prest_select_categorie' | translate"
+              [placeholderOption]="'prest_aucune_categorie' | translate">
+            </app-filterable-select>
+          </div>
+
+          <!-- Ville -->
+          <div class="form-group">
+            <label>{{ 'prest_ville' | translate }}</label>
+            <app-filterable-select
+              [options]="villeOptions"
+              [value]="form.villeId"
+              (valueChange)="form.villeId = $event"
+              [placeholder]="'prest_select_ville' | translate"
+              [placeholderOption]="'prest_aucune_ville' | translate">
+            </app-filterable-select>
+          </div>
+
+          <!-- Téléphone -->
+          <div class="form-group">
+            <label>{{ 'prest_telephone' | translate }} <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="form.telephone"
+              [placeholder]="'prest_telephone' | translate">
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label>{{ 'prest_email' | translate }}</label>
+            <input type="email" class="form-control" [(ngModel)]="form.email"
+              [placeholder]="'prest_email' | translate">
+          </div>
+
+          <!-- Adresse -->
+          <div class="form-group">
+            <label>{{ 'prest_adresse' | translate }}</label>
+            <input type="text" class="form-control" [(ngModel)]="form.adresse"
+              [placeholder]="'prest_adresse' | translate">
+          </div>
+
+          <!-- Registre de commerce -->
+          <div class="form-group">
+            <label>{{ 'prest_registre' | translate }}</label>
+            <input type="text" class="form-control" [(ngModel)]="form.registre"
+              [placeholder]="'prest_registre' | translate">
+          </div>
+        </div>
+
+        <!-- Colonne droite : logo -->
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ 'prest_logo' | translate }}</label>
+            <div class="logo-preview-box" style="
+              border:2px dashed #ddd; border-radius:6px;
+              min-height:140px; display:flex; align-items:center;
+              justify-content:center; margin-bottom:10px; background:#fafafa;">
+              <img *ngIf="logoPreview" [src]="logoPreview"
+                style="max-width:100%; max-height:140px; border-radius:4px; object-fit:contain;">
+              <span *ngIf="!logoPreview" style="color:#bbb; font-size:13px;">
+                <i class="fa fa-image fa-2x"></i><br>{{ 'prest_aucun_logo' | translate }}
+              </span>
+            </div>
+            <input type="file" accept="image/*" class="form-control" (change)="onLogoChange($event)">
+            <span class="help-block" style="font-size:11px;">{{ 'prest_logo_hint' | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="box-footer text-right">
+      <button class="btn btn-default" (click)="annuler()" [disabled]="isSaving">
+        <i class="fa fa-times"></i> {{ 'prest_annuler' | translate }}
+      </button>
+      <button class="btn btn-primary" style="margin-left:8px;"
+        (click)="enregistrer()" [disabled]="isSaving">
+        <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+        {{ (isSaving ? 'prest_enregistrement' : 'prest_enregistrer') | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  MODAL CONFIRMATION SUPPRESSION                                -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="confirm-overlay" *ngIf="confirmItem" (click)="annulerSuppression()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-header">
+      <i class="fa fa-trash-o text-danger"></i> {{ 'prest_confirmer_suppression' | translate }}
+    </div>
+    <div class="confirm-body">
+      {{ 'prest_confirmer_msg' | translate }}
+      <strong>{{ confirmItem ? confirmItem.nom : '' }}</strong> ?<br>
+      <span style="color:#e74c3c; font-size:12px;">{{ 'prest_action_irreversible' | translate }}</span>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-default btn-sm" (click)="annulerSuppression()">
+        <i class="fa fa-times"></i> {{ 'prest_annuler' | translate }}
+      </button>
+      <button class="btn btn-danger btn-sm" style="margin-left:8px;" (click)="confirmerSuppression()">
+        <i class="fa fa-trash-o"></i> {{ 'prest_supprimer' | translate }}
+      </button>
+    </div>
+  </div>
+</div>

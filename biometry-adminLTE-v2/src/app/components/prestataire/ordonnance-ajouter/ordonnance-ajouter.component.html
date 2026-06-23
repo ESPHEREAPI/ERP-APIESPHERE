@@ -8,15 +8,116 @@
 
   <div class="box-body">
 
-    <!-- Succès -->
-    <div *ngIf="success"
-         class="alert alert-success text-center"
-         style="font-size:14px;">
-      <i class="fa fa-check-circle fa-2x"></i><br><br>
-      <strong>
-        {{ 'ordonnance_enregistree' | translate }}
-      </strong><br>
-      <small>{{ 'redirection_cours' | translate }}</small>
+    <!-- Succès + QR Code -->
+    <div *ngIf="success" style="text-align:center;padding:20px 10px;">
+      <div class="alert alert-success"
+           style="margin-bottom:20px;font-size:14px;">
+        <i class="fa fa-check-circle fa-2x"></i><br><br>
+        <strong>{{ 'ordonnance_enregistree' | translate }}</strong>
+      </div>
+
+      <!-- QR Code section -->
+      <div style="background:#f8f9ff;border:2px solid #3c6bc9;
+                  border-radius:12px;padding:20px;margin-bottom:20px;">
+        <h4 style="color:#1a1a2e;margin-bottom:4px;">
+          <i class="fa fa-qrcode"></i>
+          {{ 'qr_titre' | translate }}
+        </h4>
+        <p style="color:#666;font-size:12px;margin-bottom:16px;">
+          {{ 'qr_instruction' | translate }}
+        </p>
+
+        <!-- Canvas QR Code (généré en JS, pas d'appel externe) -->
+        <canvas #qrCanvas
+                style="border:4px solid #fff;
+                       box-shadow:0 4px 12px rgba(0,0,0,.15);
+                       border-radius:8px;">
+        </canvas>
+
+        <div style="margin-top:12px;padding:8px 12px;background:#e8eaf6;
+                    border-radius:6px;font-size:11px;
+                    word-break:break-all;color:#3c6bc9;text-align:left;">
+          <strong>{{ 'lien_direct' | translate }} :</strong><br>
+          <a [href]="urlMobile" target="_blank"
+             style="color:#3c6bc9;">{{ urlMobile }}</a>
+          <button type="button"
+                  class="btn btn-xs btn-default"
+                  style="margin-left:6px;"
+                  (click)="copierUrl()"
+                  title="Copier le lien">
+            <i class="fa fa-copy"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Boutons de partage -->
+      <div style="margin-bottom:20px;">
+        <p style="color:#666;font-size:12px;margin-bottom:8px;">
+          <i class="fa fa-share-alt"></i> {{ 'envoyer_lien_patient' | translate }} :
+        </p>
+        <button *ngIf="whatsappActif" type="button" class="btn btn-success" style="margin-right:8px;"
+                (click)="partagerWhatsApp()">
+          <i class="fa fa-whatsapp"></i> WhatsApp
+        </button>
+        <button *ngIf="smsActif" type="button" class="btn btn-primary" style="margin-right:8px;"
+                (click)="ouvrirSmsModal()">
+          <i class="fa fa-commenting"></i> SMS
+        </button>
+        <button type="button" class="btn btn-default"
+                (click)="copierUrl()">
+          <i class="fa fa-copy"></i> {{ 'copier_lien' | translate }}
+        </button>
+      </div>
+
+      <!-- Alerte document obligatoire -->
+      <div *ngIf="documentObligatoire && !documentEnvoye"
+           class="alert alert-warning" style="font-size:13px;">
+        <i class="fa fa-exclamation-triangle"></i>
+        {{ 'document_obligatoire_msg' | translate }}
+        <button type="button" class="btn btn-xs btn-info" style="margin-left:10px;"
+                (click)="verifierDocumentEnvoye()">
+          <i class="fa fa-refresh"></i> {{ 'verifier_document' | translate }}
+        </button>
+      </div>
+
+      <button type="button"
+              class="btn btn-success"
+              [disabled]="!peutTerminer"
+              (click)="terminer()">
+        <i class="fa fa-check"></i>
+        Done
+      </button>
+
+      <!-- Modal SMS -->
+      <div *ngIf="showSmsModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);
+           z-index:9999;display:flex;align-items:center;justify-content:center;"
+           (click)="fermerSmsModal()">
+        <div style="background:#fff;border-radius:10px;padding:24px;width:380px;
+             box-shadow:0 8px 32px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
+          <h4 style="margin:0 0 16px;"><i class="fa fa-commenting text-primary"></i> {{ 'envoyer_sms' | translate }}</h4>
+          <div class="form-group">
+            <label>{{ 'numero_telephone' | translate }}</label>
+            <input type="tel" class="form-control" [(ngModel)]="smsNumero"
+              placeholder="Ex: 694923568" autofocus>
+          </div>
+          <div *ngIf="smsResultat === 'ok'" class="alert alert-success" style="font-size:13px;">
+            <i class="fa fa-check"></i> {{ 'sms_envoye_ok' | translate }}
+          </div>
+          <div *ngIf="smsResultat === 'erreur'" class="alert alert-danger" style="font-size:13px;">
+            <i class="fa fa-times"></i> {{ 'sms_envoye_erreur' | translate }}
+          </div>
+          <div style="text-align:right;margin-top:12px;">
+            <button type="button" class="btn btn-default" (click)="fermerSmsModal()" style="margin-right:8px;">
+              {{ 'annuler' | translate }}
+            </button>
+            <button type="button" class="btn btn-primary" [disabled]="smsEnvoi || !smsNumero"
+                    (click)="envoyerSms()">
+              <i class="fa" [ngClass]="smsEnvoi ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+              {{ 'envoyer' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div *ngIf="!success">

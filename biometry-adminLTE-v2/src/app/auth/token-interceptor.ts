@@ -12,8 +12,9 @@ export class TokenInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.authService.getToken();
 
-    // Ne pas injecter le token sur le login
-    if (req.url.includes('/auth/login')) {
+    // Routes publiques — pas de token ni redirection
+    const publicRoutes = ['/auth/login', '/auth/otp', '/auth/validate-otp', '/capture/'];
+    if (publicRoutes.some(r => req.url.includes(r))) {
       return next.handle(req);
     }
 
@@ -26,9 +27,8 @@ export class TokenInterceptor implements HttpInterceptor {
 
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
-          console.warn('⚠️ Session expirée, redirection vers login');
-          this.router.navigate(['/login']);
+        if (error.status === 401 && token) {
+          console.warn('⚠️ Session expirée');
         }
         return throwError(() => error);
       })

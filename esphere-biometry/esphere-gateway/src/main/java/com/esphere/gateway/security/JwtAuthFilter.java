@@ -65,7 +65,9 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         String method = exchange.getRequest().getMethod().name();
 
         // Route publique → laisser passer sans vérification
-        if (ENDPOINTS_PUBLICS.stream().anyMatch(path::startsWith)) {
+        boolean estPublic = ENDPOINTS_PUBLICS.stream().anyMatch(path::startsWith)
+                || path.endsWith("/telecharger");
+        if (estPublic) {
             log.debug("[Gateway] Route publique autorisée : {} {}", method, path);
             return chain.filter(exchange);
         }

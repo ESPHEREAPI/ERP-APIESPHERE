@@ -26,6 +26,16 @@ spring:
           predicates:
             - Path=/prestataires/**
 
+        - id: prestataire-admin
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8083
+          predicates:
+            - Path=/admin/prestataires/**
+
+        - id: prestataire-logos
+          uri: http://${ESPHERE_HOST:109.228.49.89}:8083
+          predicates:
+            - Path=/biometry/logos/**
+
         - id: visite
           uri: http://${ESPHERE_HOST:109.228.49.89}:8084
           predicates:
@@ -34,7 +44,7 @@ spring:
         - id: validation
           uri: http://${ESPHERE_HOST:109.228.49.89}:8085
           predicates:
-            - Path=/validations/**
+            - Path=/validations/**,/parametres/**
 
         - id: bons-manuels
           uri: http://${ESPHERE_HOST:109.228.49.89}:8086
@@ -82,10 +92,17 @@ spring:
       globalcors:
         corsConfigurations:
           '[/**]':
-            allowedOrigins:
+            allowedOriginPatterns:
               - "https://zenbio.zenitheinsurance.com"
-            allowedMethods: ["GET","POST","PUT","DELETE","OPTIONS","PATCH"]
-            allowedHeaders: "Authorization,Content-Type,X-Requested-With"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders:
+              - "*"
             allowCredentials: true
 
 eureka:

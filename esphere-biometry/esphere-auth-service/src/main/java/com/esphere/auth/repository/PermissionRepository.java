@@ -25,6 +25,10 @@ public interface PermissionRepository extends JpaRepository<Permission, Integer>
         ORDER BY m.numeroOrdre ASC
     """)
     List<Permission> findMenusByProfilId(@Param("profilId") Integer profilId);
+
+    List<Permission> findByProfilId(Integer profilId);
+
+    void deleteByProfilIdAndMenuId(Integer profilId, Integer menuId);
     
     @Query("""
     SELECT m FROM Menu m

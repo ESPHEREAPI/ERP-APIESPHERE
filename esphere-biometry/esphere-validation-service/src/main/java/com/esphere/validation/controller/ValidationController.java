@@ -11,6 +11,7 @@ import com.esphere.validation.dto.request.ValidationLigneRequest;
 import com.esphere.validation.dto.response.ConsommationResponse;
 import com.esphere.validation.dto.response.ConsultationEnAttenteResponse;
 import com.esphere.validation.dto.response.LigneEnAttenteResponse;
+import com.esphere.validation.dto.response.PrestationBonResponse;
 import com.esphere.validation.dto.response.VisiteInfoResponse;
 import com.esphere.validation.repository.ConsultationRepository;
 import com.esphere.validation.repository.LignePrestationRepository;
@@ -76,6 +77,13 @@ public class ValidationController {
                         page, size, prestataireId, etat,typeConsultation,souscripteur,nomAdherent,nomAyantDroit, dateMin, dateMax));
     }
 
+    // GET /validations/consultations/{id}
+    @GetMapping("/consultations/{id}")
+    public ResponseEntity<ConsultationEnAttenteResponse> getConsultationById(
+            @PathVariable Integer id) {
+        return ResponseEntity.ok(validationService.getConsultationById(id));
+    }
+
     // PUT /validations/consultations/{id}
     @PutMapping("/consultations/{id}")
     public ResponseEntity<ConsultationEnAttenteResponse> validerConsultation(
@@ -92,6 +100,12 @@ public class ValidationController {
     }
 
     // ── LIGNES DE PRESTATION ──────────────────────────────────────
+    // GET /validations/prestations/{id}/bon
+    @GetMapping("/prestations/{id}/bon")
+    public ResponseEntity<PrestationBonResponse> getPrestationBon(@PathVariable Integer id) {
+        return ResponseEntity.ok(validationService.getPrestationBon(id));
+    }
+
     // GET /validations/lignes/en-attente
     @GetMapping("/lignes/en-attente")
     public ResponseEntity<List<LigneEnAttenteResponse>> getLignesEnAttente() {
@@ -244,10 +258,11 @@ public ResponseEntity<ConsultationEnAttenteResponse> soumettreConsultation(
     
     // POST /validations/prestations
 @PostMapping("/prestations")
-public ResponseEntity<Void> soumettrePrestation(
+public ResponseEntity<Map<String, Integer>> soumettrePrestation(
         @RequestBody PrestationSoumissionRequest request) {
-    validationService.soumettrePrestation(request);
-    return ResponseEntity.status(HttpStatus.CREATED).build();
+    Integer prestationId = validationService.soumettrePrestation(request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body(Map.of("prestationId", prestationId));
 }
 
 /**
@@ -303,4 +318,13 @@ public ResponseEntity<Map<String, Object>> getTaux(
         "typePrestation", typePrestation
     ));
 }
+
+    // ── REJET DOCUMENT → rejeter toutes les prestations ──────────
+    @PostMapping("/rejet-document")
+    public ResponseEntity<Map<String, Object>> rejetDocument(@RequestBody Map<String, String> body) {
+        String visiteId    = body.get("visiteId");
+        String commentaire = body.get("commentaire");
+        int count = validationService.rejeterParDocument(visiteId, commentaire);
+        return ResponseEntity.ok(Map.of("rejetees", count, "visiteId", visiteId));
+    }
 }

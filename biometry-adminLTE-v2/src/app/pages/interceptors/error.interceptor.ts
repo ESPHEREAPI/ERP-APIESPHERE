@@ -14,6 +14,15 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
+      // Les endpoints reporting/validations gèrent leurs propres erreurs via catchError
+      const silentPaths = [
+        '/reporting/',
+        '/validations/dashboard/prestataire/'
+      ];
+      if (silentPaths.some(p => req.url.includes(p))) {
+        return throwError(() => error);
+      }
+
       const errorCode = error.status;
       const errorDetails = {
         url: req.url,
@@ -55,10 +64,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           break;
 
         case 403:
-          router.navigate(['/error'], {
-            queryParams: { code: 403 },
-            state: { errorCode: 403, errorDetails }
-          });
+          console.error('⚠️ Forbidden:', req.url);
           break;
 
         case 404:
@@ -67,32 +73,19 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           return throwError(() => error);
 
         case 408:
-          // Timeout - ne rediriger que si pas une route d'auth
-          if (!isAuthRoute) {
-            router.navigate(['/network-error'], {
-              state: { previousUrl: router.url }
-            });
-          }
+          console.error('⚠️ Timeout:', req.url);
           break;
 
         case 429:
-          router.navigate(['/error'], {
-            queryParams: { code: 429 },
-            state: { errorCode: 429, errorDetails }
-          });
+          console.error('⚠️ Too many requests:', req.url);
           break;
 
         case 500:
         case 502:
         case 503:
         case 504:
-          // Erreurs serveur - ne rediriger que si pas une route d'auth
-          if (!isAuthRoute) {
-            router.navigate(['/error'], {
-              queryParams: { code: errorCode },
-              state: { errorCode, errorDetails }
-            });
-          }
+          // Erreurs serveur — NE PAS rediriger, laisser le composant gérer
+          console.error(`⚠️ Server error ${errorCode} on:`, req.url);
           break;
 
         default:

@@ -654,8 +654,9 @@ imprimerBon(
     event.preventDefault();
     this.dropdownOuvertId = null;
 
-    // Ouvrir la page d'impression dans un nouvel onglet
-    const url = `/public/admin/consultation/bon/${consultation.id}`;
+    // /biometry = base href — évite que le proxy ne capte l'URL avant Angular
+    const base = document.querySelector('base')?.getAttribute('href') || '/biometry/';
+    const url = `${base}public/admin/consultation/bon/${consultation.id}`;
     window.open(url, '_blank');
 }
 }

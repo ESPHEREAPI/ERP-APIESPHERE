@@ -27,9 +27,11 @@ public class ConsultationEnAttenteResponse {
     private LocalDateTime date;
      private short groupe;
     private String souscripteur;
-    private Double montantValide;   // ← ajouter
-    private Double partZenithe;     // ← ajouter
-    private Double partAssure;      // ← ajouter
+    private Double montantValide;
+    private Double partZenithe;
+    private Double partAssure;
     private String statutAdherent;
+    private String nomAdherent;
+    private String nomAyantDroit;
   
 }

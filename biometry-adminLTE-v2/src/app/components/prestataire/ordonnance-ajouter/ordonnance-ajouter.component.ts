@@ -1,15 +1,19 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import * as QRCode from 'qrcode';
 import { CommonModule }                  from '@angular/common';
 import { FormsModule }                   from '@angular/forms';
 import { RouterModule, ActivatedRoute,
          Router }                        from '@angular/router';
-import { TranslateModule }               from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject }                       from 'rxjs';
 import { takeUntil, debounceTime,
          distinctUntilChanged }          from 'rxjs/operators';
 import { Medicament,
          PrestataireService }            from '../../../services/prestataire.service';
+import { HttpClient }                    from '@angular/common/http';
 import { AuthService }                   from '../../../auth/auth.service';
+import { ParametreService }              from '../../../services/parametre.service';
+import { MediaService }                  from '../../../services/media.service';
 
 interface LigneMedicament {
   medicamentId: number | null;
@@ -31,6 +35,8 @@ interface LigneMedicament {
 })
 export class OrdonnanceAjouterComponent
        implements OnInit, OnDestroy {
+
+  @ViewChild('qrCanvas') qrCanvasRef?: ElementRef<HTMLCanvasElement>;
 
   // ── Infos visite ──────────────────────────────────────
   codeVisite:    string      = '';
@@ -79,6 +85,20 @@ export class OrdonnanceAjouterComponent
   erreur:       string  = '';
   success:      boolean = false;
 
+  // ── QR code après enregistrement ──────────────────────
+  prestationIdCree: number | null = null;
+  urlMobile:        string        = '';
+
+  // ── Partage & contrôle document ───────────────────────
+  showSmsModal     = false;
+  smsNumero        = '';
+  smsEnvoi         = false;
+  smsResultat      = '';
+  whatsappActif    = true;
+  smsActif         = true;
+  documentObligatoire = false;
+  documentEnvoye   = false;
+
   private destroy$      = new Subject<void>();
   private searchSubject = new Subject<string>();
 
@@ -86,7 +106,11 @@ export class OrdonnanceAjouterComponent
     private route:              ActivatedRoute,
     private router:             Router,
     private prestataireService: PrestataireService,
-    private authService:        AuthService
+    private authService:        AuthService,
+    private http:               HttpClient,
+    private parametreService:   ParametreService,
+    private mediaService:       MediaService,
+    private translate:          TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -104,8 +128,18 @@ export class OrdonnanceAjouterComponent
 
     this.chargerMedicaments();
     this.initSearchDebounce();
+    this.chargerParametres();
     document.addEventListener(
       'click', this.fermerDropdownExterieur);
+  }
+
+  private chargerParametres(): void {
+    this.parametreService.getBoolean('PARTAGE_WHATSAPP_ACTIF', true)
+      .pipe(takeUntil(this.destroy$)).subscribe(v => this.whatsappActif = v);
+    this.parametreService.getBoolean('PARTAGE_SMS_ACTIF', true)
+      .pipe(takeUntil(this.destroy$)).subscribe(v => this.smsActif = v);
+    this.parametreService.getBoolean('DOCUMENT_OBLIGATOIRE', false)
+      .pipe(takeUntil(this.destroy$)).subscribe(v => this.documentObligatoire = v);
   }
 
   ngOnDestroy(): void {
@@ -393,14 +427,18 @@ export class OrdonnanceAjouterComponent
       .soumettreOrdonnance(payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {
-          this.isSubmitting = false;
-          this.success      = true;
+        next: (res: any) => {
+          this.isSubmitting     = false;
+          this.success          = true;
+          this.prestationIdCree = res?.prestationId ?? null;
+          const base = document.getElementsByTagName('base')[0]?.getAttribute('href') || '/';
+          const lng = this.translate.currentLang || 'fr';
+          this.urlMobile = `${window.location.origin}${base}mobile/capture`
+            + `/${this.codeVisite}/${this.prestationIdCree}/ordonnance?lang=${lng}`;
           sessionStorage.removeItem('visite_code');
           sessionStorage.removeItem('visite_nature');
-          setTimeout(() =>
-            this.router.navigate(
-              ['/public/admin/ordonnance']), 2000);
+          // Génération QR code après le prochain cycle de détection
+          setTimeout(() => this.genererQRCode(), 100);
         },
         error: err => {
           this.isSubmitting = false;
@@ -410,8 +448,89 @@ export class OrdonnanceAjouterComponent
       });
   }
 
+  imprimerBon(): void {
+    if (!this.prestationIdCree) return;
+    const base = document.querySelector('base')?.getAttribute('href') || '/biometry/';
+    window.open(`${base}public/prestataire/prestation/bon/${this.prestationIdCree}`, '_blank');
+  }
+
+  terminer(): void {
+    this.router.navigate(['/public/admin/ordonnance']);
+  }
+
   retour(): void {
     this.router.navigate(['/public/admin/ordonnance']);
+  }
+
+  copierUrl(): void {
+    if (this.urlMobile) {
+      navigator.clipboard.writeText(this.urlMobile).catch(() => {});
+    }
+  }
+
+  private genererQRCode(): void {
+    const canvas = this.qrCanvasRef?.nativeElement;
+    if (!canvas || !this.urlMobile) return;
+    QRCode.toCanvas(canvas, this.urlMobile, {
+      width: 280,
+      margin: 4,
+      errorCorrectionLevel: 'H',
+      color: { dark: '#000000', light: '#ffffff' }
+    }).catch(err => console.error('QR code error:', err));
+  }
+
+  private get msgCapture(): string {
+    return this.translate.currentLang === 'en'
+      ? `Please film the document by clicking on this link:\n${this.urlMobile}`
+      : `Veuillez filmer le document en cliquant sur ce lien :\n${this.urlMobile}`;
+  }
+
+  partagerWhatsApp(): void {
+    if (!this.urlMobile) return;
+    window.open(`https://wa.me/?text=${encodeURIComponent(this.msgCapture)}`, '_blank');
+  }
+
+  ouvrirSmsModal(): void {
+    this.showSmsModal = true;
+    this.smsNumero = '';
+    this.smsResultat = '';
+  }
+
+  fermerSmsModal(): void {
+    this.showSmsModal = false;
+  }
+
+  envoyerSms(): void {
+    if (!this.smsNumero || !this.urlMobile) return;
+    this.smsEnvoi = true;
+    this.smsResultat = '';
+    const body = {
+      destinataireId: this.smsNumero,
+      typeDest: 'assure',
+      canal: 'sms',
+      message: this.msgCapture,
+      telephone: this.smsNumero,
+      eventType: 'lien_capture',
+      referenceId: String(this.prestationIdCree || '')
+    };
+    this.http.post('/notifications/envoyer', body)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => { this.smsEnvoi = false; this.smsResultat = 'ok'; },
+        error: () => { this.smsEnvoi = false; this.smsResultat = 'erreur'; }
+      });
+  }
+
+  verifierDocumentEnvoye(): void {
+    if (!this.prestationIdCree) return;
+    this.mediaService.getParPrestation(this.prestationIdCree)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: medias => { this.documentEnvoye = medias && medias.length > 0; } });
+  }
+
+  get peutTerminer(): boolean {
+    if (!this.documentObligatoire) return true;
+    return this.documentEnvoye;
   }
 
   // ── Helpers ───────────────────────────────────────────

@@ -26,6 +26,7 @@ eureka:
 services:
   visite-url: http://localhost:8084
   adherent-url: http://localhost:8082
+  validation-url: http://localhost:8085
 
 esphere:
   jwt:

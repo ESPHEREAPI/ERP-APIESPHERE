@@ -1,0 +1,362 @@
+<!-- ═══════════════════════════════════════════════════════════
+     FILTRES  (masqués à l'impression)
+═══════════════════════════════════════════════════════════ -->
+<div class="etat-filtres-panel no-print">
+  <div class="box box-default" style="margin-bottom:10px;">
+    <div class="box-header with-border">
+      <h3 class="box-title"><i class="fa fa-filter"></i> {{ 'rpt_filtres' | translate }}</h3>
+      <div class="box-tools pull-right">
+        <button class="btn btn-sm btn-default" (click)="reinitialiserFiltres()">
+          <i class="fa fa-refresh"></i> {{ 'rpt_reinit' | translate }}
+        </button>
+      </div>
+    </div>
+    <div class="box-body">
+      <div class="row">
+        <div class="col-sm-3">
+          <label>{{ 'rpt_type' | translate }}</label>
+          <select class="form-control" [(ngModel)]="filtreNature">
+            <option value="">{{ 'rpt_tous_types' | translate }}</option>
+            <option value="consultation">{{ 'consultation' | translate }}</option>
+            <option value="ordonnance">{{ 'ordonnance' | translate }}</option>
+            <option value="examen">{{ 'examen' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <label>{{ 'rpt_statut' | translate }}</label>
+          <select class="form-control" [(ngModel)]="filtreStatut">
+            <option value="">{{ 'rpt_tous_statuts' | translate }}</option>
+            <option value="attente_validation">{{ 'rpt_en_attente' | translate }}</option>
+            <option value="valide">{{ 'rpt_valide' | translate }}</option>
+            <option value="rejete">{{ 'rpt_rejete' | translate }}</option>
+            <option value="encaisse">{{ 'rpt_encaisse' | translate }}</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <label>{{ 'rpt_mois' | translate }}</label>
+          <select class="form-control" [(ngModel)]="filtreMois">
+            <option *ngFor="let m of moisDisponibles" [value]="m.val">{{ m.lib | translate }}</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <label>{{ 'rpt_annee' | translate }}</label>
+          <select class="form-control" [(ngModel)]="filtreAnnee">
+            <option *ngFor="let a of anneesDisponibles" [value]="a">{{ a }}</option>
+          </select>
+        </div>
+        <div class="col-sm-1">
+          <label>{{ 'rpt_taille' | translate }}</label>
+          <select class="form-control" [(ngModel)]="pageSize" (change)="changerTaille(pageSize)">
+            <option *ngFor="let t of tailles" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+        <div class="col-sm-2">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary btn-block" (click)="appliquerFiltres()">
+            <i class="fa fa-search"></i> {{ 'rechercher' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chargement -->
+<div *ngIf="isLoading" class="text-center no-print" style="padding:60px;">
+  <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE DOCUMENT
+═══════════════════════════════════════════════════════════ -->
+<div class="etat-page" *ngIf="!isLoading && page">
+
+  <!-- Filigrane -->
+  <div class="etat-watermark">
+    <img src="/biometry/1logo.png" alt="">
+    <div class="etat-watermark-slogan">{{ 'bon_slogan' | translate }}</div>
+  </div>
+
+  <!-- EN-TÊTE -->
+  <div class="etat-header">
+    <div class="etat-header-left">
+      <strong>ZENITHE Insurance</strong><br>
+      {{ 'bon_adresse' | translate }}<br>
+      {{ 'bon_tel' | translate }}
+    </div>
+    <div class="etat-header-center">
+      <img src="/biometry/1logo.png" alt="ZENITHE">
+    </div>
+    <div class="etat-header-right">
+      <strong>{{ 'bon_republique' | translate }}</strong><br>
+      {{ 'bon_devise' | translate }}
+    </div>
+  </div>
+  <hr class="etat-hr">
+
+  <!-- TITRE -->
+  <div class="etat-titre">{{ 'rpt_etat_prestations' | translate }}</div>
+  <div class="etat-sous-titre">
+    {{ libellePeriode }} &nbsp;·&nbsp; {{ page.totalElements }} {{ 'rpt_resultats' | translate }}
+    &nbsp;·&nbsp; {{ 'rpt_date_edition' | translate }} {{ dateImpression }}
+  </div>
+
+  <!-- ── BOUTON IMPRIMER + INFO (au-dessus du tableau) ── -->
+  <div class="etat-toolbar no-print">
+    <span class="etat-hint"><i class="fa fa-hand-o-up"></i> {{ 'rpt_clic_detail' | translate }}</span>
+    <button class="etat-btn-print-inline" (click)="imprimer()">
+      <i class="fa fa-print"></i> {{ 'rpt_imprimer' | translate }}
+    </button>
+  </div>
+
+  <!-- TABLEAU -->
+  <table class="etat-table">
+    <thead>
+      <tr>
+        <th>{{ 'rpt_col_date'          | translate }}</th>
+        <th>{{ 'rpt_col_type'          | translate }}</th>
+        <th>{{ 'rpt_col_souscripteur'  | translate }}</th>
+        <th>{{ 'rpt_col_assure'        | translate }}</th>
+        <th>{{ 'rpt_col_patient'       | translate }}</th>
+        <th class="th-center">{{ 'rpt_col_taux'           | translate }}</th>
+        <th class="th-right">{{ 'rpt_col_montant_valide'  | translate }}</th>
+        <th class="th-right">{{ 'rpt_col_zenithe'         | translate }}</th>
+        <th class="th-right">{{ 'rpt_col_part_assure'     | translate }}</th>
+        <th class="th-center">{{ 'rpt_col_statut'         | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of page.content; let i = index"
+          [class.etat-tr-alt]="i % 2 === 1"
+          class="etat-tr-clickable"
+          (click)="ouvrirDetail(item)"
+          title="{{ 'rpt_clic_detail' | translate }}">
+
+        <td class="td-date">{{ formatDate(item.date) }}</td>
+
+        <td class="td-type">
+          <span [ngClass]="badgeNature(item.nature)">
+            <i [ngClass]="iconeNature(item.nature)"></i>
+            {{ item.nature | titlecase }}
+          </span>
+        </td>
+
+        <td class="td-souscripteur">{{ item.souscripteur || '—' }}</td>
+
+        <td class="td-assure">
+          <strong>{{ item.nomAssure || item.codeAdherent || '—' }}</strong>
+          <small class="td-code">{{ item.codeAdherent }}</small>
+        </td>
+
+        <!-- Patient = ayant droit si présent, sinon assuré -->
+        <td class="td-patient">
+          <strong>{{ nomPatient(item) }}</strong>
+          <small class="td-code" *ngIf="item.codeAyantDroit">{{ item.codeAyantDroit }}</small>
+        </td>
+
+        <td class="td-center">{{ item.taux !== null && item.taux !== undefined ? item.taux : 100 }} %</td>
+        <td class="td-right td-montant">{{ formatMontant(item.montantValide) }}</td>
+        <td class="td-right td-montant td-zenithe"><strong>{{ formatMontant(montantZenithe(item)) }}</strong></td>
+        <td class="td-right td-montant td-part">{{ formatMontant(partAssure(item)) }}</td>
+        <td class="td-center">
+          <span [ngClass]="badgeClass(item.etatGlobal)">
+            {{ ('rpt_' + item.etatGlobal) | translate }}
+          </span>
+        </td>
+      </tr>
+
+      <tr *ngIf="page.content.length === 0">
+        <td colspan="10" class="td-vide">
+          <i class="fa fa-inbox"></i>&nbsp; {{ 'rpt_aucune_prestation' | translate }}
+        </td>
+      </tr>
+    </tbody>
+
+    <tfoot *ngIf="page.content.length > 0">
+      <tr class="etat-tfoot">
+        <td colspan="6" class="td-right"><strong>{{ 'rpt_total_page' | translate }}</strong></td>
+        <td class="td-right td-montant"><strong>{{ formatMontant(totalMontantValide) }}</strong></td>
+        <td class="td-right td-montant td-zenithe"><strong>{{ formatMontant(totalMontantZenithe) }}</strong></td>
+        <td class="td-right td-montant td-part"><strong>{{ formatMontant(totalPartAssure) }}</strong></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- TOTAUX GLOBAUX + SIGNATURE -->
+  <div class="etat-footer-totaux" *ngIf="page.content.length > 0">
+    <div class="etat-totaux-bloc">
+      <table class="etat-totaux-table">
+        <tr>
+          <td class="etot-lib">{{ 'rpt_total_valide'      | translate }} :</td>
+          <td class="etot-val">{{ formatMontant(totalMontantValide) }} FCFA</td>
+        </tr>
+        <tr>
+          <td class="etot-lib">{{ 'rpt_total_zenithe'     | translate }} :</td>
+          <td class="etot-val">{{ formatMontant(totalMontantZenithe) }} FCFA</td>
+        </tr>
+        <tr>
+          <td class="etot-lib">{{ 'rpt_total_part_assure' | translate }} :</td>
+          <td class="etot-val">{{ formatMontant(totalPartAssure) }} FCFA</td>
+        </tr>
+      </table>
+    </div>
+    <div class="etat-signature">
+      <div class="etat-sig-titre">{{ 'rpt_signature_prestataire' | translate }}</div>
+      <div class="etat-sig-ligne"></div>
+    </div>
+  </div>
+
+  <!-- PAGINATION -->
+  <div class="etat-pagination no-print" *ngIf="(page.totalPages ?? 0) > 1">
+    <ul class="pagination pagination-sm">
+      <li [class.disabled]="currentPage === 0">
+        <a (click)="currentPage > 0 && charger(currentPage - 1)" style="cursor:pointer;">&laquo;</a>
+      </li>
+      <li *ngFor="let p of pages" [class.active]="p === currentPage">
+        <a (click)="charger(p)" style="cursor:pointer;">{{ p + 1 }}</a>
+      </li>
+      <li [class.disabled]="currentPage === (page.totalPages - 1)">
+        <a (click)="currentPage < (page.totalPages - 1) && charger(currentPage + 1)" style="cursor:pointer;">&raquo;</a>
+      </li>
+    </ul>
+    <p class="etat-pag-info">
+      {{ 'rpt_page' | translate }} {{ currentPage + 1 }} / {{ page.totalPages }}
+      — {{ page.totalElements }} {{ 'rpt_resultats' | translate }}
+    </p>
+  </div>
+
+</div><!-- /etat-page -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     MODAL DÉTAIL (cliquable sur une ligne)
+═══════════════════════════════════════════════════════════ -->
+<div class="detail-overlay no-print" *ngIf="selectedItem" (click)="fermerDetail()">
+  <div class="detail-modal" (click)="$event.stopPropagation()">
+
+    <!-- Bouton fermer -->
+    <button class="detail-close" (click)="fermerDetail()">
+      <i class="fa fa-times"></i>
+    </button>
+
+    <!-- ── PAGE IMPRIMABLE DU DÉTAIL ─────────────────── -->
+    <div class="detail-bon">
+
+      <!-- Filigrane -->
+      <div class="etat-watermark">
+        <img src="/biometry/1logo.png" alt="">
+      </div>
+
+      <!-- En-tête -->
+      <div class="etat-header">
+        <div class="etat-header-left">
+          <strong>ZENITHE Insurance</strong><br>
+          {{ 'bon_adresse' | translate }}<br>
+          {{ 'bon_tel' | translate }}
+        </div>
+        <div class="etat-header-center">
+          <img src="/biometry/1logo.png" alt="ZENITHE">
+        </div>
+        <div class="etat-header-right">
+          <strong>{{ 'bon_republique' | translate }}</strong><br>
+          {{ 'bon_devise' | translate }}
+        </div>
+      </div>
+      <hr class="etat-hr">
+
+      <!-- Titre -->
+      <div class="etat-titre">{{ 'rpt_detail_prestation' | translate }}</div>
+      <div class="etat-sous-titre">{{ 'rpt_date_edition' | translate }} {{ dateImpression }}</div>
+
+      <!-- Infos principales -->
+      <table class="detail-infos">
+        <tr>
+          <td class="di-lib">{{ 'rpt_col_date' | translate }}</td>
+          <td class="di-val">{{ formatDateLong(selectedItem.date) }}</td>
+          <td class="di-lib">{{ 'rpt_col_type' | translate }}</td>
+          <td class="di-val">
+            <span [ngClass]="badgeNature(selectedItem.nature)">
+              <i [ngClass]="iconeNature(selectedItem.nature)"></i>
+              {{ selectedItem.nature | titlecase }}
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td class="di-lib">{{ 'rpt_col_souscripteur' | translate }}</td>
+          <td class="di-val"><strong>{{ selectedItem.souscripteur || '—' }}</strong></td>
+          <td class="di-lib">{{ 'rpt_col_statut' | translate }}</td>
+          <td class="di-val">
+            <span [ngClass]="badgeClass(selectedItem.etatGlobal)">
+              {{ ('rpt_' + selectedItem.etatGlobal) | translate }}
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td class="di-lib">{{ 'rpt_col_assure' | translate }}</td>
+          <td class="di-val">
+            <strong>{{ selectedItem.nomAssure || selectedItem.codeAdherent }}</strong>
+            <small class="td-code">{{ selectedItem.codeAdherent }}</small>
+          </td>
+          <td class="di-lib">{{ 'rpt_col_patient' | translate }}</td>
+          <td class="di-val">
+            <strong>{{ nomPatient(selectedItem) }}</strong>
+            <small class="td-code" *ngIf="selectedItem.codeAyantDroit">{{ selectedItem.codeAyantDroit }}</small>
+          </td>
+        </tr>
+      </table>
+
+      <hr style="border-color:#ddd; margin:12px 0;">
+
+      <!-- Montants -->
+      <div class="detail-montants">
+        <table class="detail-montants-table">
+          <tr>
+            <td class="dm-lib">{{ 'rpt_col_taux' | translate }}</td>
+            <td class="dm-val">{{ selectedItem.taux !== null && selectedItem.taux !== undefined ? selectedItem.taux : 100 }} %</td>
+          </tr>
+          <tr>
+            <td class="dm-lib">{{ 'rpt_col_montant_valide' | translate }}</td>
+            <td class="dm-val">{{ formatMontant(selectedItem.montantValide) }} FCFA</td>
+          </tr>
+          <tr class="dm-important">
+            <td class="dm-lib">{{ 'rpt_col_zenithe' | translate }}</td>
+            <td class="dm-val">{{ formatMontant(montantZenithe(selectedItem)) }} FCFA</td>
+          </tr>
+          <tr>
+            <td class="dm-lib">{{ 'rpt_col_part_assure' | translate }}</td>
+            <td class="dm-val">{{ formatMontant(partAssure(selectedItem)) }} FCFA</td>
+          </tr>
+          <tr>
+            <td class="dm-lib">{{ 'rpt_col_lignes' | translate }}</td>
+            <td class="dm-val">{{ selectedItem.nbreLignes }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Signatures -->
+      <div class="etat-footer-totaux" style="margin-top:30px;">
+        <div class="etat-signature">
+          <div class="etat-sig-titre">{{ 'bon_l_assure' | translate }}</div>
+          <div class="etat-sig-ligne"></div>
+        </div>
+        <div class="etat-signature">
+          <div class="etat-sig-titre">{{ 'rpt_signature_prestataire' | translate }}</div>
+          <div class="etat-sig-ligne"></div>
+        </div>
+      </div>
+
+    </div><!-- /detail-bon -->
+
+    <!-- Boutons actions -->
+    <div class="detail-actions no-print">
+      <button class="btn btn-default" (click)="fermerDetail()">
+        <i class="fa fa-arrow-left"></i> {{ 'rpt_fermer' | translate }}
+      </button>
+      <button class="btn btn-primary" (click)="imprimerDetail()">
+        <i class="fa fa-print"></i> {{ 'rpt_imprimer' | translate }}
+      </button>
+    </div>
+
+  </div>
+</div>

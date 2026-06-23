@@ -1,5 +1,6 @@
 package com.esphere.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -32,6 +33,7 @@ public class Profil {
     @Column(name = "supprime", nullable = false)
     private String supprime;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "profil", fetch = FetchType.LAZY)
     private List<Permission> permissions;
 }

@@ -9,8 +9,31 @@
       <span class="sr-only">Toggle navigation</span>
     </a>
 
+    <!-- ── BANNIÈRE SESSION (warning/danger) ── -->
+    <div [ngClass]="banniereClass" *ngIf="showBanniereExpiration">
+      <span class="banniere-icone">
+        <i class="fa fa-exclamation-triangle"></i>
+      </span>
+      <span class="banniere-texte">
+        {{ 'session_expiration_msg' | translate }}
+      </span>
+      <span class="banniere-action">
+        <a (click)="logout()" style="cursor:pointer;text-decoration:underline;font-weight:bold;">
+          {{ 'se_reconnecter' | translate }}
+        </a>
+      </span>
+    </div>
+
     <div class="navbar-custom-menu">
       <ul class="nav navbar-nav">
+
+        <!-- ── TIMER TOKEN ── -->
+        <li class="token-timer-li" *ngIf="tokenStatus.secondesRestantes >= 0">
+          <span [ngClass]="timerClass">
+            <i class="fa fa-clock-o"></i>
+            {{ tokenStatus.label }}
+          </span>
+        </li>
 
         <!-- Consultations en attente -->
         <li class="dropdown messages-menu" *ngIf="consultationCount > 0" [class.open]="dropdowns['consultations']">
@@ -47,14 +70,14 @@
         <!-- Examens en attente -->
         <li class="dropdown messages-menu" *ngIf="examenCount > 0" [class.open]="dropdowns['examens']">
           <a href="#" class="dropdown-toggle" (click)="toggleDropdown('examens', $event)">
-            <i class="ion ion-beaker"></i>
+            <i class="fa fa-flask"></i>
             <span class="label label-warning">{{ examenCount }}</span>
           </a>
           <ul class="dropdown-menu">
             <li class="header">{{ examenCount }} {{ 'examens_en_attente' | translate }}</li>
             <li><ul class="menu"><li>
               <a href="#" (click)="goToExamens(); $event.preventDefault()">
-                <i class="ion ion-beaker text-warning"></i> {{ 'voir_tous' | translate }}
+                <i class="fa fa-flask text-warning"></i> {{ 'voir_tous' | translate }}
               </a>
             </li></ul></li>
           </ul>
@@ -63,22 +86,11 @@
         <!-- Menu Utilisateur -->
         <li class="dropdown user user-menu" [class.open]="dropdowns['user']">
           <a href="#" class="dropdown-toggle" (click)="toggleDropdown('user', $event)">
-            <!-- Initiales à la place de la photo
-            <span class="user-image" style="display:inline-block;width:40px;height:40px;
-              border-radius:50%;background:#3c8dbc;color:white;text-align:center;
-              line-height:40px;font-weight:bold;font-size:14px;margin-top:10px;">
-              {{ getInitiales() }}
-            </span> -->
-             <img src="./img/user2-160x160.png" class="user-image" alt="User image">
+            <img src="./img/user2-160x160.png" class="user-image" alt="User image">
             <span class="hidden-xs">{{ user?.prenom }} {{ user?.nom }} <i class="caret"></i></span>
           </a>
           <ul class="dropdown-menu">
             <li class="user-header">
-             <!-- <span class="img-circle" style="display:inline-block;width:90px;height:90px;
-                border-radius:50%;background:#3c8dbc;color:white;text-align:center;
-                line-height:90px;font-size:28px;font-weight:bold;">
-                {{ getInitiales() }}
-              </span> -->
               <img src="./img/user2-160x160.png" class="user-image" alt="User image">
               <p>
                 {{ user?.prenom }} {{ user?.nom }} — {{ user?.profilLibelle }}

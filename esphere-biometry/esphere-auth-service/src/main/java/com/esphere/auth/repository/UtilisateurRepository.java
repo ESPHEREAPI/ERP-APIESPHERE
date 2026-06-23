@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,6 +20,23 @@ public interface UtilisateurRepository
     // Recherche paginée par nom, prénom ou login (pour UserController)
     Page<Utilisateur> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrLoginContainingIgnoreCase(
             String nom, String prenom, String login, Pageable pageable);
+
+    @Query("""
+        SELECT u FROM Utilisateur u
+        WHERE u.supprime = '-1'
+        ORDER BY u.nom ASC
+        """)
+    Page<Utilisateur> findAllNonSupprimes(Pageable pageable);
+
+    @Query("""
+        SELECT u FROM Utilisateur u
+        WHERE u.supprime = '-1'
+          AND (LOWER(u.nom) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.prenom) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.login) LIKE LOWER(CONCAT('%', :search, '%')))
+        ORDER BY u.nom ASC
+        """)
+    Page<Utilisateur> searchNonSupprimes(@Param("search") String search, Pageable pageable);
 
     Optional<Utilisateur> findByEmail(String email);
 
@@ -47,8 +65,9 @@ public interface UtilisateurRepository
     WHERE e.prestataireId = :prestataireId
       AND u.statut        = '1'
       AND u.supprime      = '-1'
+      AND e.serialBiometrie is not null
     ORDER BY u.id ASC
     """)
-    Optional<Utilisateur> findActiveByPrestataireId(
+    List<Utilisateur> findActiveByPrestataireId(
             @Param("prestataireId") String prestataireId);
 }

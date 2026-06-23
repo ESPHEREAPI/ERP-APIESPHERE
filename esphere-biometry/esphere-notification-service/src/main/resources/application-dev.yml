@@ -31,6 +31,12 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
 
+esphere:
+  validation:
+    url: http://localhost:8085
+  service-sante:
+    telephones: ${SS_TELEPHONES:694923568,686086116}
+
 sms:
   api:
     url: ${SMS_API_URL:https://smsvas.com/bulk/public/index.php/api/v1/sendsms}

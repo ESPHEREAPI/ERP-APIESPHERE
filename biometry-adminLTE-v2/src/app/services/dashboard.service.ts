@@ -50,6 +50,32 @@ export interface DashboardPrestataireResponse {
   accesBonManuel: boolean;
 }
 
+export interface EtatPrestationItem {
+  id: number;
+  nature: string;
+  date: string;
+  codeAdherent: string;
+  codeAyantDroit: string | null;
+  nomAssure: string | null;
+  nomAyantDroit: string | null;
+  souscripteur: string | null;
+  taux: number;
+  etatGlobal: string;
+  nbreLignes: number;
+  montantSoumis: number;
+  montantValide: number;
+}
+
+export interface EtatPrestationPageResponse {
+  content: EtatPrestationItem[];
+  totalElements: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  montantSoumisTotalPage: number;
+  montantValideTotalPage: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardService {
 
@@ -64,6 +90,26 @@ export class DashboardService {
         console.error('Dashboard SS error:', err);
         return of({} as DashboardSsResponse);
       }));
+  }
+
+  // État des prestations prestataire (paginé + filtres)
+  getEtatPrestationsPrestataire(
+    prestataireId: string,
+    filtres: { nature?: string; statut?: string; mois?: number; annee?: number; page?: number; size?: number } = {}
+  ): Observable<EtatPrestationPageResponse> {
+    const p = new URLSearchParams();
+    if (filtres.nature)  p.set('nature',  filtres.nature);
+    if (filtres.statut)  p.set('statut',  filtres.statut);
+    if (filtres.mois)    p.set('mois',    String(filtres.mois));
+    if (filtres.annee)   p.set('annee',   String(filtres.annee));
+    p.set('page', String(filtres.page  ?? 0));
+    p.set('size', String(filtres.size  ?? 20));
+    return this.http.get<EtatPrestationPageResponse>(
+      `/reporting/prestations/prestataire/${prestataireId}?${p.toString()}`
+    ).pipe(catchError(() => of({
+      content: [], totalElements: 0, totalPages: 0, currentPage: 0,
+      pageSize: 20, montantSoumisTotalPage: 0, montantValideTotalPage: 0
+    })));
   }
 
   // Dashboard Prestataire

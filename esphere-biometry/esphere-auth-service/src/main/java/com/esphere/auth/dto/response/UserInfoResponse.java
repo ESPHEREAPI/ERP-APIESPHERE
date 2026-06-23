@@ -24,4 +24,7 @@ public class UserInfoResponse {
     private String  profilLibelle;
     private String  connexionAppli;
     private String  prestataireId;
+    private Integer profilId;
+    private Short   langueDefaut;
+    private String  serialBiometrie;
 }

@@ -328,6 +328,59 @@ public class ReportingService {
                 .collect(Collectors.toList());
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // ÉTAT DES PRESTATIONS — PRESTATAIRE
+    // ══════════════════════════════════════════════════════════════
+
+    public EtatPrestationPageResponse getEtatPrestationsPrestataire(
+            String prestataireId, String nature, String statut,
+            Integer mois, int annee, int page, int size) {
+
+        List<Object[]> rows = reportingRepository.etatPrestationsPrestataire(
+                prestataireId, nature, statut, mois, annee, page, size);
+        long total = reportingRepository.countEtatPrestationsPrestataire(
+                prestataireId, nature, statut, mois, annee);
+
+        List<EtatPrestationItem> items = new ArrayList<>();
+        double totalSoumis = 0, totalValide = 0;
+
+        for (Object[] row : rows) {
+            // SQL order: id[0], nature[1], date[2], code_adherent[3], code_ayant_droit[4],
+            //            nom_assure[5], nom_ayant_droit[6], souscripteur[7], taux[8],
+            //            nbre_lignes[9], montant_soumis[10], montant_valide[11], etat_calcule[12]
+            double soumis = row[10] != null ? ((Number) row[10]).doubleValue() : 0.0;
+            double valide = row[11] != null ? ((Number) row[11]).doubleValue() : 0.0;
+            totalSoumis += soumis;
+            totalValide += valide;
+            items.add(EtatPrestationItem.builder()
+                    .id(((Number) row[0]).longValue())
+                    .nature((String) row[1])
+                    .date(row[2] != null ? row[2].toString() : null)
+                    .codeAdherent((String) row[3])
+                    .codeAyantDroit((String) row[4])
+                    .nomAssure((String) row[5])
+                    .nomAyantDroit((String) row[6])
+                    .souscripteur((String) row[7])
+                    .taux(row[8] != null ? ((Number) row[8]).intValue() : 100)
+                    .nbreLignes(row[9] != null ? ((Number) row[9]).intValue() : 0)
+                    .montantSoumis(soumis)
+                    .montantValide(valide)
+                    .etatGlobal((String) row[12])
+                    .build());
+        }
+
+        int totalPagesCalc = size > 0 ? (int) Math.ceil((double) total / size) : 1;
+        return EtatPrestationPageResponse.builder()
+                .content(items)
+                .totalElements(total)
+                .totalPages(totalPagesCalc)
+                .currentPage(page)
+                .pageSize(size)
+                .montantSoumisTotalPage(totalSoumis)
+                .montantValideTotalPage(totalValide)
+                .build();
+    }
+
     private String libelleMois(int mois) {
         return Month.of(mois)
                 .getDisplayName(TextStyle.FULL, Locale.FRENCH);

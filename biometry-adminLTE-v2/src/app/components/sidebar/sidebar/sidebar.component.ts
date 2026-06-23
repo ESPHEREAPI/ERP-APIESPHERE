@@ -380,12 +380,10 @@ private updateBadgesPrestataire(data: any): void {
     if (isPrestataire) {
       if (profilCode === 'LABORATOIRE') {
         base.push(
-
           { title: 'examen', icon: 'fa fa-flask', route: '/public/admin/examen' }
         );
       } else if (profilCode === 'PHARMACIE') {
         base.push(
-
           { title: 'ordonnance', icon: 'fa fa-file-text-o', route: '/public/admin/ordonnance' }
         );
       } else {
@@ -396,6 +394,14 @@ private updateBadgesPrestataire(data: any): void {
         );
       }
 
+      base.push({
+        title: 'menu_reporting',
+        icon: 'fa fa-bar-chart',
+        isOpen: false,
+        children: [
+          { title: 'menu_etat_prestations', icon: 'fa fa-list-alt', route: '/public/admin/reporting/mes-prestations' }
+        ]
+      });
 
     } else {
       base.push({
@@ -456,7 +462,7 @@ private updateBadgesPrestataire(data: any): void {
   }
   isPrestataire(): boolean {
     const profilCode = this.user?.profilCode || '';
-    console.log(profilCode)
+    //console.log(profilCode)
     return !['SERVICE_SANTE',
              'SUP_ADMIN'].includes(profilCode);
 }

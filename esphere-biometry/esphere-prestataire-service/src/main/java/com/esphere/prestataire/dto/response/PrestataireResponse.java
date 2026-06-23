@@ -12,6 +12,7 @@ public class PrestataireResponse {
     private String categorieId;
     private String categorieNom;
     private Integer villeId;
+    private String villeNom;
     private String nom;
     private String adresse;
     private String email;

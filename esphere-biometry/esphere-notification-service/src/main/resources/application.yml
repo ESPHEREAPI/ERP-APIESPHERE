@@ -33,6 +33,14 @@ spring:
           timeout: 10000
           connectiontimeout: 10000
 
+esphere:
+  validation:
+    url: ${VALIDATION_URL:http://localhost:8085}
+  auth:
+    url: ${AUTH_URL:http://localhost:8081}
+  service-sante:
+    telephones: ${SS_TELEPHONES:694923568,686086116}
+
 management:
   endpoints:
     web:

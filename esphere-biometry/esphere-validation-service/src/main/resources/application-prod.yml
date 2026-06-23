@@ -44,6 +44,10 @@ eureka:
     service-url:
       defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:8761/eureka/
 
+esphere:
+  notification:
+    url: http://localhost:8088
+
 services:
   adherent-url: http://${ESPHERE_HOST:109.228.49.89}:8082
   prestataire-url: http://${ESPHERE_HOST:109.228.49.89}:8083

@@ -1,1 +1,167 @@
-<p>parametre works!</p>
+<div class="row">
+  <div class="col-xs-12">
+
+    <!-- ── En-tête ─────────────────────────────────────────────────── -->
+    <div class="box box-primary">
+      <div class="box-header with-border">
+        <h3 class="box-title">
+          <i class="fa fa-sliders"></i>&nbsp;Paramètres système
+        </h3>
+        <div class="box-tools pull-right">
+          <button type="button" class="btn btn-default btn-sm"
+                  (click)="charger()" [disabled]="isLoading">
+            <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i>
+            Actualiser
+          </button>
+        </div>
+      </div>
+
+      <div class="box-body">
+
+        <!-- Chargement -->
+        <div *ngIf="isLoading" class="text-center" style="padding:40px 0;">
+          <i class="fa fa-spinner fa-spin fa-2x text-muted"></i>
+          <p class="text-muted" style="margin-top:10px;">Chargement des paramètres…</p>
+        </div>
+
+        <!-- Erreur -->
+        <div *ngIf="!isLoading && erreurChargement" class="alert alert-danger">
+          <i class="fa fa-exclamation-triangle"></i> {{ erreurChargement }}
+        </div>
+
+        <!-- ═══ Catégories ═════════════════════════════════════════════ -->
+        <ng-container *ngIf="!isLoading && !erreurChargement">
+
+          <div *ngFor="let cat of categories" style="margin-bottom:28px;">
+
+            <!-- Titre catégorie -->
+            <div style="display:flex; align-items:center; margin-bottom:10px;
+                        border-bottom:2px solid; padding-bottom:6px;"
+                 [style.border-color]="cat.couleur">
+              <i class="fa {{ cat.icone }}" [style.color]="cat.couleur"
+                 style="font-size:16px; margin-right:8px;"></i>
+              <span style="font-size:14px; font-weight:700;"
+                    [style.color]="cat.couleur">{{ cat.titre | translate }}</span>
+              <span class="badge" style="margin-left:8px; background:#e0e0e0; color:#555;">
+                {{ cat.params.length }}
+              </span>
+            </div>
+
+            <!-- Lignes de paramètres -->
+            <div *ngFor="let p of cat.params"
+                 style="background:#fff; border:1px solid #ddd; border-radius:6px;
+                        padding:14px 18px; margin-bottom:8px;
+                        box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+
+              <div style="display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+
+                <!-- Clé + description -->
+                <div style="flex:1; min-width:200px;">
+                  <code style="font-size:12px; color:#333; background:#f4f4f4;
+                                padding:2px 6px; border-radius:3px;">{{ p.cle }}</code>
+                  <p style="margin:5px 0 0; font-size:12px; color:#777;">
+                    {{ p.description || '—' }}
+                  </p>
+                  <span *ngIf="p.saved"
+                        style="font-size:11px; color:#00a65a;">
+                    <i class="fa fa-check-circle"></i> Sauvegardé
+                  </span>
+                </div>
+
+                <!-- Valeur / édition -->
+                <div style="min-width:220px; text-align:right;">
+
+                  <!-- ── Booléen : toggle switch ── -->
+                  <ng-container *ngIf="isBoolean(p.valeur) && !p.editing">
+                    <button type="button"
+                            [disabled]="p.saving"
+                            (click)="toggleBoolean(p)"
+                            style="border:none; background:none; cursor:pointer;
+                                   padding:0; font-size:0;">
+                      <!-- Toggle ON -->
+                      <span *ngIf="p.valeur === 'true'"
+                            style="display:inline-flex; align-items:center; gap:8px;
+                                   background:#00a65a; color:#fff; border-radius:20px;
+                                   padding:5px 14px; font-size:13px; font-weight:600;">
+                        <i class="fa fa-toggle-on" style="font-size:18px;"></i>
+                        Activé
+                        <i *ngIf="p.saving" class="fa fa-spinner fa-spin" style="font-size:12px;"></i>
+                      </span>
+                      <!-- Toggle OFF -->
+                      <span *ngIf="p.valeur === 'false'"
+                            style="display:inline-flex; align-items:center; gap:8px;
+                                   background:#bbb; color:#fff; border-radius:20px;
+                                   padding:5px 14px; font-size:13px; font-weight:600;">
+                        <i class="fa fa-toggle-off" style="font-size:18px;"></i>
+                        Désactivé
+                        <i *ngIf="p.saving" class="fa fa-spinner fa-spin" style="font-size:12px;"></i>
+                      </span>
+                    </button>
+                  </ng-container>
+
+                  <!-- ── Valeur texte/nombre en lecture ── -->
+                  <ng-container *ngIf="!isBoolean(p.valeur) && !p.editing">
+                    <span style="font-size:13px; font-weight:600; color:#333;">
+                      {{ p.valeur || '—' }}
+                    </span>
+                    &nbsp;
+                    <button type="button" class="btn btn-xs btn-primary"
+                            (click)="editer(p)" title="Modifier">
+                      <i class="fa fa-pencil"></i>
+                    </button>
+                  </ng-container>
+
+                  <!-- ── Mode édition ── -->
+                  <ng-container *ngIf="p.editing">
+                    <div style="display:flex; gap:6px; align-items:center; justify-content:flex-end;">
+                      <input type="text" class="form-control input-sm"
+                             [(ngModel)]="p.valeurEdit"
+                             style="width:180px;"
+                             (keyup.enter)="sauvegarder(p)"
+                             (keyup.escape)="annuler(p)">
+                      <button type="button" class="btn btn-xs btn-success"
+                              (click)="sauvegarder(p)" [disabled]="p.saving">
+                        <i class="fa" [class.fa-save]="!p.saving"
+                           [class.fa-spinner]="p.saving" [class.fa-spin]="p.saving"></i>
+                      </button>
+                      <button type="button" class="btn btn-xs btn-default"
+                              (click)="annuler(p)" [disabled]="p.saving">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
+                    <div *ngIf="p.error" class="text-danger"
+                         style="font-size:11px; margin-top:4px; text-align:right;">
+                      <i class="fa fa-exclamation-circle"></i> {{ p.error }}
+                    </div>
+                  </ng-container>
+
+                  <!-- Date modification -->
+                  <div style="font-size:10px; color:#aaa; margin-top:4px;">
+                    {{ formatDate(p.dateModification) }}
+                  </div>
+
+                </div>
+              </div>
+            </div><!-- /param row -->
+
+          </div><!-- /categorie -->
+
+          <!-- Aucun paramètre -->
+          <div *ngIf="categories.length === 0"
+               class="text-center text-muted" style="padding:40px;">
+            <i class="fa fa-inbox fa-2x"></i><br><br>
+            Aucun paramètre trouvé.
+          </div>
+
+          <!-- Compteur bas de page -->
+          <div class="text-muted" style="font-size:11px; text-align:right; margin-top:4px;">
+            {{ params.length }} paramètre(s) — Les modifications sont appliquées immédiatement.
+          </div>
+
+        </ng-container>
+
+      </div><!-- /box-body -->
+    </div><!-- /box -->
+
+  </div>
+</div>

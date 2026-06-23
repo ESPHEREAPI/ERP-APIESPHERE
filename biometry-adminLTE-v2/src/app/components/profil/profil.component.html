@@ -1,1 +1,182 @@
-<p>profil works!</p>
+<div *ngIf="mode === 'liste'">
+
+  <div class="box box-default">
+    <div class="box-body" style="padding: 10px 15px;">
+      <div class="row">
+        <div class="col-sm-6">
+          <button class="btn btn-primary btn-sm" (click)="ouvrirAjouter()">
+            <i class="fa fa-plus"></i> {{ 'prof_ajouter' | translate }}
+          </button>
+        </div>
+        <div class="col-sm-6 text-right" style="line-height:30px; color:#777; font-size:12px;">
+          <span *ngIf="!isLoading">{{ total }} {{ 'prof_total' | translate }}</span>
+          <span *ngIf="isLoading"><i class="fa fa-spinner fa-spin"></i></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-default">
+    <div class="box-body">
+      <div class="row">
+        <div class="col-sm-6">
+          <input type="text" class="form-control input-sm"
+            [placeholder]="'prof_rechercher' | translate" [(ngModel)]="filtreSearch"
+            (keyup.enter)="appliquerFiltres()">
+        </div>
+        <div class="col-sm-6">
+          <button class="btn btn-primary btn-sm" (click)="appliquerFiltres()">
+            <i class="fa fa-search"></i> {{ 'prof_btn_rechercher' | translate }}
+          </button>
+          <button class="btn btn-default btn-sm" style="margin-left:5px;" (click)="reinitFiltres()">
+            <i class="fa fa-refresh"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box box-default">
+    <div class="box-body no-padding">
+      <div class="row" style="padding: 8px 15px; border-bottom:1px solid #f4f4f4;">
+        <div class="col-sm-6" style="line-height:30px; font-size:12px; color:#777;">
+          {{ 'prest_de' | translate }} {{ currentPage * pageSize + 1 }} {{ 'prest_a' | translate }} {{ finPage }} {{ 'prest_sur' | translate }} {{ total }}
+        </div>
+        <div class="col-sm-6 text-right">
+          <select class="form-control input-sm" style="display:inline-block; width:auto;"
+            [(ngModel)]="pageSize" (change)="charger(0)">
+            <option *ngFor="let t of tailles" [value]="t">{{ t }}</option>
+          </select>
+        </div>
+      </div>
+
+      <table class="table table-hover table-striped table-condensed" style="margin-bottom:0;">
+        <thead>
+          <tr>
+            <th style="width:35px;">
+              <input type="checkbox" [checked]="allSelected" (change)="toggleAll($any($event.target).checked)">
+            </th>
+            <th>{{ 'prof_nom' | translate }}</th>
+            <th>{{ 'prof_code' | translate }}</th>
+            <th>{{ 'prof_type' | translate }}</th>
+            <th>{{ 'prof_sous_type' | translate }}</th>
+            <th style="text-align:center;">{{ 'prof_statut' | translate }}</th>
+            <th style="text-align:right;">{{ 'prof_actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoading">
+            <td colspan="7" class="text-center" style="padding:20px;"><i class="fa fa-spinner fa-spin fa-2x"></i></td>
+          </tr>
+          <tr *ngIf="!isLoading && items.length === 0">
+            <td colspan="7" class="text-center" style="padding:20px; color:#aaa;">{{ 'prof_aucun' | translate }}</td>
+          </tr>
+          <tr *ngFor="let item of items">
+            <td><input type="checkbox" [checked]="selected.has(item.id)" (change)="toggleSelect(item.id)"></td>
+            <td>
+              <a href="javascript:void(0)" (click)="ouvrirModifier(item)" class="text-primary">
+                {{ item.typeProfil }}
+              </a>
+            </td>
+            <td><strong>{{ item.code }}</strong></td>
+            <td>{{ item.typeProfil }}</td>
+            <td>{{ item.typeSousProfil ?? '—' }}</td>
+            <td style="text-align:center;">
+              <span [class]="statutClass(item.statut)">
+                {{ (item.statut === '1' ? 'prof_actif' : 'prof_inactif') | translate }}
+              </span>
+            </td>
+            <td style="text-align:right; white-space:nowrap;">
+              <button class="btn btn-xs btn-primary" (click)="ouvrirModifier(item)" style="margin-right:2px;">
+                <i class="fa fa-pencil"></i> {{ 'prof_modifier' | translate }}
+              </button>
+              <button class="btn btn-xs btn-danger" (click)="demanderSuppression(item)">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="text-right" style="padding:10px 15px;" *ngIf="totalPages > 1">
+        <ul class="pagination pagination-sm" style="margin:0;">
+          <li [class.disabled]="currentPage === 0"><a href="javascript:void(0)" (click)="currentPage > 0 && charger(0)">&laquo;</a></li>
+          <li [class.disabled]="currentPage === 0"><a href="javascript:void(0)" (click)="currentPage > 0 && charger(currentPage-1)">&lsaquo;</a></li>
+          <li *ngFor="let p of pages" [class.active]="p === currentPage"
+            [style.display]="(p >= currentPage-2 && p <= currentPage+2) ? '' : 'none'">
+            <a href="javascript:void(0)" (click)="charger(p)">{{ p + 1 }}</a>
+          </li>
+          <li [class.disabled]="currentPage === totalPages-1"><a href="javascript:void(0)" (click)="currentPage < totalPages-1 && charger(currentPage+1)">&rsaquo;</a></li>
+          <li [class.disabled]="currentPage === totalPages-1"><a href="javascript:void(0)" (click)="currentPage < totalPages-1 && charger(totalPages-1)">&raquo;</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORMULAIRE ════════════════════════════════════════════════ -->
+<div *ngIf="mode === 'form'">
+  <div class="box box-primary">
+    <div class="box-header with-border">
+      <h3 class="box-title">
+        <i class="fa" [ngClass]="isEdit ? 'fa-pencil' : 'fa-plus'"></i>
+        {{ (isEdit ? 'prof_modifier_titre' : 'prof_ajouter_titre') | translate }}
+      </h3>
+    </div>
+    <div class="box-body">
+      <div class="alert alert-danger" *ngIf="formError">
+        <i class="fa fa-exclamation-triangle"></i> {{ formError }}
+      </div>
+
+      <div class="form-group">
+        <label>{{ 'prof_nom' | translate }} <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="form.typeProfil"
+          [placeholder]="'prof_nom_placeholder' | translate">
+      </div>
+      <div class="form-group">
+        <label>{{ 'prof_code' | translate }} <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="form.code"
+          [placeholder]="'prof_code_placeholder' | translate"
+          style="text-transform:uppercase;" [readonly]="isEdit">
+        <span class="help-block" style="font-size:11px;" *ngIf="!isEdit">
+          {{ 'prof_code_hint' | translate }}
+        </span>
+      </div>
+      <div class="form-group">
+        <label>{{ 'prof_type' | translate }} <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" [(ngModel)]="form.typeProfil"
+          [placeholder]="'prof_type_placeholder' | translate">
+      </div>
+      <div class="form-group">
+        <label>{{ 'prof_sous_type' | translate }}</label>
+        <input type="text" class="form-control" [(ngModel)]="form.typeSousProfil"
+          [placeholder]="'prof_sous_type' | translate">
+      </div>
+    </div>
+    <div class="box-footer text-right">
+      <button class="btn btn-default" (click)="annuler()" [disabled]="isSaving">
+        <i class="fa fa-times"></i> {{ 'prof_annuler' | translate }}
+      </button>
+      <button class="btn btn-primary" style="margin-left:8px;" (click)="enregistrer()" [disabled]="isSaving">
+        <i class="fa" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+        {{ (isSaving ? 'prof_enregistrement' : 'prof_enregistrer') | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL SUPPRESSION ═══════════════════════════════════════ -->
+<div class="confirm-overlay" *ngIf="confirmItem" (click)="annulerSuppression()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-header"><i class="fa fa-trash-o text-danger"></i> {{ 'prof_confirmer_suppression' | translate }}</div>
+    <div class="confirm-body">
+      {{ 'prof_confirmer_msg' | translate }}
+      <strong>{{ confirmItem ? confirmItem.typeProfil + ' (' + confirmItem.code + ')' : '' }}</strong> ?<br>
+      <span style="color:#e74c3c; font-size:12px;">{{ 'prof_action_irreversible' | translate }}</span>
+    </div>
+    <div class="confirm-footer">
+      <button class="btn btn-default btn-sm" (click)="annulerSuppression()"><i class="fa fa-times"></i> {{ 'prof_annuler' | translate }}</button>
+      <button class="btn btn-danger btn-sm" style="margin-left:8px;" (click)="confirmerSuppression()"><i class="fa fa-trash-o"></i> {{ 'prof_supprimer' | translate }}</button>
+    </div>
+  </div>
+</div>

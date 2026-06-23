@@ -22,4 +22,10 @@ public interface MediaRepository extends JpaRepository<MediaPrestation, Integer>
 
     @Query("SELECT m FROM MediaPrestation m WHERE m.demandeParSs = true AND m.supprime = '-1' ORDER BY m.dateUpload DESC")
     List<MediaPrestation> findDemandesParSs();
+
+    @Query("SELECT m FROM MediaPrestation m WHERE m.prestationId = :prestationId AND m.supprime = '-1' ORDER BY m.dateUpload DESC")
+    List<MediaPrestation> findByPrestationId(@Param("prestationId") Integer prestationId);
+
+    @Query("SELECT m FROM MediaPrestation m WHERE m.visiteId = :visiteId AND m.naturePrestation = :nature AND m.supprime = '-1' ORDER BY m.dateUpload DESC")
+    List<MediaPrestation> findByVisiteAndNature(@Param("visiteId") String visiteId, @Param("nature") String nature);
 }

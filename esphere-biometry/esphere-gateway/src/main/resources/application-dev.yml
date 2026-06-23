@@ -20,6 +20,16 @@ spring:
           predicates:
             - Path=/prestataires/**
 
+        - id: prestataire-admin
+          uri: http://localhost:8083
+          predicates:
+            - Path=/admin/prestataires/**
+
+        - id: prestataire-logos
+          uri: http://localhost:8083
+          predicates:
+            - Path=/biometry/logos/**
+
         - id: visite
           uri: http://localhost:8084
           predicates:
@@ -28,7 +38,7 @@ spring:
         - id: validation
           uri: http://localhost:8085
           predicates:
-            - Path=/validations/**
+            - Path=/validations/**,/parametres/**
 
         - id: bons-manuels
           uri: http://localhost:8086

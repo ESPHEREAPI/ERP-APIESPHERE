@@ -31,6 +31,10 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
 
+esphere:
+  notification:
+    url: http://localhost:8088
+
 services:
   adherent-url: http://localhost:8082
   prestataire-url: http://localhost:8083

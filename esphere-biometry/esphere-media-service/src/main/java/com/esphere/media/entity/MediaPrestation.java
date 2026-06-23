@@ -65,6 +65,20 @@ public class MediaPrestation {
     // supprime : -1 = non supprimé | 1 = supprimé
     @Column(name = "supprime", nullable = false)
     private String supprime;
+
     @Column(name = "demande_par_ss", nullable = false)
     private Boolean demandeParSs;
+
+    @Column(name = "prestation_id")
+    private Integer prestationId;
+
+    @Column(name = "nature_prestation")
+    private String naturePrestation;
+
+    // en_attente_revue | approuve | rejete
+    @Column(name = "statut_document", nullable = false)
+    private String statutDocument;
+
+    @Column(name = "commentaire_rejet", columnDefinition = "TEXT")
+    private String commentaireRejet;
 }

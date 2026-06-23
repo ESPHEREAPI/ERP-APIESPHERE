@@ -52,4 +52,24 @@ public class ReportingController {
         return ResponseEntity.ok(
                 reportingService.getConsommationAdherent(codeAdherent, annee));
     }
+
+    // ── ÉTAT DES PRESTATIONS — PRESTATAIRE ───────────────────────
+
+    // GET /reporting/prestations/prestataire/{prestataireId}
+    //     ?nature=&statut=&mois=0&annee=2026&page=0&size=20
+    @GetMapping("/prestations/prestataire/{prestataireId}")
+    public ResponseEntity<EtatPrestationPageResponse> getEtatPrestationsPrestataire(
+            @PathVariable String prestataireId,
+            @RequestParam(required = false) String nature,
+            @RequestParam(required = false) String statut,
+            @RequestParam(defaultValue = "0") int mois,
+            @RequestParam(defaultValue = "0") int annee,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        if (annee == 0) annee = Year.now().getValue();
+        Integer moisParam = mois > 0 ? mois : null;
+        return ResponseEntity.ok(
+                reportingService.getEtatPrestationsPrestataire(
+                        prestataireId, nature, statut, moisParam, annee, page, size));
+    }
 }

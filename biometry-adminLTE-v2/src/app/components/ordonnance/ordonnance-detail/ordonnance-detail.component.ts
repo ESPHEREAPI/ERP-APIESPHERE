@@ -5,6 +5,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { ParametreService } from '../../../services/parametre.service';
 
 import {
   OrdonnanceService,
@@ -13,6 +14,7 @@ import {
 } from '../../../services/ordonnance.service';
 import { ConsommationResponse } from '../../../services/consultation.service';
 import { AuthService } from '../../../auth/auth.service';
+import { MediaService, MediaResponse } from '../../../services/media.service';
 
 @Component({
   selector: 'app-ordonnance-detail',
@@ -41,16 +43,40 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
   consommation: ConsommationResponse | null = null;
   isLoadingConso = false;
 
+  // ── Revue document (SS) ───────────────────────────────
+  medias: MediaResponse[] = [];
+  isLoadingMedia = false;
+  // 'aucun' | 'en_attente_revue' | 'approuve' | 'rejete'
+  statutDocument: string = 'aucun';
+  mediaSelectionne: MediaResponse | null = null;
+  showModalRejet       = false;
+  showModalVisualiseur = false;
+  indexVisualiseur     = 0;
+  mediaVisualiseur: MediaResponse | null = null;
+  commentaireRejet = '';
+  erreurRejetMedia = '';
+  isSubmittingMedia = false;
+  observationRejetObligatoire = false;
+  urlMobilePartage = '';
+
+  // Paramètre système
+  documentObligatoire = false;
+
   // Modal confirmation
   showModalConfirmation = false;
   tauxErreur = false;
 
-  // Totaux
+  // Dialog traitement en cours
+  showDialogTraitement  = false;
+  traitementTermine     = false;
+
+  // Totaux — inclut lignes validées localement (decisionLocale) + valide + encaisse
   get montantTotalValide(): number {
     return this.lignes.reduce((sum, l) => {
-      if (l.decisionLocale === 'valide') {
-        const pu = l.valeurModifLocal ?? l.valeur;
-        const qte = l.nbreModifLocal ?? l.nbre;
+      const etatEffectif = l.decisionLocale ?? l.etat;
+      if (etatEffectif === 'valide' || l.etat === 'valide' || l.etat === 'encaisse') {
+        const pu  = l.valeurModifLocal || l.valeurModif || l.valeur || 0;
+        const qte = l.nbreModifLocal   || l.nbreModif   || l.nbre   || 1;
         return sum + (pu * qte);
       }
       return sum;
@@ -59,9 +85,10 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
 
   get montantZenithe(): number {
     return this.lignes.reduce((sum, l) => {
-      if (l.decisionLocale === 'valide') {
-        const pu = l.valeurModifLocal ?? l.valeur;
-        const qte = l.nbreModifLocal ?? l.nbre;
+      const etatEffectif = l.decisionLocale ?? l.etat;
+      if (etatEffectif === 'valide' || l.etat === 'valide' || l.etat === 'encaisse') {
+        const pu   = l.valeurModifLocal || l.valeurModif || l.valeur || 0;
+        const qte  = l.nbreModifLocal   || l.nbreModif   || l.nbre   || 1;
         const taux = l.tauxLocal ?? l.taux ?? 100;
         return sum + (pu * qte * taux / 100);
       }
@@ -79,17 +106,20 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private ordonnanceService: OrdonnanceService,
-    private authService: AuthService
+    private authService: AuthService,
+    private mediaService: MediaService,
+    private parametreService: ParametreService
   ) { }
 
   ngOnInit(): void {
     this.prestationId = Number(this.route.snapshot.paramMap.get('prestationId'));
     this.chargerLignes();
-     // DEBUG — à supprimer après
-  const user = this.authService.getStoredUser();
-  console.log('profilCode:', user?.profilCode);
-  console.log('isPrestataire:', this.isPrestataire);
-  console.log('isSS:', this.isSS);
+    this.parametreService.getBoolean('DOCUMENT_OBLIGATOIRE', false)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(v => this.documentObligatoire = v);
+    this.parametreService.getBoolean('OBSERVATION_REJET_OBLIGATOIRE', false)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(v => this.observationRejetObligatoire = v);
   }
 
   ngOnDestroy(): void {
@@ -131,10 +161,111 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
             this.natureAffection = premiere.natureAffection || '';
             this.nomPrestataire = premiere.nomPrestataire || premiere.prestataireId || '';
             this.nomAyantDroit = premiere.nomAyantDroit || premiere.codeAyantDroit || '';
+
+            // Charger les médias (SS + prestataire)
+            this.chargerMedias();
           }
         },
         error: () => { this.isLoading = false; }
       });
+  }
+
+  chargerMedias(): void {
+    this.isLoadingMedia = true;
+    this.mediaService.getParPrestation(this.prestationId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (medias) => {
+          this.medias = medias;
+          this.isLoadingMedia = false;
+          // Le statut global = celui du media le plus récent
+          if (medias.length === 0) {
+            this.statutDocument = 'aucun';
+            // Construire URL de partage pour demander le filmage
+            if (this.visiteId) {
+              const codeCourt = this.visiteId.split('_').pop() || '';
+              this.urlMobilePartage = `${window.location.origin}/mobile/capture`
+                + `/${codeCourt}/${this.prestationId}/ordonnance`;
+            }
+          } else {
+            // Priorité : si au moins un est approuvé → approuvé
+            // si tous rejetés → rejeté, sinon en_attente_revue
+            const approuve = medias.find(m => m.statutDocument === 'approuve');
+            const rejete   = medias.find(m => m.statutDocument === 'rejete');
+            this.statutDocument = approuve ? 'approuve'
+              : rejete ? 'rejete' : 'en_attente_revue';
+            this.mediaSelectionne = medias[0];
+          }
+        },
+        error: () => { this.isLoadingMedia = false; }
+      });
+  }
+
+  approuverDocument(media: MediaResponse): void {
+    const user = this.authService.getStoredUser();
+    const employeId = user?.utilisateurId ?? 0;
+    this.isSubmittingMedia = true;
+    this.mediaService.approuver(media.id, employeId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => { this.isSubmittingMedia = false; this.chargerMedias(); },
+        error: () => { this.isSubmittingMedia = false; }
+      });
+  }
+
+  ouvrirModalRejet(media: MediaResponse): void {
+    this.mediaSelectionne = media;
+    this.commentaireRejet = '';
+    this.erreurRejetMedia = '';
+    this.showModalRejet = true;
+  }
+
+  fermerModalRejet(): void {
+    this.showModalRejet = false;
+  }
+
+  ouvrirVisualiseur(media: MediaResponse): void {
+    this.indexVisualiseur     = this.medias.indexOf(media);
+    this.mediaVisualiseur     = media;
+    this.showModalVisualiseur = true;
+  }
+
+  fermerVisualiseur(): void {
+    this.showModalVisualiseur = false;
+    this.mediaVisualiseur     = null;
+  }
+
+  naviguerVisualiseur(direction: number): void {
+    const next = this.indexVisualiseur + direction;
+    if (next >= 0 && next < this.medias.length) {
+      this.indexVisualiseur = next;
+      this.mediaVisualiseur = this.medias[next];
+    }
+  }
+
+  confirmerRejetDocument(): void {
+    if (!this.commentaireRejet.trim()) {
+      this.erreurRejetMedia = 'Le commentaire est obligatoire.';
+      return;
+    }
+    if (!this.mediaSelectionne) return;
+    const user = this.authService.getStoredUser();
+    const employeId = user?.utilisateurId ?? 0;
+    this.isSubmittingMedia = true;
+    this.mediaService.rejeter(this.mediaSelectionne.id, this.commentaireRejet, employeId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.isSubmittingMedia = false;
+          this.showModalRejet = false;
+          this.chargerMedias();
+        },
+        error: () => { this.isSubmittingMedia = false; }
+      });
+  }
+
+  getUrlMedia(mediaId: number): string {
+    return this.mediaService.getUrlMedia(mediaId);
   }
 
   chargerConsommation(visiteId: string): void {
@@ -189,6 +320,14 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
 
   // ── Soumission ────────────────────────────────────────────────────
 
+  validerTout(): void {
+    this.lignesEnAttente.forEach(l => {
+      if (this.isEnAttente(l.etat)) {
+        l.decisionLocale = 'valide';
+      }
+    });
+  }
+
   soumettre(): void {
     if (!this.toutesDecidees) return;
     this.showModalConfirmation = true;
@@ -201,13 +340,14 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
   confirmerSoumission(): void {
     this.isSubmitting = true;
     this.showModalConfirmation = false;
+    this.showDialogTraitement  = true;
+    this.traitementTermine     = false;
     const user = this.authService.getStoredUser();
     const employeId = user?.utilisateurId ?? 0;
 
     const appels = this.lignesEnAttente
       .filter(l => l.decisionLocale !== null && (this.isEnAttente(l.etat) || l.decisionLocale !== l.etat))
       .map(l => {
-        // ✅ Conversion en number pour comparaison fiable
         const valeurModifLocal = l.valeurModifLocal != null ? Number(l.valeurModifLocal) : null;
         const nbreModifLocal = l.nbreModifLocal != null ? Number(l.nbreModifLocal) : null;
         const tauxLocal = l.tauxLocal != null ? Number(l.tauxLocal) : null;
@@ -215,7 +355,6 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
           decision: l.decisionLocale!,
           employeId,
           observations: l.observationsLocal || null,
-          // ✅ Envoie la valeur si différente, sinon null
           valeurModif: valeurModifLocal !== null && valeurModifLocal !== Number(l.valeur)
             ? valeurModifLocal
             : null,
@@ -229,14 +368,26 @@ export class OrdonnanceDetailComponent implements OnInit, OnDestroy {
         return this.ordonnanceService.validerLigne(l.id, request);
       });
 
+    if (appels.length === 0) {
+      this.isSubmitting      = false;
+      this.traitementTermine = true;
+      setTimeout(() => this.router.navigate(['/public/admin/ordonnance']), 1500);
+      return;
+    }
+
     forkJoin(appels)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.isSubmitting = false;
-          this.chargerLignes();
+          this.isSubmitting      = false;
+          this.traitementTermine = true;
+          setTimeout(() => this.router.navigate(['/public/admin/ordonnance']), 1500);
         },
-        error: () => { this.isSubmitting = false; }
+        error: () => {
+          this.isSubmitting         = false;
+          this.showDialogTraitement = false;
+        },
+        complete: () => { this.isSubmitting = false; }
       });
   }
   retour(): void {
@@ -335,11 +486,19 @@ get toutesEncaissees(): boolean {
       && this.lignes.some(l => l.etat === 'encaisse')
       && this.lignes.every(l => l.etat !== 'valide');
 }
+get peutImprimer(): boolean {
+    return this.lignes.some(l => l.etat === 'valide' || l.etat === 'encaisse');
+}
+
+get observationsRejetManquantes(): boolean {
+    if (!this.observationRejetObligatoire) return false;
+    return this.lignes.some(l =>
+        l.decisionLocale === 'rejete' && (!l.observationsLocal || l.observationsLocal.trim() === ''));
+}
+
 imprimerBon(): void {
-    window.open(
-        `/public/admin/ordonnance/bon/`
-        + `${this.prestationId}`,
-        '_blank');
+    const base = document.querySelector('base')?.getAttribute('href') || '/biometry/';
+    window.open(`${base}public/prestataire/prestation/bon/${this.prestationId}`, '_blank');
 }
 
 // Vérifie s'il y a des lignes à encaisser

@@ -5,7 +5,7 @@
       {{ 'liste_examens' | translate }}
     </h3>
     <div class="box-tools pull-right">
-      <button class="btn btn-default btn-sm">
+      <button *ngIf="isPrestataire && peutImprimer" class="btn btn-default btn-sm" (click)="imprimerBon()">
         <i class="fa fa-print"></i> {{ 'imprimer_bon' | translate }}
       </button>
     </div>
@@ -50,6 +50,128 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ===== PANNEAU REVUE DOCUMENT (SS uniquement) ===== -->
+    <div *ngIf="isSS" style="margin-bottom:20px;">
+
+      <div *ngIf="isLoadingMedia" class="text-center" style="padding:12px;">
+        <i class="fa fa-spinner fa-spin text-muted"></i>
+        <span class="text-muted" style="margin-left:6px; font-size:12px;">
+          Vérification du document...
+        </span>
+      </div>
+
+      <!-- Aucun document -->
+      <div *ngIf="!isLoadingMedia && statutDocument === 'aucun'"
+           class="alert alert-warning" style="border-radius:8px; padding:16px;">
+        <h4 style="margin-top:0;">
+          <i class="fa fa-qrcode"></i>
+          {{ 'doc_attente_filmage' | translate }}
+        </h4>
+        <p style="margin-bottom:12px; font-size:13px;">
+          {{ 'doc_instruction_filmage' | translate }}
+        </p>
+        <div style="background:#fff; border-radius:6px; padding:10px;
+                    font-size:11px; word-break:break-all; color:#666;">
+          <strong>{{ 'lien_direct' | translate }} :</strong><br>
+          <a [href]="urlMobilePartage" target="_blank" style="color:#3c6bc9;">
+            {{ urlMobilePartage }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Document en attente de revue -->
+      <div *ngIf="!isLoadingMedia && statutDocument === 'en_attente_revue'"
+           class="box box-warning" style="margin-bottom:0;">
+        <div class="box-header with-border" style="background:#f39c12; color:#fff;">
+          <h3 class="box-title" style="color:#fff;">
+            <i class="fa fa-eye"></i>
+            {{ 'doc_a_reviser' | translate }}
+          </h3>
+        </div>
+        <div class="box-body">
+          <table class="table table-condensed" style="margin-bottom:12px;">
+            <tbody>
+              <tr *ngFor="let m of medias; let i = index">
+                <td style="width:32px; vertical-align:middle; padding:6px 4px;">
+                  <i class="fa" [ngClass]="m.typeMedia === 'video' ? 'fa-film' : 'fa-file-image-o'"
+                     style="font-size:18px; color:#f39c12;"></i>
+                </td>
+                <td style="vertical-align:middle; font-size:12px;">
+                  <span style="font-weight:600;">Page {{ i + 1 }}</span>
+                  <span style="color:#999; margin-left:6px;">
+                    {{ (m.taille / 1024 / 1024).toFixed(1) }} Mo
+                  </span>
+                </td>
+                <td style="width:40px; vertical-align:middle; text-align:right; padding:6px 4px;">
+                  <button type="button" class="btn btn-xs btn-default"
+                          title="Visualiser"
+                          (click)="ouvrirVisualiseur(m)">
+                    <i class="fa fa-search-plus"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <button type="button" class="btn btn-success"
+                    [disabled]="isSubmittingMedia"
+                    (click)="approuverDocument(medias[0])">
+              <i class="fa fa-check"></i>
+              {{ 'approuver_document' | translate }}
+            </button>
+            <button type="button" class="btn btn-danger"
+                    [disabled]="isSubmittingMedia"
+                    (click)="ouvrirModalRejet(medias[0])">
+              <i class="fa fa-times"></i>
+              {{ 'rejeter_document' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Document approuvé -->
+      <div *ngIf="!isLoadingMedia && statutDocument === 'approuve'"
+           class="alert alert-success" style="border-radius:8px; padding:10px 14px;">
+        <i class="fa fa-check-circle"></i>
+        <strong> {{ 'doc_approuve' | translate }}</strong>
+        — {{ 'doc_approuve_detail' | translate }}
+      </div>
+
+      <!-- Document rejeté -->
+      <div *ngIf="!isLoadingMedia && statutDocument === 'rejete'"
+           class="alert alert-danger" style="border-radius:8px; padding:12px 14px;">
+        <h4 style="margin-top:0;">
+          <i class="fa fa-ban"></i>
+          {{ 'doc_rejete' | translate }}
+        </h4>
+        <p style="margin-bottom:0; font-size:13px;">
+          <strong>{{ 'motif' | translate }} :</strong>
+          {{ medias[0].commentaireRejet }}
+        </p>
+      </div>
+
+    </div>
+    <!-- ===== FIN REVUE DOCUMENT ===== -->
+
+    <!-- ===== STATUT DOCUMENT CÔTÉ PRESTATAIRE ===== -->
+    <div *ngIf="!isSS && !isLoadingMedia && medias.length > 0" style="margin-bottom:20px;">
+      <div *ngIf="statutDocument === 'rejete'"
+           class="alert alert-danger" style="border-radius:8px; padding:14px;">
+        <h4 style="margin-top:0;"><i class="fa fa-ban"></i> Document rejeté</h4>
+        <p style="margin-bottom:0; font-size:13px;">
+          <strong>Motif :</strong> {{ medias[0].commentaireRejet }}
+        </p>
+      </div>
+      <div *ngIf="statutDocument === 'en_attente_revue'"
+           class="alert alert-info" style="border-radius:8px; padding:14px;">
+        <i class="fa fa-clock-o"></i> Document en attente de vérification par le service santé.
+      </div>
+      <div *ngIf="statutDocument === 'approuve'"
+           class="alert alert-success" style="border-radius:8px; padding:14px;">
+        <i class="fa fa-check-circle"></i> Document approuvé.
       </div>
     </div>
 
@@ -380,15 +502,34 @@
           <i class="fa fa-arrow-left"></i> {{ 'retour' | translate }}
         </button>
 
-        <!-- SS uniquement : Soumettre -->
-        <button type="button" class="btn btn-primary pull-right"
-                *ngIf="isSS"
-                [disabled]="isSubmitting || !toutesDecidees"
-                (click)="soumettre()">
-          <i class="fa fa-check-circle" *ngIf="!isSubmitting"></i>
-          <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
-          {{ 'soumettre' | translate }}
-        </button>
+        <!-- SS uniquement : Tout valider + Soumettre -->
+        <ng-container *ngIf="isSS && (!documentObligatoire || statutDocument === 'approuve')">
+          <button type="button" class="btn btn-success pull-right"
+                  *ngIf="lignesEnAttente.length > 0"
+                  [disabled]="isSubmitting"
+                  (click)="validerTout()"
+                  style="margin-left:8px;">
+            <i class="fa fa-check-square-o"></i>
+            {{ 'tout_valider' | translate }}
+          </button>
+          <button type="button" class="btn btn-primary pull-right"
+                  [disabled]="isSubmitting || !toutesDecidees || observationsRejetManquantes"
+                  (click)="soumettre()">
+            <i class="fa fa-paper-plane" *ngIf="!isSubmitting"></i>
+            <i class="fa fa-spinner fa-spin" *ngIf="isSubmitting"></i>
+            {{ 'soumettre' | translate }}
+          </button>
+          <span *ngIf="observationsRejetManquantes" class="pull-right text-danger"
+                style="padding:6px 12px; font-size:12px;">
+            <i class="fa fa-exclamation-triangle"></i>
+            {{ 'observation_rejet_requise' | translate }}
+          </span>
+        </ng-container>
+        <span *ngIf="isSS && documentObligatoire && statutDocument !== 'approuve' && statutDocument !== 'aucun'"
+              class="pull-right text-muted" style="padding:6px 12px; font-size:12px;">
+          <i class="fa fa-lock"></i>
+          {{ 'validation_bloquee_doc' | translate }}
+        </span>
 
         <!-- Prestataire uniquement : Encaisser tout -->
         <button type="button" class="btn btn-info pull-right"
@@ -504,3 +645,234 @@
 </div>
 <div class="modal-backdrop fade in"
      *ngIf="showModalConfirmation" style="z-index:1040;"></div>
+
+<!-- ===== DIALOG TRAITEMENT EN COURS ===== -->
+<div *ngIf="showDialogTraitement"
+     style="position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.6); z-index:2000;
+            display:flex; align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:10px; padding:40px 50px;
+              text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.4);
+              min-width:320px; max-width:420px;">
+
+    <div style="margin-bottom:20px;">
+      <span *ngIf="!traitementTermine"
+            style="display:inline-block; width:64px; height:64px;
+                   border:5px solid #e0e0e0; border-top-color:#3c8dbc;
+                   border-radius:50%; animation:spin 0.8s linear infinite;">
+      </span>
+      <span *ngIf="traitementTermine"
+            style="display:inline-block; width:64px; height:64px;
+                   background:#00a65a; border-radius:50%;
+                   line-height:64px; color:#fff; font-size:32px;">
+        <i class="fa fa-check"></i>
+      </span>
+    </div>
+
+    <h4 *ngIf="!traitementTermine"
+        style="margin:0 0 8px; color:#333; font-weight:600;">
+      {{ 'traitement_en_cours' | translate }}
+    </h4>
+    <h4 *ngIf="traitementTermine"
+        style="margin:0 0 8px; color:#00a65a; font-weight:600;">
+      {{ 'validation_reussie' | translate }}
+    </h4>
+
+    <p *ngIf="!traitementTermine"
+       style="color:#888; font-size:13px; margin:0;">
+      {{ 'patience_traitement' | translate }}
+    </p>
+    <p *ngIf="traitementTermine"
+       style="color:#888; font-size:13px; margin:0;">
+      {{ 'redirection_liste' | translate }}
+    </p>
+
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<!-- MODAL REJET DOCUMENT -->
+<div class="modal fade"
+     [class.in]="showModalRejet"
+     [style.display]="showModalRejet ? 'block' : 'none'"
+     tabindex="-1" role="dialog" style="z-index:1060;">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header"
+           style="background:#dd4b39; color:#fff; border-radius:3px 3px 0 0;">
+        <button type="button" class="close" style="color:#fff; opacity:1;"
+                (click)="fermerModalRejet()">
+          <span>&times;</span>
+        </button>
+        <h4 class="modal-title">
+          <i class="fa fa-ban"></i>
+          {{ 'rejeter_document' | translate }}
+        </h4>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:13px; color:#666; margin-bottom:12px;">
+          {{ 'rejet_doc_avertissement' | translate }}
+        </p>
+        <div class="form-group">
+          <label style="font-size:13px;">
+            {{ 'motif_rejet' | translate }}
+            <span class="text-danger">*</span>
+          </label>
+          <textarea class="form-control" rows="4"
+                    [(ngModel)]="commentaireRejet"
+                    placeholder="{{ 'motif_rejet_placeholder' | translate }}">
+          </textarea>
+        </div>
+        <div *ngIf="erreurRejetMedia"
+             class="alert alert-danger" style="padding:8px; font-size:12px;">
+          {{ erreurRejetMedia }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default pull-left"
+                (click)="fermerModalRejet()">
+          {{ 'annuler_btn' | translate }}
+        </button>
+        <button type="button" class="btn btn-danger"
+                [disabled]="isSubmittingMedia || !commentaireRejet.trim()"
+                (click)="confirmerRejetDocument()">
+          <i class="fa fa-spinner fa-spin" *ngIf="isSubmittingMedia"></i>
+          <i class="fa fa-ban" *ngIf="!isSubmittingMedia"></i>
+          {{ 'confirmer_rejet' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade in"
+     *ngIf="showModalRejet" style="z-index:1050;"></div>
+
+<!-- ===== MODAL VISUALISEUR DOCUMENT ===== -->
+<div *ngIf="showModalVisualiseur"
+     style="position:fixed;inset:0;z-index:1070;display:flex;
+            align-items:center;justify-content:center;padding:16px;">
+
+  <div (click)="fermerVisualiseur()"
+       style="position:absolute;inset:0;background:rgba(0,0,0,.85);"></div>
+
+  <div style="position:relative;z-index:1;width:100%;max-width:1200px;height:90vh;
+              display:flex;flex-direction:column;border-radius:10px;overflow:hidden;
+              box-shadow:0 20px 60px rgba(0,0,0,.8);">
+
+    <!-- En-tête -->
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                padding:10px 16px;background:#1a1a2e;color:#fff;flex-shrink:0;
+                border-bottom:1px solid #333;">
+      <span style="font-weight:600;font-size:14px;">
+        <i class="fa fa-search-plus" style="margin-right:6px;color:#f39c12;"></i>
+        Vérification document — Page {{ indexVisualiseur + 1 }} / {{ medias.length }}
+      </span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button type="button" [disabled]="indexVisualiseur === 0"
+                (click)="naviguerVisualiseur(-1)"
+                style="background:#333;color:#fff;border:none;border-radius:4px;
+                       padding:4px 12px;cursor:pointer;"
+                [style.opacity]="indexVisualiseur === 0 ? '0.4' : '1'">
+          <i class="fa fa-chevron-left"></i>
+        </button>
+        <button type="button" [disabled]="indexVisualiseur === medias.length - 1"
+                (click)="naviguerVisualiseur(1)"
+                style="background:#333;color:#fff;border:none;border-radius:4px;
+                       padding:4px 12px;cursor:pointer;"
+                [style.opacity]="indexVisualiseur === medias.length - 1 ? '0.4' : '1'">
+          <i class="fa fa-chevron-right"></i>
+        </button>
+        <button type="button" (click)="fermerVisualiseur()"
+                style="background:#dd4b39;color:#fff;border:none;border-radius:4px;
+                       padding:4px 12px;cursor:pointer;font-size:16px;line-height:1;">
+          &times;
+        </button>
+      </div>
+    </div>
+
+    <!-- Corps : panneau gauche + image droite -->
+    <div style="display:flex;flex:1;overflow:hidden;">
+
+      <!-- ── Panneau gauche : infos à comparer ── -->
+      <div style="width:320px;min-width:280px;background:#fff;overflow-y:auto;
+                  border-right:1px solid #ddd;flex-shrink:0;">
+
+        <!-- Assuré -->
+        <div style="background:#3c8dbc;color:#fff;padding:8px 12px;
+                    font-size:12px;font-weight:700;letter-spacing:.5px;">
+          <i class="fa fa-user"></i> ASSURÉ
+        </div>
+        <div style="padding:10px 12px;font-size:12px;border-bottom:1px solid #eee;">
+          <div style="margin-bottom:4px;">
+            <span style="color:#888;">Principal :</span>
+            <strong style="margin-left:4px;">{{ nomAssure || '—' }}</strong>
+          </div>
+          <div *ngIf="nomAyantDroit" style="margin-bottom:4px;">
+            <span style="color:#888;">Ayant droit :</span>
+            <strong style="margin-left:4px;">{{ nomAyantDroit }}</strong>
+          </div>
+          <div style="margin-bottom:4px;">
+            <span style="color:#888;">Souscripteur :</span>
+            <span style="margin-left:4px;">{{ souscripteur || '—' }}</span>
+          </div>
+          <div *ngIf="natureAffection">
+            <span style="color:#888;">Affection :</span>
+            <span style="margin-left:4px;">{{ natureAffection }}</span>
+          </div>
+        </div>
+
+        <!-- Actes/examens saisis -->
+        <div style="background:#00a65a;color:#fff;padding:8px 12px;
+                    font-size:12px;font-weight:700;letter-spacing:.5px;">
+          <i class="fa fa-flask"></i> EXAMENS SAISIS
+        </div>
+        <div style="padding:8px;">
+          <div *ngFor="let l of lignes; let i = index"
+               style="border:1px solid #e0e0e0;border-radius:6px;padding:8px 10px;
+                      margin-bottom:6px;background:#fafafa;">
+            <div style="font-weight:600;font-size:12px;color:#222;margin-bottom:4px;">
+              {{ i + 1 }}. {{ l.nom }}
+            </div>
+            <div style="font-size:11px;color:#555;line-height:1.6;">
+              <i class="fa fa-cubes" style="color:#888;"></i>
+              Qté : <strong>{{ l.nbre }}</strong>
+              &nbsp;|&nbsp;
+              PU : <strong>{{ l.valeur | number:'1.0-0' }} F</strong>
+            </div>
+          </div>
+          <div *ngIf="lignes.length === 0"
+               style="text-align:center;color:#aaa;font-size:12px;padding:12px;">
+            <i class="fa fa-inbox"></i> Aucune ligne
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Visionneuse droite ── -->
+      <div style="flex:1;background:#222;display:flex;align-items:center;
+                  justify-content:center;overflow:auto;padding:12px;">
+        <ng-container *ngIf="mediaVisualiseur">
+          <img *ngIf="mediaVisualiseur.typeMedia === 'image'"
+               [src]="getUrlMedia(mediaVisualiseur.id)"
+               style="max-width:100%;max-height:100%;object-fit:contain;
+                      border-radius:4px;display:block;" />
+          <video *ngIf="mediaVisualiseur.typeMedia === 'video'"
+                 controls autoplay
+                 style="max-width:100%;max-height:100%;border-radius:4px;background:#000;">
+            <source [src]="getUrlMedia(mediaVisualiseur.id)"
+                    [type]="'video/' + mediaVisualiseur.extension">
+          </video>
+        </ng-container>
+      </div>
+
+    </div>
+
+    <!-- Pied -->
+    <div *ngIf="mediaVisualiseur"
+         style="padding:6px 16px;background:#1a1a2e;color:#777;font-size:11px;flex-shrink:0;">
+      {{ mediaVisualiseur.nomFichier }}
+    </div>
+  </div>
+</div>

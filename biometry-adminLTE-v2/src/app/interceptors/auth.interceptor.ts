@@ -32,8 +32,12 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   ];
 
   // ✅ Requêtes silencieuses : on ajoute le token mais on ne tente PAS de refresh
+  // Les endpoints reporting gèrent leurs erreurs via catchError dans le service
   const silentRoutes = [
-    '/reporting/dashboard/ss/'
+    '/reporting/dashboard/ss/',
+    '/reporting/dashboard/prestataire/',
+    '/reporting/prestations/prestataire/',
+    '/validations/dashboard/prestataire/'
   ];
 
   const isPublicRoute = publicRoutes.some(route => req.url.includes(route));
@@ -42,18 +46,25 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   // Ajouter le token si disponible
-    const isSilentRoute = silentRoutes.some(route => req.url.includes(route));
+  const isSilentRoute = silentRoutes.some(route => req.url.includes(route));
+  const isBackgroundPoll = req.headers.has('X-Background-Poll');
+  const isGetRequest = req.method === 'GET';
   const token = authService.getToken();
   const reqWithToken = token ? addToken(req, token) : req;
 
   return next(reqWithToken).pipe(
     catchError((error: HttpErrorResponse) => {
-      // ✅ Pour les routes silencieuses, on absorbe l'erreur sans refresh ni logout
-      if (isSilentRoute) {
+      // Requêtes silencieuses ou background → jamais de refresh/logout
+      if (isSilentRoute || isBackgroundPoll) {
         return throwError(() => error);
       }
 
       if (error.status === 401) {
+        // Les GET automatiques (chargement données) ne doivent pas forcer logout
+        // Seules les actions utilisateur (POST/PUT/DELETE) ou navigation déclenchent le refresh
+        if (isGetRequest) {
+          return throwError(() => error);
+        }
         return handleRefresh(req, next, authService);
       }
 
@@ -93,7 +104,7 @@ function handleRefresh(
     catchError(refreshError => {
       isRefreshing = false;
       refreshDone$.next(null);
-      authService.logout().subscribe();
+      console.warn('⚠️ Token refresh failed — session may have expired');
       return throwError(() => refreshError);
     })
   );

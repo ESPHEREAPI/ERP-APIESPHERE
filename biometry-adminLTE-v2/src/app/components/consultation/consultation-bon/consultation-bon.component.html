@@ -1,0 +1,112 @@
+<!-- Chargement -->
+<div class="bon-loading" *ngIf="isLoading">
+  <p>Chargement du bon…</p>
+</div>
+
+<!-- Erreur -->
+<div class="bon-erreur" *ngIf="!isLoading && erreur">
+  <p>{{ erreur }}</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     BON DE PRISE EN CHARGE — CONSULTATION
+     ══════════════════════════════════════════════════════════ -->
+<div class="bon-page" *ngIf="!isLoading && !erreur && bon">
+
+  <!-- ── FILIGRANE ── -->
+  <div class="bon-watermark">
+    <img src="/biometry/1logo.png" alt="">
+    <div class="bon-watermark-slogan">{{ 'bon_slogan' | translate }}</div>
+  </div>
+
+  <!-- ── EN-TÊTE ── -->
+  <div class="bon-header">
+    <div class="bon-header-left">
+      <strong>ZENITHE Insurance</strong><br>
+      {{ 'bon_adresse' | translate }}<br>
+      {{ 'bon_tel' | translate }}
+    </div>
+    <div class="bon-header-center">
+      <img src="/biometry/1logo.png" alt="ZENITHE">
+    </div>
+    <div class="bon-header-right">
+      <strong>{{ 'bon_republique' | translate }}</strong><br>
+      {{ 'bon_devise' | translate }}
+    </div>
+  </div>
+
+  <!-- ── TITRE ── -->
+  <div class="bon-titre">{{ 'bon_titre_consultation' | translate }}</div>
+
+  <!-- ── Bandeau prestataire / date ── -->
+  <div class="bon-bandeau">
+    <span class="bon-bandeau-prest">{{ bon.prestataireNom }}</span>
+    <span class="bon-bandeau-date">{{ 'bon_date_heure' | translate }} {{ dateHeure }}</span>
+  </div>
+
+  <!-- ── Informations ── -->
+  <table class="bon-infos">
+    <tr>
+      <td class="bon-col-lib">{{ 'bon_prestation_n' | translate }}</td>
+      <td class="bon-col-val">{{ codeCourt }}</td>
+    </tr>
+    <tr>
+      <td class="bon-col-lib">{{ 'bon_assure' | translate }}</td>
+      <td class="bon-col-val">{{ bon.nomAdherent }}</td>
+    </tr>
+    <tr>
+      <td class="bon-col-lib">{{ 'bon_malade' | translate }}</td>
+      <td class="bon-col-val">{{ malade }}</td>
+    </tr>
+    <tr>
+      <td class="bon-col-lib">{{ 'bon_souscripteur' | translate }}</td>
+      <td class="bon-col-val">{{ bon.souscripteur }}</td>
+    </tr>
+    <tr>
+      <td class="bon-col-lib">{{ 'bon_taux_couverture' | translate }}</td>
+      <td class="bon-col-val">{{ tauxLabel }}</td>
+    </tr>
+    <tr>
+      <td class="bon-col-lib">{{ 'bon_type_consultation' | translate }}</td>
+      <td class="bon-col-val">{{ bon.typeConsultation }}</td>
+    </tr>
+  </table>
+
+  <!-- ── Montants ── -->
+  <div class="bon-montants">
+    <table class="bon-montants-table">
+      <tr>
+        <td class="bon-mt-lib">{{ 'bon_montant_valide' | translate }}</td>
+        <td class="bon-mt-val">{{ formatMontant(bon.montantValide) }} FCFA</td>
+      </tr>
+      <tr>
+        <td class="bon-mt-lib">{{ 'bon_part_zenithe' | translate }}</td>
+        <td class="bon-mt-val">{{ formatMontant(bon.partZenithe) }} FCFA</td>
+      </tr>
+      <tr>
+        <td class="bon-mt-lib">{{ 'bon_part_assure' | translate }}</td>
+        <td class="bon-mt-val">{{ formatMontant(bon.partAssure) }} FCFA</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ── Signatures ── -->
+  <div class="bon-signatures">
+    <div class="bon-sig">
+      <div class="bon-sig-titre">{{ 'bon_l_assure' | translate }}</div>
+      <div class="bon-sig-ligne"></div>
+    </div>
+    <div class="bon-sig">
+      <div class="bon-sig-titre">{{ 'bon_le_prestataire' | translate }}</div>
+      <div class="bon-sig-ligne"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bouton impression (masqué à l'impression) -->
+<div class="bon-btn-print-wrapper" *ngIf="!isLoading && !erreur && bon">
+  <button class="bon-btn-print" (click)="imprimer()">
+    {{ 'bon_imprimer' | translate }}
+  </button>
+</div>
