@@ -140,14 +140,10 @@ type EtatUpload = 'idle' | 'uploading' | 'success' | 'error' | 'deja_envoye';
     <div *ngIf="etat === 'success'" style="text-align:center;padding:20px;">
       <div style="font-size:64px;">✅</div>
       <h3 style="color:#2e7d32;margin:12px 0 8px;">
-        {{ lang === 'en'
-          ? (fichiers.length > 1 ? fichiers.length + ' documents sent!' : 'Document sent!')
-          : (fichiers.length > 1 ? fichiers.length + ' documents envoyés !' : 'Document envoyé !') }}
+        {{ msgSuccesTitre }}
       </h3>
       <p style="color:#666;font-size:13px;">
-        {{ lang === 'en'
-          ? 'The health service agent will review your document before validating your ' + nature + '.'
-          : 'L\'agent de service de santé va examiner votre document avant de valider votre ' + nature + '.' }}
+        {{ msgSuccesDetail }}
       </p>
       <p style="color:#999;font-size:12px;margin-top:16px;">
         {{ lang === 'en' ? 'You can close this page.' : 'Vous pouvez fermer cette page.' }}
@@ -251,6 +247,20 @@ export class MobileCaptureComponent implements OnInit {
         this.erreur = err?.error?.message || 'Erreur lors de l\'envoi. Réessayez.';
       }
     });
+  }
+
+  get msgSuccesTitre(): string {
+    if (this.lang === 'en') {
+      return this.fichiers.length > 1 ? this.fichiers.length + ' documents sent!' : 'Document sent!';
+    }
+    return this.fichiers.length > 1 ? this.fichiers.length + ' documents envoyés !' : 'Document envoyé !';
+  }
+
+  get msgSuccesDetail(): string {
+    if (this.lang === 'en') {
+      return 'The health service agent will review your document before validating your ' + this.nature + '.';
+    }
+    return 'L\'agent de service de santé va examiner votre document avant de valider votre ' + this.nature + '.';
   }
 
   formatTaille(octets: number): string {

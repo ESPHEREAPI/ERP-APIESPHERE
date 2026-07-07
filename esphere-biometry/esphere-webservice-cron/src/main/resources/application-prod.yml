@@ -1,0 +1,69 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:biometry-test}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:DeepWater@2021}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+      pool-name: HikariPool-webservice-cron
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+  config:
+    import: optional:configserver:http://${CONFIG_HOST:109.228.49.89}:8888
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:109.228.49.89}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_HOSTNAME:109.228.49.89}:8761/eureka/
+
+# Serveur biométrie externe legacy (ex serveur PHP "webservice_server")
+esphere:
+  external-biometry-server:
+    base-url: ${EXTERNAL_BIOMETRY_URL:http://35.204.126.17/web_service/public/biometry}
+  webservice-cron:
+    enabled: ${WEBSERVICE_CRON_ENABLED:true}
+    # Séquence complète (adhérents -> ayants droit -> taux -> désactivations)
+    # exécutée 3 fois par jour : 06h30, 18h00, 20h00
+    cron-matin: "0 30 6 * * *"
+    cron-soir-18h: "0 0 18 * * *"
+    cron-soir-20h: "0 0 20 * * *"
+
+logging:
+  file:
+    name: ${LOG_PATH:C:/esphere/logs}/webservice-cron.log
+  level:
+    root: WARN
+    com.esphere: INFO
+    org.flywaydb: WARN

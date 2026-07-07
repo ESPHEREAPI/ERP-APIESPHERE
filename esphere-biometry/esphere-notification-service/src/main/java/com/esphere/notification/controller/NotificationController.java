@@ -4,6 +4,7 @@ import com.esphere.notification.dto.request.NotificationRequest;
 import com.esphere.notification.dto.request.SmsManuelRequest;
 import com.esphere.notification.dto.response.NotificationResponse;
 import com.esphere.notification.service.NotificationService;
+import com.esphere.notification.service.SmsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,15 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final SmsService smsService;
+
+    @GetMapping("/sms/solde")
+    public ResponseEntity<Map<String, Object>> getSoldeSms() {
+        return ResponseEntity.ok(Map.of(
+            "solde", smsService.getSolde(),
+            "disponible", smsService.soldeDisponible()
+        ));
+    }
 
     // ── ENVOI ─────────────────────────────────────────────────────
 

@@ -17,8 +17,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import service_administration_api.DTO.pooltpv.ActionResponse;
+import service_administration_api.DTO.pooltpv.CertificateInfoDTO;
+import service_administration_api.DTO.pooltpv.MotifActionDTO;
+import service_administration_api.DTO.pooltpv.SuspendCancelRequest;
 import service_administration_api.DTO.pooltpv.ResponseApi.RequestApiPoolTPV.InsuranceCertificateRequest;
 import service_administration_api.DTO.pooltpv.ResponseApiPoolTPV.ProductionPayloadResponse;
+import service_administration_api.entite.pooltpv.HistoriqueAction;
 import service_administration_api.entite.pooltpv.Infos_AdministrateurAgencePayLoad;
 import service_administration_api.entite.pooltpv.StockAttestation;
 import service_administration_api.repository.poolTPV.Infos_AdministrateurAgencePayLoadRepository;
@@ -198,6 +203,100 @@ public class CertificateController {
                 .ok()
                 .headers(headers)
                 .body(pdfBytes);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // INFO CERTIFICAT : GET /certificates/info/{reference}
+    // ════════════════════════════════════════════════════════════════
+    @GetMapping("/info/{reference}")
+    public ResponseEntity<CertificateInfoDTO> getCertificateInfo(@PathVariable String reference) {
+        return ResponseEntity.ok(service.getCertificateInfo(reference));
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // FLOTTE : GET /certificates/fleet/{policeNumber}
+    // Retourne tous les certificats d'une police (flotte)
+    // ════════════════════════════════════════════════════════════════
+    @GetMapping("/fleet/{policeNumber}")
+    public ResponseEntity<List<CertificateInfoDTO>> getFleet(@PathVariable String policeNumber) {
+        return ResponseEntity.ok(service.getCertificatesByPolice(policeNumber));
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // RECHERCHE FLEXIBLE : GET /certificates/search?type=REFERENCE|POLICE|PLATE&value=...&plate=...
+    // ════════════════════════════════════════════════════════════════
+    @GetMapping("/search")
+    public ResponseEntity<CertificateInfoDTO> searchCertificate(
+            @RequestParam(defaultValue = "REFERENCE") String type,
+            @RequestParam String value,
+            @RequestParam(required = false) String plate) {
+        return ResponseEntity.ok(service.getCertificateInfoBySearch(type, value, plate));
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // MOTIFS PAR TYPE : GET /certificates/motifs/{typeAction}
+    // ════════════════════════════════════════════════════════════════
+    @GetMapping("/motifs/{typeAction}")
+    public ResponseEntity<List<MotifActionDTO>> getMotifs(@PathVariable String typeAction) {
+        return ResponseEntity.ok(service.getMotifsByType(typeAction));
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // SUSPENSION : POST /certificates/{reference}/suspend?username=...
+    // ════════════════════════════════════════════════════════════════
+    @PostMapping("/{reference}/suspend")
+    public ResponseEntity<ActionResponse> suspend(
+            @PathVariable String reference,
+            @RequestParam String username,
+            @RequestBody @Valid SuspendCancelRequest req) {
+        ActionResponse resp = service.suspendCertificate(reference, req, username);
+        return ResponseEntity.ok(resp);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // ANNULATION : POST /certificates/{reference}/cancel?username=...
+    // ════════════════════════════════════════════════════════════════
+    @PostMapping("/{reference}/cancel")
+    public ResponseEntity<ActionResponse> cancel(
+            @PathVariable String reference,
+            @RequestParam String username,
+            @RequestBody @Valid SuspendCancelRequest req) {
+        ActionResponse resp = service.cancelCertificate(reference, req, username);
+        return ResponseEntity.ok(resp);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // RESILIATION : POST /certificates/{reference}/resiliation?username=...
+    // ════════════════════════════════════════════════════════════════
+    @PostMapping("/{reference}/resiliation")
+    public ResponseEntity<ActionResponse> resiliation(
+            @PathVariable String reference,
+            @RequestParam String username,
+            @RequestBody @Valid SuspendCancelRequest req) {
+        ActionResponse resp = service.resiliationCertificate(reference, req, username);
+        return ResponseEntity.ok(resp);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // HISTORIQUE : GET /certificates/{reference}/historique
+    //              GET /certificates/historique/office/{officeCode}
+    //              GET /certificates/historique/office/{officeCode}/{typeAction}
+    // ════════════════════════════════════════════════════════════════
+    @GetMapping("/{reference}/historique")
+    public ResponseEntity<List<HistoriqueAction>> historiqueRef(@PathVariable String reference) {
+        return ResponseEntity.ok(service.getHistoriqueByReference(reference));
+    }
+
+    @GetMapping("/historique/office/{officeCode}")
+    public ResponseEntity<List<HistoriqueAction>> historiqueOffice(@PathVariable String officeCode) {
+        return ResponseEntity.ok(service.getHistoriqueByOffice(officeCode));
+    }
+
+    @GetMapping("/historique/office/{officeCode}/{typeAction}")
+    public ResponseEntity<List<HistoriqueAction>> historiqueOfficeType(
+            @PathVariable String officeCode,
+            @PathVariable String typeAction) {
+        return ResponseEntity.ok(service.getHistoriqueByOfficeAndType(officeCode, typeAction));
     }
 
     /**

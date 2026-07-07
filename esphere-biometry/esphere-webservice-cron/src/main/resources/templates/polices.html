@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{fragments/layout :: layout(titre='Toutes les polices', contenu=~{::section})}">
+<section>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Toutes les polices</h1>
+            <p class="text-muted mb-0">
+                <span class="legend-dot legend-dot--actif"></span> Active (echeance non depassee)
+                &nbsp;&nbsp;
+                <span class="legend-dot legend-dot--desactif"></span> Desactivee / echue
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-subtle text-primary fs-6" th:text="${#lists.size(polices)} + ' polices'">0 polices</span>
+            <button class="btn btn-outline-secondary" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Actualiser
+            </button>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(polices)}" class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>Aucune police trouvee. Lancez d'abord un import adherent.
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4" th:each="p : ${polices}">
+            <a class="text-decoration-none"
+               th:href="@{/webservice/dashboard/police(police=${p.police})}">
+                <div class="card police-card border-0 shadow-sm h-100"
+                     th:classappend="${p.statut == 'ACTIF'} ? 'police-card--actif' : 'police-card--desactif'">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold text-truncate" style="max-width: 220px;"
+                                     th:text="${p.souscripteur != null ? p.souscripteur : 'Souscripteur inconnu'}">Souscripteur</div>
+                                <code class="small" th:text="${p.police}">police</code>
+                            </div>
+                            <span class="badge" th:classappend="${p.statut == 'ACTIF'} ? 'text-bg-primary' : 'text-bg-danger'"
+                                  th:text="${p.statut}">STATUT</span>
+                        </div>
+
+                        <div class="d-flex align-items-baseline gap-1 mb-2">
+                            <span class="jours-restants" th:if="${p.nbJoursRestants != null and p.nbJoursRestants >= 0}"
+                                  th:text="${p.nbJoursRestants}">0</span>
+                            <span class="jours-restants text-danger" th:if="${p.nbJoursRestants != null and p.nbJoursRestants < 0}"
+                                  th:text="${-p.nbJoursRestants}">0</span>
+                            <span class="small text-muted" th:if="${p.nbJoursRestants != null and p.nbJoursRestants >= 0}">jours restants</span>
+                            <span class="small text-danger" th:if="${p.nbJoursRestants != null and p.nbJoursRestants < 0}">jours de retard</span>
+                            <span class="small text-muted" th:if="${p.nbJoursRestants == null}">echeance inconnue</span>
+                        </div>
+
+                        <div class="small text-muted mb-2">
+                            <i class="bi bi-calendar-x me-1"></i>Echeance :
+                            <span th:text="${p.dateEcheance != null ? #temporals.format(p.dateEcheance, 'dd/MM/yyyy') : '-'}">-</span>
+                        </div>
+
+                        <div class="d-flex gap-3 small">
+                            <span><i class="bi bi-person-check text-success"></i> <span th:text="${p.nbAdherentsActifs}">0</span></span>
+                            <span><i class="bi bi-person-dash text-danger"></i> <span th:text="${p.nbAdherentsDesactives}">0</span></span>
+                            <span><i class="bi bi-people text-success"></i> <span th:text="${p.nbAyantsDroitActifs}">0</span></span>
+                            <span><i class="bi bi-people-fill text-danger"></i> <span th:text="${p.nbAyantsDroitDesactives}">0</span></span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+</section>
+</th:block>
+</body>
+</html>

@@ -257,9 +257,8 @@ public class UserController {
     // ── Agents SS actifs (pour notifications) ─────────────────
     @GetMapping("/agents-ss")
     public ResponseEntity<List<Map<String, Object>>> getAgentsSS() {
-        List<Profil> profilsSS = profilRepository.findByCode("SERVICE_SANTE")
-                .map(List::of).orElse(List.of());
-        // Aussi SUP_ADMIN
+        List<Profil> profilsSS = new java.util.ArrayList<>();
+        profilRepository.findByCode("SERVICE_SANTE").ifPresent(profilsSS::add);
         profilRepository.findByCode("SUP_ADMIN").ifPresent(profilsSS::add);
 
         List<Map<String, Object>> agents = new java.util.ArrayList<>();

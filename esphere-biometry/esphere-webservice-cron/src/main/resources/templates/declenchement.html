@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{fragments/layout :: layout(titre='Declenchement manuel', contenu=~{::section})}">
+<section>
+
+    <div class="mb-4">
+        <h1 class="h3 fw-bold mb-1">Declenchement manuel</h1>
+        <p class="text-muted mb-0">
+            Lance immediatement un traitement sans attendre les passages automatiques (06h30 / 18h00 / 20h00).
+            Chaque execution est tracee dans l'historique.
+        </p>
+    </div>
+
+    <div class="alert alert-info d-flex align-items-start gap-2" role="alert">
+        <i class="bi bi-info-circle fs-5"></i>
+        <div>
+            Ordre recommande si vous declenchez tout manuellement :
+            <strong>Adherents</strong> &rarr; <strong>Ayants droit</strong> &rarr; <strong>Taux de prestation</strong>
+            &rarr; <strong>Desactivation adherents</strong> &rarr; <strong>Desactivation ayants droit</strong>.
+            Ou utilisez directement le bouton "Sequence complete" ci-dessous.
+        </div>
+    </div>
+
+    <!-- Sequence complete -->
+    <div class="card border-0 shadow-sm mb-4 action-card action-card--highlight">
+        <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <h2 class="h5 fw-semibold mb-1"><i class="bi bi-lightning-charge-fill me-2"></i>Sequence complete</h2>
+                <p class="text-muted mb-0">Lance les 5 traitements dans l'ordre, comme le fait le scheduler automatique.</p>
+            </div>
+            <button class="btn btn-warning text-dark fw-semibold"
+                    data-action-path="/webservice/synchronisation-complete"
+                    data-action-label="Sequence complete"
+                    onclick="lancerTraitement(this)">
+                <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                <i class="bi bi-play-fill me-1"></i>Lancer la sequence complete
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Adherents -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 action-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Import adherents</h2>
+                        <span class="badge bg-secondary-subtle text-secondary">recuperer-donnees-adherent</span>
+                    </div>
+                    <p class="text-muted small">Importe/met a jour les adherents depuis le serveur biometrie externe.</p>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Police</span>
+                        <input type="text" class="form-control" placeholder="optionnel, ex: 1017-2130000110" id="input-adherent">
+                    </div>
+                    <button class="btn btn-primary w-100"
+                            data-action-path="/webservice/recuperer-donnees-adherent"
+                            data-action-input="input-adherent"
+                            data-action-label="Import adherents"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-play-fill me-1"></i>Lancer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ayants droit -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 action-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-people text-primary me-2"></i>Import ayants droit</h2>
+                        <span class="badge bg-secondary-subtle text-secondary">recuperer-donnees-ayant-droit</span>
+                    </div>
+                    <p class="text-muted small">Necessite que les adherents existent deja en base.</p>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Police</span>
+                        <input type="text" class="form-control" placeholder="optionnel, ex: 1017-2130000110" id="input-ayant-droit">
+                    </div>
+                    <button class="btn btn-primary w-100"
+                            data-action-path="/webservice/recuperer-donnees-ayant-droit"
+                            data-action-input="input-ayant-droit"
+                            data-action-label="Import ayants droit"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-play-fill me-1"></i>Lancer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taux de prestation -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 action-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-percent text-primary me-2"></i>Import taux de prestation</h2>
+                        <span class="badge bg-secondary-subtle text-secondary">recuperer-donnees-taux-prestation</span>
+                    </div>
+                    <p class="text-muted small">Cree les types de prestation manquants, applique le mapping des anciens codes.</p>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Police</span>
+                        <input type="text" class="form-control" placeholder="optionnel, ex: 1017-2130000110" id="input-taux">
+                    </div>
+                    <button class="btn btn-primary w-100"
+                            data-action-path="/webservice/recuperer-donnees-taux-prestation"
+                            data-action-input="input-taux"
+                            data-action-label="Import taux de prestation"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-play-fill me-1"></i>Lancer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desactivation adherents -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 action-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-person-dash text-danger me-2"></i>Desactivation adherents</h2>
+                        <span class="badge bg-secondary-subtle text-secondary">desactiver-donnees-adherent</span>
+                    </div>
+                    <p class="text-muted small">
+                        <i class="bi bi-exclamation-triangle text-warning"></i>
+                        Desactive tous les adherents absents de la source (sauf regles ONCC). A executer apres les imports.
+                    </p>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Police</span>
+                        <input type="text" class="form-control" placeholder="optionnel" id="input-desact-adherent">
+                    </div>
+                    <button class="btn btn-outline-danger w-100"
+                            data-action-path="/webservice/desactiver-donnees-adherent"
+                            data-action-input="input-desact-adherent"
+                            data-action-label="Desactivation adherents"
+                            data-action-confirm="Confirmer la desactivation des adherents absents de la source ?"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-play-fill me-1"></i>Lancer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Desactivation ayants droit -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100 action-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h2 class="h6 fw-semibold mb-0"><i class="bi bi-person-x text-danger me-2"></i>Desactivation ayants droit</h2>
+                        <span class="badge bg-secondary-subtle text-secondary">desactiver-donnees-ayant-droit</span>
+                    </div>
+                    <p class="text-muted small">A executer apres la desactivation des adherents.</p>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Code adherent</span>
+                        <input type="text" class="form-control" placeholder="optionnel" id="input-desact-ayant-droit">
+                    </div>
+                    <button class="btn btn-outline-danger w-100"
+                            data-action-path="/webservice/desactiver-donnees-ayant-droit"
+                            data-action-input="input-desact-ayant-droit"
+                            data-action-label="Desactivation ayants droit"
+                            data-action-confirm="Confirmer la desactivation des ayants droit absents de la source ?"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-play-fill me-1"></i>Lancer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Resultat du dernier declenchement -->
+    <div class="card border-0 shadow-sm mt-4" id="resultatCard" style="display:none;">
+        <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+            <h2 class="h6 fw-semibold mb-0"><i class="bi bi-clipboard-data me-2"></i>Resultat : <span id="resultatTitre"></span></h2>
+            <button class="btn-close" onclick="document.getElementById('resultatCard').style.display='none'"></button>
+        </div>
+        <div class="card-body" id="resultatBody"></div>
+    </div>
+
+</section>
+</th:block>
+</body>
+</html>

@@ -10,6 +10,7 @@ import {
   OrdonnanceService,
   PrestationResponse
 } from '../../services/ordonnance.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'app-ordonnance',
@@ -48,12 +49,23 @@ private searchTimeout: any = null;
   private boundFermerDropdowns         = () => this.fermerDropdowns();
   private destroy$                     = new Subject<void>();
 
+  isPrestataire = false;
+  private myPrestataireId = '';
+
   constructor(
     private ordonnanceService: OrdonnanceService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    const user = this.authService.getStoredUser();
+    const profilCode = user?.profilCode || '';
+    this.isPrestataire = !['SERVICE_SANTE', 'SUP_ADMIN'].includes(profilCode);
+    if (this.isPrestataire && user?.prestataireId) {
+      this.myPrestataireId = user.prestataireId;
+      this.filtrePrestataire = this.myPrestataireId;
+    }
     this.chargerPage(0);
     document.addEventListener('click', this.boundFermerDropdowns);
   }

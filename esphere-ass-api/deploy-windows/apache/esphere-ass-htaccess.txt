@@ -1,0 +1,34 @@
+# Types MIME pour les polices et assets modernes
+AddType application/font-woff         .woff
+AddType font/woff2                    .woff2
+AddType application/vnd.ms-fontobject .eot
+AddType font/ttf                      .ttf
+AddType font/otf                      .otf
+AddType image/svg+xml                 .svg
+
+# CORS pour les fonts — autorise le chargement depuis n'importe quelle origine
+<FilesMatch "\.(woff|woff2|ttf|otf|eot|svg)$">
+    Header set Access-Control-Allow-Origin "*"
+</FilesMatch>
+
+# Angular SPA routing
+Options -Indexes +FollowSymLinks
+RewriteEngine On
+RewriteBase /esphere-ass/
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/gateway-proxy/
+RewriteRule ^ index.html [L]
+
+# Pas de cache sur index.html
+<FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch>
+
+# Cache long sur les assets hashés
+<FilesMatch "\.(js|css|woff|woff2|ttf|eot|svg|png|jpg|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>

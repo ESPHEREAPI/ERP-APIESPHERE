@@ -1,7 +1,7 @@
 <!-- src/app/components/sidebar/sidebar.component.html -->
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-    <a href="#" class="brand-link">
+    <a href="javascript:void(0)" class="brand-link">
       <img src="./1logo.png" alt="zenith-insurance" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">PAYLOAD</span>
     </a>
@@ -14,17 +14,17 @@
         <img [src]="imagePath" class="img-circle elevation-2" alt="User Image">
       </div>
       <div class="info">
-        <a href="#" class="d-block">{{ user.nomcomplet }} </a>
+        <a href="javascript:void(0)" class="d-block">{{ user.nomcomplet }} </a>
       </div>
     </div>
 
     <!-- Sidebar Menu -->
    <nav class="mt-2">
-  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+  <ul class="nav nav-pills nav-sidebar flex-column" role="menu">
     <ng-container *ngFor="let item of menuItems">
 
-      <!-- Visible si : profilType correspond ET canSeeMenu autorise -->
       <li class="nav-item"
+          [class.menu-open]="isExpanded(item.menuKey)"
           *ngIf="(item.profilType === '' || item.profilType === profilType) && canSeeMenu(item.menuKey)">
 
         <!-- Lien sans enfants -->
@@ -38,17 +38,19 @@
           <p>{{ item.titleKey | translate }}</p>
         </a>
 
-        <!-- Lien parent avec enfants -->
-        <a href="#" class="nav-link" *ngIf="item.children.length > 0">
+        <!-- Lien parent avec enfants — toggle Angular pur -->
+        <a href="javascript:void(0)" class="nav-link"
+           *ngIf="item.children.length > 0"
+           (click)="toggleMenu(item.menuKey)">
           <i class="nav-icon {{item.icon}}"></i>
           <p>
             {{ item.titleKey | translate }}
-            <i class="right fas fa-angle-left"></i>
+            <i class="right fas fa-angle-left" [class.fa-angle-down]="isExpanded(item.menuKey)"></i>
           </p>
         </a>
 
-        <!-- Sous-menu -->
-        <ul class="nav nav-treeview" *ngIf="item.children.length > 0">
+        <!-- Sous-menu — affiché/masqué par Angular -->
+        <ul class="nav nav-treeview" *ngIf="item.children.length > 0 && isExpanded(item.menuKey)">
           <li class="nav-item"
               *ngFor="let child of item.children"
               [style.display]="canSeeChild(child.childKey) ? '' : 'none'">

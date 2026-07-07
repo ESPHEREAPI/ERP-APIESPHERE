@@ -24,6 +24,7 @@ import service_administration_api.mapper.MapperDtoImpl;
 import service_administration_api.repository.InfosAdminAgenceRepository;
 import service_administration_api.repository.PosteTravailRepository;
 import service_administration_api.service.OracleAuthService;
+import service_administration_api.service.StockSyncService;
 
 /**
  * Contrôleur d'authentification ✅ Compatible avec le frontend Angular ✅ Tous
@@ -48,6 +49,8 @@ public class AuthController {
     private PosteTravailRepository posteTravailRepository;
     @Autowired
     private InfosAdminAgenceRepository agenceRepository;
+    @Autowired
+    private StockSyncService stockSyncService;
 
     /**
      * 🔐 Endpoint de connexion POST /auth/users/login
@@ -86,6 +89,12 @@ public class AuthController {
                     session.setProfilAgent(agent.getProfilAgent());
                     session.setCanEdit(agent.isCanEdit());
                     logger.info("ProfilAgent enrichi : {} → {}", userapiasac, agent.getProfilAgent());
+
+                    // Initialiser le stock du bureau en arrière-plan si pas encore fait
+                    String officeCode = agent.getOffice_code();
+                    if (officeCode != null && !officeCode.isBlank()) {
+                        stockSyncService.syncBureauSiNonInitialise(officeCode, userapiasac);
+                    }
                 });
             }
 

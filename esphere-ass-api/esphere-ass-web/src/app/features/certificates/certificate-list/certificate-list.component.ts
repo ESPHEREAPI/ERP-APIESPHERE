@@ -133,6 +133,26 @@ export class CertificateListComponent  implements OnInit {
     const certs: any[] = prod.data?.certificates ?? [];
     return certs.map((c: any) => c.police_number).filter(Boolean).join(', ') || '—';
   }
+
+  /**
+   * Retourne le statut agrégé d'une production.
+   * Priorité : TERMINATED > CANCELLED > SUSPENDED > ISSUED
+   */
+  getProductionStatus(prod: any): { key: string; badge: string; icon: string } {
+    const states: string[] = (prod.data?.certificates ?? [])
+      .map((c: any) => ((c.state?.name ?? c.state) ?? '').toString().toLowerCase());
+
+    if (states.some(s => s === 'terminated' || s === 'resilie')) {
+      return { key: 'STATUS_TERMINATED', badge: 'badge-dark',    icon: 'fa-ban' };
+    }
+    if (states.some(s => s === 'cancelled' || s === 'annule')) {
+      return { key: 'STATUS_CANCELLED',  badge: 'badge-danger',  icon: 'fa-times-circle' };
+    }
+    if (states.some(s => s === 'suspended' || s === 'suspendu')) {
+      return { key: 'STATUS_SUSPENDED',  badge: 'badge-warning', icon: 'fa-pause-circle' };
+    }
+    return     { key: 'STATUS_EDITED',   badge: 'badge-success', icon: 'fa-check-circle' };
+  }
  
   /** Télécharge un seul certificat converti en PDF */
   async downloadSingleCert(cert: any): Promise<void> {

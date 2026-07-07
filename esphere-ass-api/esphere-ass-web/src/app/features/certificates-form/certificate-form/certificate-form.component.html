@@ -271,6 +271,85 @@
     </div>
     <!-- ══ FIN DIALOG CONFIRMATION ══ -->
 
+    <!-- ══ MODAL ATTESTATION EXISTANTE ════════════════════════ -->
+    <div class="confirm-overlay" *ngIf="viewingExistingCert" (click)="closeExistingCertModal()"></div>
+    <div class="confirm-dialog" *ngIf="viewingExistingCert" style="max-width:680px">
+      <div class="confirm-dialog-header">
+        <div class="confirm-dialog-title">
+          <div class="confirm-icon-wrap" style="background:#fff3cd;color:#856404">
+            <i class="fas fa-certificate"></i>
+          </div>
+          <div>
+            <h5 class="mb-0">{{ 'CERT_FORM.EXISTING_CERT_TITLE' | translate }}</h5>
+            <small class="text-muted">{{ 'CERT_FORM.EXISTING_CERT_SUBTITLE' | translate }}</small>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeExistingCertModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="confirm-dialog-body">
+        <div class="alert alert-warning py-2 mb-3">
+          <i class="fas fa-info-circle mr-2"></i>
+          <strong>Information :</strong> {{ 'CERT_FORM.EXISTING_CERT_INFO' | translate }}
+        </div>
+        <table class="table table-sm table-bordered mb-3">
+          <tbody>
+            <tr>
+              <th class="bg-light" style="width:35%">Référence</th>
+              <td><strong class="text-primary">{{ viewingExistingCert.reference }}</strong></td>
+            </tr>
+            <tr>
+              <th class="bg-light">N° Police</th>
+              <td><span class="badge badge-warning">{{ viewingExistingCert.policeNumber || '—' }}</span></td>
+            </tr>
+            <tr>
+              <th class="bg-light">Immatriculation</th>
+              <td>
+                <span class="badge badge-info px-2" style="font-size:12px;letter-spacing:1px">
+                  <i class="fas fa-car mr-1"></i>{{ viewingExistingCert.licencePlate || '—' }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <th class="bg-light">Assuré</th>
+              <td>{{ viewingExistingCert.insuredName || '—' }}</td>
+            </tr>
+            <tr>
+              <th class="bg-light">Téléphone</th>
+              <td>{{ viewingExistingCert.insuredPhone || '—' }}</td>
+            </tr>
+            <tr>
+              <th class="bg-light">Type / Variante</th>
+              <td>
+                {{ viewingExistingCert.certTypeName || '—' }}
+                <span class="badge badge-secondary ml-1">{{ viewingExistingCert.certVariantName }}</span>
+              </td>
+            </tr>
+            <tr>
+              <th class="bg-light">Validité</th>
+              <td>{{ viewingExistingCert.startsAt }} → {{ viewingExistingCert.endsAt }}</td>
+            </tr>
+            <tr>
+              <th class="bg-light">État</th>
+              <td>
+                <span class="badge"
+                  [class.badge-success]="viewingExistingCert.stateLabel === 'Active' || viewingExistingCert.stateLabel === 'Éditée'"
+                  [class.badge-warning]="viewingExistingCert.stateLabel !== 'Active' && viewingExistingCert.stateLabel !== 'Éditée'">
+                  {{ viewingExistingCert.stateLabel || '—' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="confirm-dialog-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeExistingCertModal()">
+          <i class="fas fa-arrow-left mr-2"></i>{{ 'CERT_FORM.BACK_TO_FORM' | translate }}
+        </button>
+      </div>
+    </div>
+    <!-- ══ FIN MODAL ATTESTATION EXISTANTE ══ -->
 
     <!-- ══ FORMULAIRE PRINCIPAL ══════════════════════════════ -->
     <form [formGroup]="productionForm" (ngSubmit)="onSubmit()">
@@ -496,13 +575,21 @@
                     <tbody>
                       <ng-container *ngFor="let p of foundProductions; let i = index">
 
-                        <tr [class.table-success]="isSelected(i)" (click)="toggleSelection(i)" style="cursor:pointer">
+                        <tr [class.table-success]="isSelected(i) && !hasExistingCert(p)"
+                            [style.opacity]="hasExistingCert(p) ? '0.6' : '1'"
+                            [style.background]="hasExistingCert(p) ? '#f8f9fa' : ''"
+                            (click)="hasExistingCert(p) ? null : toggleSelection(i)"
+                            [style.cursor]="hasExistingCert(p) ? 'default' : 'pointer'">
                           <td>
-                            <input type="checkbox" [checked]="isSelected(i)" (click)="$event.stopPropagation()"
+                            <input type="checkbox" [checked]="isSelected(i)"
+                              [disabled]="hasExistingCert(p)"
+                              (click)="$event.stopPropagation()"
                               (change)="toggleSelection(i)">
                           </td>
                           <td><small class="text-muted">{{ i + 1 }}</small></td>
-                          <td><strong class="text-primary">{{ p.licence_plate || '—' }}</strong></td>
+                          <td>
+                            <strong class="text-primary">{{ p.licence_plate || '—' }}</strong>
+                          </td>
                           <td><small>{{ p.vehicle_brand }} {{ p.vehicle_model }}</small></td>
                           <td><small>{{ p.customer_name || '—' }}</small></td>
                           <td>
@@ -514,15 +601,26 @@
                             <small class="text-success font-weight-bold">{{ p.rc | number }} F</small>
                           </td>
                           <td>
-                            <span *ngIf="isComplete(p)" class="badge badge-success">
-                              <i class="fas fa-check mr-1"></i>Complet
+                            <span *ngIf="hasExistingCert(p)" class="badge badge-warning">
+                              <i class="fas fa-lock mr-1"></i>{{ 'CERT_FORM.ALREADY_EDITED_BADGE' | translate }}
                             </span>
-                            <span *ngIf="!isComplete(p)" class="badge badge-danger">
-                              <i class="fas fa-exclamation-circle mr-1"></i>{{ getMissingCount(p) }} manquant(s)
-                            </span>
+                            <ng-container *ngIf="!hasExistingCert(p)">
+                              <span *ngIf="isComplete(p)" class="badge badge-success">
+                                <i class="fas fa-check mr-1"></i>Complet
+                              </span>
+                              <span *ngIf="!isComplete(p)" class="badge badge-danger">
+                                <i class="fas fa-exclamation-circle mr-1"></i>{{ getMissingCount(p) }} manquant(s)
+                              </span>
+                            </ng-container>
                           </td>
                           <td>
-                            <button type="button" class="btn btn-xs btn-outline-primary"
+                            <button *ngIf="hasExistingCert(p)" type="button"
+                              class="btn btn-xs btn-outline-warning"
+                              [title]="'CERT_FORM.EXISTING_CERT_VIEW' | translate"
+                              (click)="$event.stopPropagation(); openExistingCertModal(p, $event)">
+                              <i class="fas fa-eye mr-1"></i>{{ 'CERT_FORM.EXISTING_CERT_VIEW' | translate }}
+                            </button>
+                            <button *ngIf="!hasExistingCert(p)" type="button" class="btn btn-xs btn-outline-primary"
                               (click)="$event.stopPropagation(); toggleDetailPanel(i)">
                               <i class="fas" [class.fa-chevron-down]="expandedIndex !== i"
                                 [class.fa-chevron-up]="expandedIndex === i"></i>
@@ -877,6 +975,23 @@
                ÉTAPES 2, 3, 4 — masquées en mode flotte
                ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
           <ng-container *ngIf="viewMode === 'form'">
+
+            <!-- ── Bannière : attestation existante (mono) ──── -->
+            <div *ngIf="monoExistingCert" class="alert d-flex align-items-center mb-3"
+                 style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;">
+              <i class="fas fa-certificate text-warning mr-3" style="font-size:1.4rem;"></i>
+              <div class="flex-grow-1">
+                <strong>{{ 'CERT_FORM.EXISTING_CERT_BANNER' | translate }} {{ monoExistingCert.reference }}</strong><br>
+                <small class="text-muted">
+                  <span class="badge badge-info px-1">{{ monoExistingCert.licencePlate }}</span>
+                  <span class="badge badge-secondary ml-1">{{ monoExistingCert.stateLabel }}</span>
+                  {{ monoExistingCert.startsAt }} → {{ monoExistingCert.endsAt }}
+                </small>
+              </div>
+              <button type="button" class="btn btn-sm btn-warning ml-3" (click)="openMonoExistingCertModal()">
+                <i class="fas fa-eye mr-1"></i>{{ 'CERT_FORM.EXISTING_CERT_CONSULT' | translate }}
+              </button>
+            </div>
 
             <!-- ÉTAPE 2 — Client & Assuré -->
             <div class="card card-info card-outline elevation-1 mb-3">

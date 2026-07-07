@@ -4,6 +4,7 @@
  */
 package service_administration_api.repository.poolTPV;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -28,5 +29,18 @@ public interface Infos_AdministrateurAgencePayLoadRepository extends JpaReposito
     // Option 2 — JPQL explicite
     @Query("SELECT i FROM Infos_AdministrateurAgencePayLoad i WHERE LOWER(i.login) = LOWER(:login)")
     Optional<Infos_AdministrateurAgencePayLoad> findByLogin(@Param("login") String login);
+
+    /** Un représentant par bureau — prend le premier utilisateur de chaque office_code distinct. */
+    @Query("""
+        SELECT i FROM Infos_AdministrateurAgencePayLoad i
+        WHERE i.office_code IS NOT NULL
+          AND i.office_code <> ''
+          AND i.id = (
+              SELECT MIN(i2.id) FROM Infos_AdministrateurAgencePayLoad i2
+              WHERE i2.office_code = i.office_code
+          )
+        ORDER BY i.office_code
+        """)
+    List<Infos_AdministrateurAgencePayLoad> findOneRepresentantParBureau();
 }
 

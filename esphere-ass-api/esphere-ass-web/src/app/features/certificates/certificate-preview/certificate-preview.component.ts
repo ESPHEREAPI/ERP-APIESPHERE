@@ -28,9 +28,10 @@ export class CertificatePreviewComponent implements OnChanges {
   downloadingRef: string | null = null;
   downloadingAll = false;
 
-  // Cache des URL d'images déjà chargées (évite refetch)
+  // Cache des URL d'images (fallback depuis backend si SSL échoue)
   imageUrls: Record<string, string> = {};
   imageErrors: Record<string, boolean> = {};
+  fallbackUrls: Record<string, string> = {};
 
   get prod(): any { return this.production?.data; }
 
@@ -79,7 +80,8 @@ export class CertificatePreviewComponent implements OnChanges {
 
   // ── Impression d'UN certificat ───────────────────────────────────
   printSingle(cert: CertificateInfo): void {
-    if (!cert.download_link) return;
+    if (!cert.download_link && !cert.reference) return;
+    const imgSrc = this.getImageSrc(cert);
     const win = window.open('', '_blank', 'width=900,height=700');
     if (!win) return;
     win.document.write(`
@@ -98,7 +100,7 @@ export class CertificatePreviewComponent implements OnChanges {
         </style>
       </head>
       <body>
-        <img src="${cert.download_link}" onload="window.print();window.close();"
+        <img src="${imgSrc}" onload="window.print();window.close();"
              onerror="document.body.innerHTML='<p>Impossible de charger l\\'image</p>'"/>
       </body>
       </html>
@@ -112,7 +114,7 @@ export class CertificatePreviewComponent implements OnChanges {
     if (!certs.length) return;
 
     const imgTags = certs.map(c =>
-      `<div class="page"><img src="${c.download_link}" /><p class="ref">${c.reference} — ${c.police_number ?? ''}</p></div>`
+      `<div class="page"><img src="${this.getImageSrc(c)}" /><p class="ref">${c.reference} — ${c.police_number ?? ''}</p></div>`
     ).join('');
 
     const win = window.open('', '_blank', 'width=900,height=700');
@@ -181,6 +183,21 @@ export class CertificatePreviewComponent implements OnChanges {
   }
 
   onImageError(ref: string): void {
-    this.imageErrors[ref] = true;
+    if (this.fallbackUrls[ref]) {
+      this.imageErrors[ref] = true;
+      return;
+    }
+    this.certificateService.downloadPdf(ref).subscribe({
+      next: (blob) => {
+        this.fallbackUrls[ref] = URL.createObjectURL(blob);
+      },
+      error: () => {
+        this.imageErrors[ref] = true;
+      }
+    });
+  }
+
+  getImageSrc(cert: CertificateInfo): string {
+    return this.fallbackUrls[cert.reference] ?? cert.download_link;
   }
 }

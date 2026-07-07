@@ -84,7 +84,7 @@ eureka:
 
 # ── CORS production : origines autorisées explicites ─────────────────────────
 cors:
-  allowed-origins: "https://77.68.94.193,http://77.68.94.193,https://77.68.94.193:*,http://77.68.94.193:*,http://localhost:*,https://localhost:*,https://zenbio.zenitheinsurance.com"
+  allowed-origins: "https://77.68.94.193,http://77.68.94.193,https://77.68.94.193:*,http://77.68.94.193:*,http://localhost:*,https://localhost:*,https://zenbio.zenitheinsurance.com,https://e-attestation.zenitheinsurance.com"
   allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PUT,PATCH,HEAD
   allowed-headers: "*"
   exposed-headers: Authorization,X-Refresh-Token

@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import service_administration_api.DTO.ApiResponse;
 import service_administration_api.DTO.stock.*;
 import service_administration_api.service.StockAttestationService;
+import service_administration_api.service.StockAuditService;
+import service_administration_api.service.StockSyncService;
 
 import java.security.Principal;
 import java.time.OffsetDateTime;
@@ -33,9 +35,15 @@ import java.util.List;
 public class StockAttestationController {
 
     private final StockAttestationService stockService;
+    private final StockAuditService       auditService;
+    private final StockSyncService        syncService;
 
-    public StockAttestationController(StockAttestationService stockService) {
+    public StockAttestationController(StockAttestationService stockService,
+                                      StockAuditService auditService,
+                                      StockSyncService syncService) {
         this.stockService = stockService;
+        this.auditService = auditService;
+        this.syncService  = syncService;
     }
 
     // ── Stocks d'un bureau ───────────────────────────────────────
@@ -121,6 +129,33 @@ public class StockAttestationController {
     ) {
         String user = principal != null ? principal.getName() : "SYSTEM";
         return ok("Stock ajusté", stockService.ajuster(officeCode, request, user));
+    }
+
+    // ── Audit stock local vs externe ────────────────────────────
+
+    @GetMapping("/{officeCode}/audit")
+    public ResponseEntity<ApiResponse<StockAuditResponse>> getAudit(
+        @PathVariable String officeCode,
+        Principal principal
+    ) {
+        String username = principal != null ? principal.getName() : "SYSTEM";
+        return ok("Audit récupéré", auditService.getAudit(officeCode, username));
+    }
+
+    // ── Synchronisation manuelle ppeatt-api → stock local ────────
+
+    @PostMapping("/sync")
+    public ResponseEntity<ApiResponse<StockSyncService.StockSyncResult>> syncNow() {
+        StockSyncService.StockSyncResult result = syncService.syncNow();
+        String msg = result.errors() > 0
+                ? "Synchronisation terminée avec " + result.errors() + " erreur(s)"
+                : "Synchronisation réussie";
+        return ok(msg, result);
+    }
+
+    @GetMapping("/sync/last")
+    public ResponseEntity<ApiResponse<StockSyncService.StockSyncResult>> lastSync() {
+        return ok("Dernier résultat de synchronisation", syncService.getLastResult());
     }
 
     // ── Annulation production ────────────────────────────────────

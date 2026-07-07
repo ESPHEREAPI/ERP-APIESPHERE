@@ -252,7 +252,7 @@
 
                       <td>
                         <span class="badge badge-secondary">
-                          {{ cert.certificate_type?.code }}
+                          {{ cert.certificate_type?.code || cert.certificate_type?.name }}
                         </span>
                       </td>
 
@@ -277,11 +277,11 @@
 
                       <td>
                         <span class="badge"
-                              [class.badge-success]="cert.state === 'Éditée'"
-                              [class.badge-warning]="cert.state !== 'Éditée'">
+                              [class.badge-success]="(cert.state?.label || cert.state) === 'Éditée'"
+                              [class.badge-warning]="(cert.state?.label || cert.state) !== 'Éditée'">
                           <i class="fas fa-check-circle mr-1"
-                             *ngIf="cert.state === 'Éditée'"></i>
-                          {{ cert.state }}
+                             *ngIf="(cert.state?.label || cert.state) === 'Éditée'"></i>
+                          {{ cert.state?.label || cert.state?.name || cert.state }}
                         </span>
                         <!-- Indicateur imprimé -->
                         <small class="text-muted d-block"
@@ -290,7 +290,6 @@
                           {{ cert.printed_at }}
                         </small>
                       </td>
-  <td>{{ cert.id }}</td>
                       <td>
                         <div class="download-actions">
 

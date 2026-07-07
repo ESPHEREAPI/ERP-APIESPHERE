@@ -1,11 +1,13 @@
 export type ProfilAgent =
   | 'PRODUCTEUR'
+  | 'SUPER_PRODUCTEUR'
   | 'CHEF_BUREAU_AGENT'
   | 'CHEF_BUREAU_DIRECT_SIEGE'
   | 'ADMINISTRATEUR';
 
 export const PROFILS_AGENT: { value: ProfilAgent; label: string }[] = [
   { value: 'PRODUCTEUR',               label: 'ADMIN_AGENCE.PROFIL_PRODUCTEUR' },
+  { value: 'SUPER_PRODUCTEUR',         label: 'ADMIN_AGENCE.PROFIL_SUPER_PRODUCTEUR' },
   { value: 'CHEF_BUREAU_AGENT',        label: 'ADMIN_AGENCE.PROFIL_CHEF_AGENT' },
   { value: 'CHEF_BUREAU_DIRECT_SIEGE', label: 'ADMIN_AGENCE.PROFIL_CHEF_SIEGE' },
   { value: 'ADMINISTRATEUR',           label: 'ADMIN_AGENCE.PROFIL_ADMIN' },

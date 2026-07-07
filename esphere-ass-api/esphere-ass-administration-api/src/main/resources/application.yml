@@ -8,7 +8,7 @@ spring:
     name: esphere-ass-microservice-admin
 
   profiles:
-    active: prod
+    active: dev
 
   cloud:
     compatibility-verifier:
@@ -185,11 +185,20 @@ app:
 api:
   external:
     url:
-      production: https://ppeatt-api.asac.cm/api/v1/productions
+      production:  https://ppeatt-api.asac.cm/api/v1/productions
+      suspend:     https://ppeatt-api.asac.cm/api/v1/certificates/{ref}/suspend
+      cancel:      https://ppeatt-api.asac.cm/api/v1/certificates/{ref}/cancel
+      statistics:  https://ppeatt-api.asac.cm/api/v1/transactions/statistics/usage
     token: https://ppeatt-api.asac.cm/api/v1/auth/tokens/app-key
   compagny:
     name: "117"
   X-App-Id: ${ASAC_APP_ID:uF75y6t9Q7euKIsZG4LxVyVpv9pQTbyJzXDKokCCUaTLQRrjAGcoXYdF13IiMRTK}
+
+# ── Synchronisation stock ppeatt-api ─────────────────────────────────────────
+stock:
+  sync:
+    # Expression cron : toutes les heures par défaut (0 0 * * * *)
+    cron: ${STOCK_SYNC_CRON:0 0 * * * *}
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging:

@@ -60,6 +60,9 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
 
   expandedIndex: number | null = null;
 
+  existingCertsMap: Map<string, any> = new Map();
+  viewingExistingCert: any | null = null;
+
   private policeInput$ = new Subject<string>();
   private destroy$ = new Subject<void>();
 
@@ -68,36 +71,52 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
     return this.authService.currentUserValue?.canEdit === true;
   }
 
-  // ── Libellés français pour chaque champ technique ────────────
-  private readonly FIELD_LABELS: Record<string, string> = {
-    starts_at: 'Date d\'effet',
-    ends_at: 'Date d\'échéance',
-    rc: 'Prime RC',
-    police_number: 'Numéro de police',
-    certificate_variant_code: 'Variante',
-    customer_name: 'Nom du client',
-    customer_phone: 'Téléphone',
-    customer_email: 'Email',
-    customer_type: 'Type de client',
-    insured_birthdate: 'Date de naissance',
-    licence_plate: 'Immatriculation',
-    vehicle_chassis: 'Numéro de châssis',
-    vehicle_brand: 'Marque',
-    vehicle_model: 'Modèle',
-    vehicle_category: 'Catégorie du véhicule',
-    vehicle_gross_weight: 'Poids total autorisé',
-    nb_of_seats: 'Nombre de places',
-    fiscal_power: 'Puissance fiscale (CV)',
-    circulation_zone: 'Zone de circulation',
-    vehicle_first_registration_date: 'Date de mise en circulation',
-    trailer_licence_plate: 'Immatriculation remorque',
-    driver_name: 'Nom du conducteur',
-    driver_permis: 'Numéro de permis',
-    driver_permis_categorie: 'Catégorie de permis',
-    driver_birthdate: 'Date de naissance (conducteur)',
-    driver_licence_issued_at: 'Date d\'obtention du permis',
-    taxpayer_number: 'Numéro contribuable',
+  // ── Clés i18n pour chaque champ technique ────────────────────
+  // Résolution via translate.instant('CERT_FORM.FIELD.' + field)
+  private readonly FIELD_I18N_KEYS: Record<string, string> = {
+    starts_at:                       'CERT_FORM.FIELD.starts_at',
+    ends_at:                         'CERT_FORM.FIELD.ends_at',
+    rc:                              'CERT_FORM.FIELD.rc',
+    police_number:                   'CERT_FORM.FIELD.police_number',
+    certificate_variant_code:        'CERT_FORM.FIELD.certificate_variant_code',
+    customer_name:                   'CERT_FORM.FIELD.customer_name',
+    customer_phone:                  'CERT_FORM.FIELD.customer_phone',
+    customer_email:                  'CERT_FORM.FIELD.customer_email',
+    customer_type:                   'CERT_FORM.FIELD.customer_type',
+    insured_birthdate:               'CERT_FORM.FIELD.insured_birthdate',
+    licence_plate:                   'CERT_FORM.FIELD.licence_plate',
+    vehicle_chassis:                 'CERT_FORM.FIELD.vehicle_chassis',
+    vehicle_brand:                   'CERT_FORM.FIELD.vehicle_brand',
+    vehicle_model:                   'CERT_FORM.FIELD.vehicle_model',
+    vehicle_category:                'CERT_FORM.FIELD.vehicle_category',
+    vehicle_gross_weight:            'CERT_FORM.FIELD.vehicle_gross_weight',
+    nb_of_seats:                     'CERT_FORM.FIELD.nb_of_seats',
+    fiscal_power:                    'CERT_FORM.FIELD.fiscal_power',
+    circulation_zone:                'CERT_FORM.FIELD.circulation_zone',
+    vehicle_first_registration_date: 'CERT_FORM.FIELD.vehicle_first_registration_date',
+    trailer_licence_plate:           'CERT_FORM.FIELD.trailer_licence_plate',
+    driver_name:                     'CERT_FORM.FIELD.driver_name',
+    driver_permis:                   'CERT_FORM.FIELD.driver_permis',
+    driver_permis_categorie:         'CERT_FORM.FIELD.driver_permis_categorie',
+    driver_birthdate:                'CERT_FORM.FIELD.driver_birthdate',
+    driver_licence_issued_at:        'CERT_FORM.FIELD.driver_licence_issued_at',
+    taxpayer_number:                 'CERT_FORM.FIELD.taxpayer_number',
+    vehicle_energy:                  'CERT_FORM.FIELD.vehicle_energy',
+    vehicle_genre:                   'CERT_FORM.FIELD.vehicle_genre',
+    vehicule_usage:                  'CERT_FORM.FIELD.vehicule_usage',
+    vehicle_type:                    'CERT_FORM.FIELD.vehicle_type',
+    driver_licence_number:           'CERT_FORM.FIELD.driver_licence_number',
+    driver_licence_category:         'CERT_FORM.FIELD.driver_licence_category',
   };
+
+  /** Retourne le libellé traduit d'un champ technique */
+  private getFieldLabel(field: string): string {
+    const key = this.FIELD_I18N_KEYS[field];
+    if (!key) return this.humanizeField(field);
+    const translated = this.translate.instant(key);
+    // Si la clé n'est pas encore chargée, translate.instant retourne la clé elle-même
+    return translated === key ? this.humanizeField(field) : translated;
+  }
 
   private readonly FIELD_ICONS: Record<string, string> = {
     starts_at: 'fa-calendar-alt',
@@ -185,7 +204,7 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
             for (const e of parsed.errors) {
               const pointer = (e?.source?.pointer ?? e?.pointer ?? '').toString();
               const field = this.pointerToField(pointer);
-              const label = this.FIELD_LABELS[field] ?? this.humanizeField(field);
+              const label = this.getFieldLabel(field);
               const msg = this.decodeMessage(e?.detail ?? e?.message ?? 'Erreur inconnue');
               results.push({
                 field: label,
@@ -236,7 +255,7 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
           for (const e of parsed.errors) {
             const pointer = (e?.source?.pointer ?? e?.pointer ?? '').toString();
             const field = this.pointerToField(pointer);
-            const label = this.FIELD_LABELS[field] ?? this.humanizeField(field);
+            const label = this.getFieldLabel(field);
             const msg = this.decodeMessage(e?.detail ?? e?.message ?? 'Erreur inconnue');
             results.push({
               field: label,
@@ -273,7 +292,7 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
       for (const e of generalObj.errors) {
         const pointer = (e?.source?.pointer ?? e?.pointer ?? '').toString();
         const field = this.pointerToField(pointer);
-        const label = this.FIELD_LABELS[field] ?? this.humanizeField(field);
+        const label = this.getFieldLabel(field);
         const msg = this.decodeMessage(e?.detail ?? e?.message ?? 'Erreur inconnue');
         results.push({
           field: label,
@@ -297,7 +316,7 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
         if (key === 'general') continue; // déjà traité
 
         const field = key.replace(/^productions\.\d+\./, '');
-        const label = this.FIELD_LABELS[field] ?? this.humanizeField(field);
+        const label = this.getFieldLabel(field);
         const msgs = Array.isArray(messages) ? messages : [String(messages)];
 
         for (const msg of msgs) {
@@ -326,7 +345,7 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
       for (const e of err.errors) {
         const pointer = (e?.source?.pointer ?? e?.pointer ?? '').toString();
         const field = this.pointerToField(pointer);
-        const label = this.FIELD_LABELS[field] ?? this.humanizeField(field);
+        const label = this.getFieldLabel(field);
         results.push({
           field: label,
           message: this.decodeMessage(e?.detail ?? e?.message ?? 'Erreur'),
@@ -456,9 +475,9 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
   // ════════════════════════════════════════════════════════════
   private setupPoliceCheck(): void {
     this.policeInput$.pipe(
-      debounceTime(600),
+      debounceTime(900),
       switchMap(policeNumber => {
-        if (!policeNumber || policeNumber.trim().length < 5) { this.resetPoliceState(); return EMPTY; }
+        if (!policeNumber || policeNumber.trim().length < 10) { this.resetPoliceState(); return EMPTY; }
         this.policeStatus = 'checking';
         this.policeChecked = policeNumber.trim();
         return this.certificateService.checkPolice(policeNumber.trim()).pipe(
@@ -486,6 +505,7 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
         this.viewMode = 'fleet';
         this.selectedIds = new Set(list.map((_, i) => i));
       }
+      this.checkExistingCerts(this.policeChecked);
     });
   }
 
@@ -503,7 +523,56 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
   private resetPoliceState(): void {
     this.policeStatus = 'idle'; this.showPoliceDialog = false;
     this.foundProductions = []; this.selectedIds = new Set(); this.viewMode = 'form';
+    this.existingCertsMap.clear(); this.viewingExistingCert = null;
   }
+
+  private normPlate(plate: string): string {
+    return (plate || '').replace(/\s+/g, '').toUpperCase();
+  }
+
+  private checkExistingCerts(policeNumber: string): void {
+    this.certificateService.getFleetByPolice(policeNumber).subscribe({
+      next: certs => {
+        const newMap = new Map<string, any>();
+        for (const cert of certs) {
+          const key = this.normPlate(cert.licencePlate);
+          if (key) newMap.set(key, cert);
+        }
+        this.existingCertsMap = newMap;
+        this.selectedIds = new Set(
+          this.foundProductions
+            .map((p, i) => ({ p, i }))
+            .filter(({ p }) => !newMap.has(this.normPlate(p.licence_plate)))
+            .map(({ i }) => i)
+        );
+      },
+      error: () => {}
+    });
+  }
+
+  hasExistingCert(p: ProductionRequest): boolean {
+    return this.existingCertsMap.has(this.normPlate(p.licence_plate));
+  }
+
+  getExistingCert(p: ProductionRequest): any {
+    return this.existingCertsMap.get(this.normPlate(p.licence_plate));
+  }
+
+  get monoExistingCert(): any | null {
+    if (this.viewMode !== 'form' || this.foundProductions.length !== 1) return null;
+    return this.getExistingCert(this.foundProductions[0]) ?? null;
+  }
+
+  openExistingCertModal(p: ProductionRequest, event: Event): void {
+    event.stopPropagation();
+    this.viewingExistingCert = this.getExistingCert(p);
+  }
+
+  openMonoExistingCertModal(): void {
+    this.viewingExistingCert = this.monoExistingCert;
+  }
+
+  closeExistingCertModal(): void { this.viewingExistingCert = null; }
 
   // ════════════════════════════════════════════════════════════
   // PRÉ-REMPLISSAGE
@@ -557,15 +626,26 @@ export class CertificateFormComponent implements OnInit, OnDestroy {
   // SÉLECTION FLOTTE
   // ════════════════════════════════════════════════════════════
   toggleSelection(index: number): void {
+    if (this.hasExistingCert(this.foundProductions[index])) return;
     this.selectedIds.has(index) ? this.selectedIds.delete(index) : this.selectedIds.add(index);
   }
   toggleAll(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
-    this.selectedIds = checked ? new Set(this.foundProductions.map((_, i) => i)) : new Set();
+    if (checked) {
+      this.selectedIds = new Set(
+        this.foundProductions
+          .map((p, i) => ({ p, i }))
+          .filter(({ p }) => !this.hasExistingCert(p))
+          .map(({ i }) => i)
+      );
+    } else {
+      this.selectedIds = new Set();
+    }
   }
   isSelected(index: number): boolean { return this.selectedIds.has(index); }
   get allSelected(): boolean {
-    return this.foundProductions.length > 0 && this.selectedIds.size === this.foundProductions.length;
+    const selectable = this.foundProductions.filter(p => !this.hasExistingCert(p));
+    return selectable.length > 0 && this.selectedIds.size === selectable.length;
   }
   get selectedCount(): number { return this.selectedIds.size; }
   backToForm(): void { this.viewMode = 'form'; this.initForm(); }

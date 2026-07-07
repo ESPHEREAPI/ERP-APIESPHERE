@@ -10,6 +10,7 @@ import {
   ApprovisionnerRequest,
   AjustementRequest
 } from '../model/StockAttestation';
+import { StockAuditResponse } from '../model/StockAudit';
 
 interface ApiResponse<T> { success: boolean; message: string; data: T; errorCode?: string; }
 
@@ -64,6 +65,10 @@ export class StockService {
 
   annulerProduction(officeCode: string, refProduction: string): Observable<ApiResponse<StockAttestation>> {
     return this.http.delete<ApiResponse<StockAttestation>>(`${this.base}/${officeCode}/annuler/${refProduction}`);
+  }
+
+  getAudit(officeCode: string): Observable<ApiResponse<StockAuditResponse>> {
+    return this.http.get<ApiResponse<StockAuditResponse>>(`${this.base}/${officeCode}/audit`);
   }
 
   // ── Helpers ──────────────────────────────────────────────────

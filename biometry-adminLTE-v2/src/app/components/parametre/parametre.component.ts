@@ -86,6 +86,7 @@ export class ParametreComponent implements OnInit, OnDestroy {
       { titre: 'param_cat_notif_assure',   icone: 'fa-user',         couleur: '#00a65a', prefixes: ['NOTIF_ASSURE_'] },
       { titre: 'param_cat_notif_ss',       icone: 'fa-heartbeat',    couleur: '#f39c12', prefixes: ['NOTIF_SS_'] },
       { titre: 'param_cat_alertes_stats',  icone: 'fa-bar-chart',    couleur: '#dd4b39', prefixes: ['NOTIF_STATS_', 'NOTIF_ALERTE_', 'SEUIL_'] },
+      { titre: 'param_cat_validation',    icone: 'fa-check-circle', couleur: '#605ca8', prefixes: ['OBSERVATION_', 'PARTAGE_'] },
       { titre: 'param_cat_autres',         icone: 'fa-cog',          couleur: '#6c757d', prefixes: ['SESSION_', '__autres__'] },
     ];
 

@@ -40,6 +40,9 @@ esphere:
     url: ${AUTH_URL:http://localhost:8081}
   service-sante:
     telephones: ${SS_TELEPHONES:694923568,686086116}
+  alerte-sms:
+    telephones: ${ALERTE_SMS_TELEPHONES:694923568,674032771}
+    seuil: ${ALERTE_SMS_SEUIL:50}
 
 management:
   endpoints:

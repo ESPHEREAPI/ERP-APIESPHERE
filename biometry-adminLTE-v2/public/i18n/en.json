@@ -257,6 +257,8 @@
       "SUBTITLE": "Track your submitted claims"
     }
   },
+
+  "param_cat_validation": "Validation & Sharing",
   "observation_rejet_requise": "Please fill in the observation for each rejected line.",
   "envoyer_lien_patient": "Send link to patient",
   "copier_lien": "Copy link",
@@ -264,7 +266,6 @@
   "numero_telephone": "Phone number",
   "sms_envoye_ok": "SMS sent successfully!",
   "sms_envoye_erreur": "Error sending SMS.",
-  "annuler": "Cancel",
   "envoyer": "Send",
   "document_obligatoire_msg": "The filmed document is required. Please send the link to the patient to film the document before finishing.",
   "verifier_document": "Check",

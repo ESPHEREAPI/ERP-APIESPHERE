@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{fragments/layout :: layout(titre='Detail execution', contenu=~{::section})}">
+<section>
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a th:href="@{/webservice/dashboard/historique}">Historique</a></li>
+            <li class="breadcrumb-item active" th:text="${detail != null ? '#' + detail.id : 'introuvable'}">#1</li>
+        </ol>
+    </nav>
+
+    <div th:if="${detail == null}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>Aucun historique trouve pour cet identifiant.
+    </div>
+
+    <div th:if="${detail != null}">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">
+                    <span class="type-badge" th:text="${detail.typeSynchronisation}">TYPE</span>
+                    Execution #<span th:text="${detail.id}">1</span>
+                </h1>
+                <p class="text-muted mb-0">
+                    Declenchee par <strong th:text="${detail.declencheur}">MANUEL</strong>
+                    le <span th:text="${#temporals.format(detail.dateDebut, 'dd/MM/yyyy HH:mm:ss')}">date</span>
+                    <span th:if="${detail.policeFiltre != null}"> avec le filtre <code th:text="${detail.policeFiltre}">police</code></span>
+                </p>
+            </div>
+            <span th:class="'badge fs-6 statut-' + ${detail.statut}" th:text="${detail.statut}">STATUT</span>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-value" th:text="${detail.nbTraites != null ? detail.nbTraites : '-'}">0</div>
+                        <div class="stat-label">Lignes traitees</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-value" th:text="${detail.nbEchecs != null ? detail.nbEchecs : '-'}">0</div>
+                        <div class="stat-label">Lignes en echec</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-value" th:text="${detail.dureeMs != null ? detail.dureeMs + ' ms' : '-'}">-</div>
+                        <div class="stat-label">Duree</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-value small" th:text="${detail.dateFin != null ? #temporals.format(detail.dateFin, 'HH:mm:ss') : 'en cours'}">-</div>
+                        <div class="stat-label">Heure de fin</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-danger" th:if="${detail.messageErreur != null}">
+            <i class="bi bi-x-octagon me-2"></i><strong>Erreur :</strong>
+            <pre class="mb-0 mt-2 small" th:text="${detail.messageErreur}"></pre>
+        </div>
+
+        <div class="card border-0 shadow-sm" th:if="${detail.detailsEchecs != null}">
+            <div class="card-header bg-white border-0 pt-3">
+                <h2 class="h6 fw-semibold mb-0"><i class="bi bi-list-ul me-2"></i>Detail des lignes en echec</h2>
+            </div>
+            <div class="card-body">
+                <pre class="echec-detail mb-0" th:text="${detail.detailsEchecs}"></pre>
+            </div>
+        </div>
+
+        <div class="alert alert-success mt-3" th:if="${detail.statut == 'SUCCES' and detail.detailsEchecs == null}">
+            <i class="bi bi-check-circle me-2"></i>Aucune erreur sur cette execution.
+        </div>
+    </div>
+
+</section>
+</th:block>
+</body>
+</html>

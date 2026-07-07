@@ -1,0 +1,317 @@
+
+  <section class="content-header">
+    <div class="container-fluid">
+      <h1>{{ 'RESILIATION.TITLE' | translate }}</h1>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container-fluid">
+
+      <div class="card card-secondary">
+        <div class="card-header">
+          <h3 class="card-title"><i class="fas fa-file-contract mr-2"></i>{{ 'RESILIATION.FORM_TITLE' | translate }}</h3>
+        </div>
+        <div class="card-body">
+
+          <div *ngIf="successMsg" class="alert alert-success">
+            <i class="icon fas fa-check"></i> {{ successMsg | translate }}
+          </div>
+          <div *ngIf="errorMsg" class="alert alert-danger">
+            <i class="icon fas fa-ban"></i> {{ errorMsg | translate }}
+          </div>
+
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>{{ 'SEARCH.TYPE' | translate }}</label>
+                <select class="form-control" [(ngModel)]="searchType" (ngModelChange)="onSearchTypeChange()">
+                  <option value="REFERENCE">{{ 'SEARCH.BY_REFERENCE' | translate }}</option>
+                  <option value="POLICE">{{ 'SEARCH.BY_POLICE' | translate }}</option>
+                  <option value="PLATE">{{ 'SEARCH.BY_PLATE' | translate }}</option>
+                </select>
+              </div>
+            </div>
+            <div [ngClass]="searchType === 'POLICE' ? 'col-md-2' : 'col-md-4'">
+              <div class="form-group">
+                <label>{{ (searchType === 'REFERENCE' ? 'RESILIATION.REFERENCE' : searchType === 'POLICE' ? 'SEARCH.POLICE_LABEL' : 'SEARCH.PLATE_LABEL') | translate }}</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" [(ngModel)]="searchValue"
+                         (input)="onSearchInput()"
+                         [placeholder]="(searchType === 'REFERENCE' ? 'RESILIATION.REFERENCE_PLACEHOLDER' : searchType === 'POLICE' ? 'SEARCH.POLICE_PLACEHOLDER' : 'SEARCH.PLATE_PLACEHOLDER') | translate">
+                  <div class="input-group-append">
+                    <span class="input-group-text">
+                      <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
+                      <i class="fas fa-search" *ngIf="!isSearching"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2" *ngIf="searchType === 'POLICE'">
+              <div class="form-group">
+                <label>{{ 'SEARCH.PLATE_FLEET' | translate }}</label>
+                <input type="text" class="form-control" [(ngModel)]="plateValue"
+                       (input)="onSearchInput()"
+                       [placeholder]="'SEARCH.PLATE_FLEET_PLACEHOLDER' | translate">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>{{ 'RESILIATION.MOTIF' | translate }}</label>
+                <select class="form-control" [(ngModel)]="motifCode">
+                  <option value="">-- {{ 'RESILIATION.SELECT_MOTIF' | translate }} --</option>
+                  <option *ngFor="let m of motifs" [value]="m.code">{{ m.code }} — {{ m.libelle }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn btn-secondary btn-block"
+                      [disabled]="!canSubmit || isLoading || isLoadingInfo"
+                      (click)="openConfirm()">
+                <span *ngIf="isLoadingInfo"><i class="fas fa-spinner fa-spin mr-1"></i></span>
+                <span *ngIf="!isLoadingInfo"><i class="fas fa-file-contract mr-1"></i></span>
+                {{ 'RESILIATION.RESIL_BTN' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- ── Liste flotte : sélectionner un véhicule ─────────── -->
+          <div *ngIf="fleetCerts.length > 0" class="mt-2">
+            <div class="card card-outline card-secondary mb-0">
+              <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+                <i class="fas fa-car text-secondary"></i>
+                <h6 class="card-title mb-0">
+                  Flotte — <strong>{{ fleetCerts.length }} véhicules</strong> trouvés — cliquez pour sélectionner
+                </h6>
+              </div>
+              <div class="card-body p-0">
+                <table class="table table-sm table-hover mb-0">
+                  <thead class="bg-light">
+                    <tr>
+                      <th>Référence</th>
+                      <th>Immatriculation</th>
+                      <th>Assuré</th>
+                      <th>Validité</th>
+                      <th>État</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let c of fleetCerts"
+                        (click)="selectFromFleet(c)"
+                        style="cursor:pointer">
+                      <td><span class="text-primary font-weight-bold">{{ c.reference }}</span></td>
+                      <td>
+                        <span class="badge badge-info px-2" style="font-size:12px;letter-spacing:1px">
+                          <i class="fas fa-car mr-1"></i>{{ c.licencePlate || '—' }}
+                        </span>
+                      </td>
+                      <td>{{ c.insuredName || '—' }}</td>
+                      <td><small>{{ c.startsAt }} → {{ c.endsAt }}</small></td>
+                      <td>
+                        <span class="badge"
+                              [class.badge-success]="c.stateLabel === 'Active' || c.stateLabel === 'Éditée'"
+                              [class.badge-warning]="c.stateLabel !== 'Active' && c.stateLabel !== 'Éditée'">
+                          {{ c.stateLabel }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Prévisualisation live ──────────────────────────── -->
+          <div *ngIf="previewCert || previewError" class="mt-2">
+
+            <div class="alert alert-warning py-2" *ngIf="previewError && !previewCert">
+              <i class="fas fa-search mr-1"></i> {{ 'CONFIRM.INFO_NOT_FOUND' | translate }}
+            </div>
+
+            <div class="alert alert-danger py-2" *ngIf="previewCert && stateWarning">
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              <strong>Attention :</strong> {{ stateWarning | translate }}
+            </div>
+
+            <div class="card card-outline card-secondary mb-0" *ngIf="previewCert">
+              <div class="card-header py-2 d-flex align-items-center" style="gap:8px">
+                <i class="fas fa-eye text-secondary"></i>
+                <h6 class="card-title mb-0">Prévisualisation du certificat trouvé</h6>
+                <span class="badge badge-success ml-auto">{{ previewCert.stateLabel }}</span>
+              </div>
+              <div class="card-body py-2 px-3">
+                <div class="row text-sm">
+                  <div class="col-md-3">
+                    <small class="text-muted d-block">Référence</small>
+                    <strong class="text-primary">{{ previewCert.reference }}</strong>
+                  </div>
+                  <div class="col-md-3">
+                    <small class="text-muted d-block">N° Police</small>
+                    <span class="badge badge-warning">{{ previewCert.policeNumber || '—' }}</span>
+                  </div>
+                  <div class="col-md-3">
+                    <small class="text-muted d-block">Assuré</small>
+                    <span>{{ previewCert.insuredName || '—' }}</span>
+                  </div>
+                  <div class="col-md-3">
+                    <small class="text-muted d-block">Immatriculation</small>
+                    <span class="badge badge-info px-2" style="font-size:12px;letter-spacing:1px">
+                      <i class="fas fa-car mr-1"></i>{{ previewCert.licencePlate || '—' }}
+                    </span>
+                  </div>
+                  <div class="col-md-3 mt-2">
+                    <small class="text-muted d-block">Type / Variante</small>
+                    <span>{{ previewCert.certTypeName || '—' }}</span>
+                    <span class="badge badge-secondary ml-1">{{ previewCert.certVariantName }}</span>
+                  </div>
+                  <div class="col-md-3 mt-2">
+                    <small class="text-muted d-block">Validité</small>
+                    <span>{{ previewCert.startsAt }} → {{ previewCert.endsAt }}</span>
+                  </div>
+                  <div class="col-md-3 mt-2">
+                    <small class="text-muted d-block">Téléphone</small>
+                    <span>{{ previewCert.insuredPhone || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Modal de confirmation enrichie -->
+      <div class="modal fade show d-block" tabindex="-1" *ngIf="isConfirming" style="background:rgba(0,0,0,.6)">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content" style="position:relative;overflow:hidden">
+
+            <div *ngIf="isLoading"
+                 style="position:absolute;inset:0;background:rgba(255,255,255,.82);z-index:20;
+                        display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+              <i class="fas fa-spinner fa-spin fa-2x text-secondary"></i>
+              <span class="font-weight-bold text-muted">{{ 'COMMON.LOADING' | translate }}</span>
+            </div>
+            <div class="modal-header bg-secondary text-white">
+              <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>{{ 'RESILIATION.CONFIRM_TITLE' | translate }}</h5>
+            </div>
+            <div class="modal-body">
+              <p class="font-weight-bold">{{ 'RESILIATION.CONFIRM_MSG' | translate }}</p>
+
+              <div class="alert alert-warning" *ngIf="infoError">
+                <i class="fas fa-info-circle mr-1"></i> {{ 'CONFIRM.INFO_NOT_FOUND' | translate }}
+              </div>
+
+              <div class="card card-outline card-secondary mb-3" *ngIf="certInfo">
+                <div class="card-header py-2">
+                  <h6 class="card-title mb-0"><i class="fas fa-id-card mr-2"></i>{{ 'CONFIRM.CERT_DETAILS' | translate }}</h6>
+                </div>
+                <div class="card-body p-0">
+                  <table class="table table-sm table-bordered mb-0">
+                    <tbody>
+                      <tr>
+                        <th class="w-35 bg-light">{{ 'CONFIRM.REFERENCE' | translate }}</th>
+                        <td>{{ certInfo.reference }}</td>
+                        <th class="w-25 bg-light">{{ 'CONFIRM.POLICE' | translate }}</th>
+                        <td>{{ certInfo.policeNumber || '—' }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-light">{{ 'CONFIRM.INSURED' | translate }}</th>
+                        <td>{{ certInfo.insuredName || '—' }}</td>
+                        <th class="bg-light">{{ 'CONFIRM.PHONE' | translate }}</th>
+                        <td>{{ certInfo.insuredPhone || '—' }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-light">{{ 'CONFIRM.MATRICULE' | translate }}</th>
+                        <td>
+                          <span class="badge badge-info px-2" style="font-size:12px;letter-spacing:1px">
+                            <i class="fas fa-car mr-1"></i>{{ certInfo.licencePlate || '—' }}
+                          </span>
+                        </td>
+                        <th class="bg-light">{{ 'CONFIRM.CHASSIS' | translate }}</th>
+                        <td>{{ certInfo.chassisNumber || '—' }}</td>
+                      </tr>
+                      <tr>
+                        <th class="bg-light">{{ 'CONFIRM.TYPE' | translate }}</th>
+                        <td>{{ certInfo.certTypeName || '—' }} <span class="badge badge-secondary ml-1">{{ certInfo.certVariantName }}</span></td>
+                        <th class="bg-light">{{ 'CONFIRM.STATUS' | translate }}</th>
+                        <td><span class="badge badge-success">{{ certInfo.stateLabel || '—' }}</span></td>
+                      </tr>
+                      <tr>
+                        <th class="bg-light">{{ 'CONFIRM.START_DATE' | translate }}</th>
+                        <td>{{ certInfo.startsAt || '—' }}</td>
+                        <th class="bg-light">{{ 'CONFIRM.END_DATE' | translate }}</th>
+                        <td>{{ certInfo.endsAt || '—' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="alert alert-light border">
+                <strong>{{ 'CONFIRM.ACTION' | translate }} :</strong>
+                <span class="badge badge-secondary ml-2">{{ 'RESILIATION.TITLE' | translate }}</span>
+                &nbsp;|&nbsp;
+                <strong>{{ 'CONFIRM.MOTIF' | translate }} :</strong> {{ motifCode }} — {{ selectedMotifLibelle }}
+              </div>
+
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-outline-secondary" [disabled]="isLoading" (click)="cancelConfirm()">{{ 'COMMON.CANCEL' | translate }}</button>
+              <button class="btn btn-secondary" [disabled]="isLoading" (click)="confirm()">
+                <span *ngIf="isLoading"><i class="fas fa-spinner fa-spin mr-1"></i></span>
+                <span *ngIf="!isLoading"><i class="fas fa-check mr-1"></i></span>
+                {{ 'RESILIATION.CONFIRM_BTN' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historique -->
+      <div class="card card-secondary mt-3">
+        <div class="card-header d-flex align-items-center">
+          <h3 class="card-title"><i class="fas fa-history mr-2"></i>{{ 'RESILIATION.HISTORY_TITLE' | translate }}</h3>
+          <div class="ml-auto" style="width:260px">
+            <div class="input-group input-group-sm">
+              <input type="text" class="form-control" [(ngModel)]="histFilter"
+                     placeholder="Filtrer par référence, motif, utilisateur…">
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="fas fa-filter"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+          <table class="table table-hover text-nowrap">
+            <thead>
+              <tr>
+                <th>{{ 'RESILIATION.COL_REF' | translate }}</th>
+                <th>{{ 'RESILIATION.COL_MOTIF' | translate }}</th>
+                <th>{{ 'RESILIATION.COL_USER' | translate }}</th>
+                <th>{{ 'RESILIATION.COL_DATE' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of filteredHistorique">
+                <td><span class="text-primary font-weight-bold">{{ h.certificateReference }}</span></td>
+                <td>{{ h.motifLibelle }}</td>
+                <td><i class="fas fa-user text-muted mr-1"></i>{{ h.usernameExecutant }}</td>
+                <td><i class="fas fa-clock text-muted mr-1"></i>{{ h.dateAction | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+              <tr *ngIf="filteredHistorique.length === 0">
+                <td colspan="4" class="text-center text-muted py-3">
+                  <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                  {{ historique.length === 0 ? ('RESILIATION.NO_HISTORY' | translate) : 'Aucun résultat pour ce filtre' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer text-muted" *ngIf="historique.length > 0">
+          <small>{{ filteredHistorique.length }} / {{ historique.length }} entrée(s)</small>
+        </div>
+      </div>
+
+    </div>
+  </section>

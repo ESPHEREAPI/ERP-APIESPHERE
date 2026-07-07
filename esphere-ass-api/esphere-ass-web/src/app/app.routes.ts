@@ -22,6 +22,13 @@ import { AdminAgenceComponent } from './features/admin-agence/admin-agence.compo
 import { StockDashboardComponent } from './features/stock/stock-dashboard/stock-dashboard.component';
 import { StockListComponent } from './features/stock/stock-list/stock-list.component';
 import { StockHistoriqueComponent } from './features/stock/stock-historique/stock-historique.component';
+import { StockAuditComponent } from './features/stock/stock-audit/stock-audit.component';
+import { SuspensionComponent } from './features/certificates/suspension/suspension.component';
+import { AnnulationComponent } from './features/certificates/annulation/annulation.component';
+import { ResiliationComponent } from './features/certificates/resiliation/resiliation.component';
+import { HistoriqueSuspensionsComponent } from './features/historique/historique-suspensions/historique-suspensions.component';
+import { HistoriqueAnnulationsComponent } from './features/historique/historique-annulations/historique-annulations.component';
+import { HistoriqueResiliationsComponent } from './features/historique/historique-resiliations/historique-resiliations.component';
 
 
 export const routes: Routes = [
@@ -138,6 +145,47 @@ export const routes: Routes = [
             path: 'downloads',
             component: TelechargementComponent,
             data: { title: 'Téléchargements PDF' }
+          },
+          {
+            path: 'suspension',
+            component: SuspensionComponent,
+            canActivate: [ProfilGuard],
+            data: { title: 'Suspension', profilsAutorises: ['PRODUCTEUR', 'SUPER_PRODUCTEUR', 'CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
+          },
+          {
+            path: 'annulation',
+            component: AnnulationComponent,
+            canActivate: [ProfilGuard],
+            data: { title: 'Annulation', profilsAutorises: ['SUPER_PRODUCTEUR', 'CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
+          },
+          {
+            path: 'resiliation',
+            component: ResiliationComponent,
+            canActivate: [ProfilGuard],
+            data: { title: 'Résiliation', profilsAutorises: ['SUPER_PRODUCTEUR', 'CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
+          }
+        ]
+      },
+      {
+        path: 'historique',
+        children: [
+          {
+            path: 'suspensions',
+            component: HistoriqueSuspensionsComponent,
+            canActivate: [ProfilGuard],
+            data: { profilsAutorises: ['PRODUCTEUR', 'SUPER_PRODUCTEUR', 'CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
+          },
+          {
+            path: 'annulations',
+            component: HistoriqueAnnulationsComponent,
+            canActivate: [ProfilGuard],
+            data: { profilsAutorises: ['SUPER_PRODUCTEUR', 'CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
+          },
+          {
+            path: 'resiliations',
+            component: HistoriqueResiliationsComponent,
+            canActivate: [ProfilGuard],
+            data: { profilsAutorises: ['SUPER_PRODUCTEUR', 'CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
           }
         ]
       },
@@ -174,6 +222,12 @@ export const routes: Routes = [
             canActivate: [ProfilGuard],
             data: { profilsAutorises: ['CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
           },
+          {
+            path: 'audit',
+            component: StockAuditComponent,
+            canActivate: [ProfilGuard],
+            data: { profilsAutorises: ['CHEF_BUREAU_AGENT', 'CHEF_BUREAU_DIRECT_SIEGE', 'ADMINISTRATEUR'] }
+          },
         ]
       }
 
@@ -185,7 +239,7 @@ export const routes: Routes = [
   // Route wildcard
   {
     path: '**',
-    redirectTo: '/home'
+    redirectTo: '/dashboard'
   },
 
 

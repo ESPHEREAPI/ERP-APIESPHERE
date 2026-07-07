@@ -258,6 +258,10 @@
       "SUBTITLE": "Suivi de vos prestations soumises"
     }
   },
+  "motif_rejet_placeholder": "Saisissez le motif du rejet...",
+  "solde_disponible": "Solde disponible",
+  "consomme": "consommé",
+  "param_cat_validation": "Validation & Partage",
   "observation_rejet_requise": "Veuillez renseigner l'observation pour chaque ligne rejetée.",
   "envoyer_lien_patient": "Envoyer le lien au patient",
   "copier_lien": "Copier le lien",

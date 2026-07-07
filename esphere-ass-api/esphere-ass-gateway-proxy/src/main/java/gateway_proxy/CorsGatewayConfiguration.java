@@ -216,6 +216,7 @@ public class CorsGatewayConfiguration {
         corsConfig.addAllowedOriginPattern("http://77.68.94.193");
         corsConfig.addAllowedOriginPattern("https://77.68.94.193:*");
         corsConfig.addAllowedOriginPattern("https://zenbio.zenitheinsurance.com");
+        corsConfig.addAllowedOriginPattern("https://e-attestation.zenitheinsurance.com");
 
         // Credentials
         corsConfig.setAllowCredentials(true);

@@ -23,7 +23,8 @@ public interface ProductionPayloadRepository extends JpaRepository<ProductionPay
 
     // Requête dérivée : liste toutes les productions d'un client
     List<ProductionPayload> findByUserName(String userName);
-    List<ProductionPayload>findByOfficeCode(String officeCode);
+    List<ProductionPayload> findByOfficeCode(String officeCode);
+    List<ProductionPayload> findByOfficeCodeAndReferenceIsNotNullOrderByCreatedAtDesc(String officeCode);
      List<ProductionPayload>findByReference(String reference);
     
 

@@ -33,6 +33,7 @@
         <module>esphere-media-service</module>
         <module>esphere-notification-service</module>
         <module>esphere-reporting-service</module>
+        <module>esphere-webservice-cron</module>
     </modules>
 
     <!-- ═══════════════════════════════════════════════════

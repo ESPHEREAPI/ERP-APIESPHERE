@@ -45,22 +45,16 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      // Gérer les erreurs HTTP spécifiques SAUF pour les routes d'authentification
+      // Gérer les erreurs HTTP spécifiques
       const isAuthRoute = req.url.includes('/auth/');
-      
+      const isPublicApi = req.url.includes('/capture/') || req.url.includes('/medias/');
+
       switch (errorCode) {
         case 401:
-          // ✅ Si route d'auth (login), ne pas rediriger automatiquement
-          if (isAuthRoute) {
-            console.log('❌ Login failed - showing error in component');
+          if (isAuthRoute || isPublicApi) {
             return throwError(() => error);
           }
-          
-          // Sinon, rediriger vers login (session expirée)
-          console.error('🔐 Unauthorized access - redirecting to login');
-          router.navigate(['/login'], {
-            queryParams: { returnUrl: router.url, sessionExpired: 'true' }
-          });
+          console.error('🔐 Unauthorized access');
           break;
 
         case 403:

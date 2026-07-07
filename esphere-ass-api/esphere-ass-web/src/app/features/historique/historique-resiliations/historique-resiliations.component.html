@@ -1,0 +1,58 @@
+<div class="content-wrapper">
+  <section class="content-header">
+    <div class="container-fluid">
+      <h1><i class="fas fa-file-contract text-secondary mr-2"></i>{{ 'HISTORIQUE.RESILIATION_TITLE' | translate }}</h1>
+    </div>
+  </section>
+  <section class="content">
+    <div class="container-fluid">
+      <div class="card card-secondary">
+        <div class="card-header">
+          <h3 class="card-title">{{ 'HISTORIQUE.RESILIATION_TITLE' | translate }}</h3>
+          <div class="card-tools">
+            <div class="input-group input-group-sm" style="width:250px">
+              <input type="text" class="form-control" [(ngModel)]="search"
+                     (input)="applyFilter()"
+                     placeholder="{{ 'HISTORIQUE.SEARCH' | translate }}">
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body table-responsive p-0">
+          <div *ngIf="isLoading" class="text-center p-4">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+          </div>
+          <div *ngIf="errorMsg" class="alert alert-danger m-3">{{ errorMsg | translate }}</div>
+          <table class="table table-hover text-nowrap" *ngIf="!isLoading">
+            <thead>
+              <tr>
+                <th>{{ 'HISTORIQUE.COL_REF' | translate }}</th>
+                <th>{{ 'HISTORIQUE.COL_MOTIF' | translate }}</th>
+                <th>{{ 'HISTORIQUE.COL_USER' | translate }}</th>
+                <th>{{ 'HISTORIQUE.COL_PROFIL' | translate }}</th>
+                <th>{{ 'HISTORIQUE.COL_DATE' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let h of filtered">
+                <td><span class="badge badge-secondary">{{ h.certificateReference }}</span></td>
+                <td>{{ h.motifLibelle }}</td>
+                <td>{{ h.usernameExecutant }}</td>
+                <td>{{ h.profilExecutant }}</td>
+                <td>{{ h.dateAction | date:'dd/MM/yyyy HH:mm' }}</td>
+              </tr>
+              <tr *ngIf="filtered.length === 0">
+                <td colspan="5" class="text-center text-muted p-4">{{ 'HISTORIQUE.NO_DATA' | translate }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer" *ngIf="!isLoading">
+          <small class="text-muted">{{ 'HISTORIQUE.TOTAL' | translate : { count: filtered.length } }}</small>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

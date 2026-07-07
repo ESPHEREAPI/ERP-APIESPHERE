@@ -41,6 +41,11 @@ ordonnancesValidees   = 0;
 examensValides        = 0;
 private prestataireId = '';
 
+  // Solde SMS (SUP_ADMIN uniquement)
+  soldeSms = -1;
+  soldeSmsAlerte = false;
+  private soldeSmsAlertEnvoyee = false;
+
   private destroy$ = new Subject<void>();
   private refreshInterval: any;
   private soundInterval: any = null;
@@ -72,9 +77,13 @@ private prestataireId = '';
 
     
 
-    // Charger les compteurs immédiatement puis toutes les 60 secondes
+    // Charger les compteurs immédiatement puis toutes les 120 secondes
     this.loadBadgeCounts();
-    this.refreshInterval = setInterval(() => this.loadBadgeCounts(), 120000);
+    this.checkSoldeSms();
+    this.refreshInterval = setInterval(() => {
+      this.loadBadgeCounts();
+      this.checkSoldeSms();
+    }, 120000);
   }
 
   ngOnDestroy(): void {
@@ -295,6 +304,26 @@ private updateBadgesPrestataire(data: any): void {
         }
     });
 }
+
+  // ── Solde SMS (SUP_ADMIN) ─────────────────────────────
+  private checkSoldeSms(): void {
+    const profilCode = this.user?.profilCode || '';
+    if (profilCode !== 'SUP_ADMIN') return;
+
+    this.http.get<any>('/notifications/sms/solde', { headers: { 'X-Background-Poll': 'true' } })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: data => {
+          this.soldeSms = data.solde ?? -1;
+          this.soldeSmsAlerte = this.soldeSms >= 0 && this.soldeSms < 50;
+        },
+        error: () => {}
+      });
+  }
+
+  get isSuperAdmin(): boolean {
+    return this.user?.profilCode === 'SUP_ADMIN';
+  }
 
  /**  private updateBadges(data: any): void {
     this.consultationsEnAttente = data.consultationsEnAttente || 0;

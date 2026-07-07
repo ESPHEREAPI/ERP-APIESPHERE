@@ -207,3 +207,12 @@ li .blink-badge {
 .callout-encaisser-blink {
     animation: blink-green 1.5s infinite;
 }
+
+@keyframes blink-red-sms {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+}
+
+.sms-blink {
+    animation: blink-red-sms 1s infinite;
+}

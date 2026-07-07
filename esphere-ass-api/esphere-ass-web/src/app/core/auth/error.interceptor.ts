@@ -36,8 +36,10 @@ export const errorInterceptor: HttpInterceptorFn = (
 
       errorService.handleAndNotify(status, body);
 
-      // Redirection automatique sur 403
-      if (status === 403) {
+      // Redirection sur 403 sauf pour les actions métier (suspension/annulation/résiliation)
+      // qui peuvent recevoir un 403 de l'API externe traduit en 422 côté backend,
+      // mais par sécurité on exclut aussi les URLs /certificates/ ici.
+      if (status === 403 && !req.url.includes('/certificates/')) {
         router.navigate(['/home']);
       }
 

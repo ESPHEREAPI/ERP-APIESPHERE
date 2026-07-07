@@ -162,9 +162,12 @@
                 </td>
 
                 <td>
-                  <span class="badge badge-success px-2 py-1">
-                    <i class="fas fa-check-circle mr-1"></i>{{ 'CERT_LIST.STATUS_EDITED' | translate }}
-                  </span>
+                  <ng-container *ngIf="getProductionStatus(prod) as st">
+                    <span class="badge px-2 py-1" [ngClass]="st.badge">
+                      <i class="fas mr-1" [ngClass]="st.icon"></i>
+                      {{ 'CERT_LIST.' + st.key | translate }}
+                    </span>
+                  </ng-container>
                 </td>
 
                 <td>
@@ -246,7 +249,7 @@
     <div class="modal fade" id="detailModal" tabindex="-1" role="dialog"
          [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'"
          *ngIf="selectedProduction">
-      <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content modal-rounded">
 
           <!-- Header modal -->
@@ -366,12 +369,16 @@
                           </span>
                         </td>
                         <td>{{ cert.insured_name }}</td>
-                        <td><code>{{ cert.licence_plate }}</code></td>
+                        <td>
+                          <span class="badge badge-info px-2 py-1" style="font-size:13px;letter-spacing:1px;font-weight:600">
+                            <i class="fas fa-car mr-1"></i>{{ cert.licence_plate || '—' }}
+                          </span>
+                        </td>
                         <td>
                           <small>{{ cert.starts_at }} → {{ cert.ends_at }}</small>
                         </td>
                         <td>
-                          <span class="badge badge-success">{{ cert.state }}</span>
+                          <span class="badge badge-success">{{ cert.state?.label || cert.state?.name || cert.state }}</span>
                         </td>
                         <td>
                           <div class="btn-group btn-group-xs">

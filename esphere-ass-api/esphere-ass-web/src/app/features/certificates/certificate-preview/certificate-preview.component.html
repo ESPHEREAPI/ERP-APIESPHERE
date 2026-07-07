@@ -83,7 +83,7 @@
                      (click)="goTo(i)">
                   <!-- Miniature image -->
                   <div class="thumb-img-wrap">
-                    <img [src]="cert.download_link"
+                    <img [src]="getImageSrc(cert)"
                          [alt]="cert.reference"
                          (error)="onImageError(cert.reference)"
                          *ngIf="!imageErrors[cert.reference]" />
@@ -131,7 +131,7 @@
 
               <!-- Image principale -->
               <div class="viewer-img-wrap">
-                <img [src]="activeCert.download_link"
+                <img [src]="getImageSrc(activeCert)"
                      [alt]="activeCert.reference"
                      class="viewer-img"
                      (error)="onImageError(activeCert.reference)"

@@ -19,8 +19,14 @@ import org.springframework.web.client.RestTemplate;
 
 import service_administration_api.DTO.pooltpv.ResponseApi.RequestApiPoolTPV.*;
 import service_administration_api.DTO.pooltpv.ResponseApiPoolTPV.ProductionPayloadResponse;
+import service_administration_api.DTO.pooltpv.SuspendCancelRequest;
+import service_administration_api.DTO.pooltpv.ActionResponse;
+import service_administration_api.DTO.pooltpv.MotifActionDTO;
+import service_administration_api.DTO.pooltpv.CertificateInfoDTO;
 import service_administration_api.entite.pooltpv.CertificatePlayLoad;
 import service_administration_api.entite.pooltpv.ProductionPayload;
+import service_administration_api.entite.pooltpv.HistoriqueAction;
+import service_administration_api.entite.pooltpv.MotifAction;
 import service_administration_api.entite.ZenAttdigAsac;
 import service_administration_api.exception.*;
 import service_administration_api.mapper.*;
@@ -52,9 +58,17 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
     private final UsageVehiculeRepository usageVehiculeRepository;
     private final ZoneCirculationRepository zoneCirculationRepository;
     private final StockAttestationService stockService;
+    private final MotifActionRepository motifActionRepository;
+    private final HistoriqueActionRepository historiqueActionRepository;
 
     @Value("${api.external.url.production}")
     private String externalApiUrl;
+
+    @Value("${api.external.url.suspend}")
+    private String suspendApiUrl;
+
+    @Value("${api.external.url.cancel}")
+    private String cancelApiUrl;
 
     @Value("${api.external.token}")
     private String apiTokenUrl;
@@ -85,7 +99,9 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
             ZoneCirculationRepository zoneCirculationRepository,
             ProfessionAssureRepository professionAssureRepository,
             GenreVehiculeRepository genreVehiculeRepository,
-            @Lazy StockAttestationService stockService) {
+            @Lazy StockAttestationService stockService,
+            MotifActionRepository motifActionRepository,
+            HistoriqueActionRepository historiqueActionRepository) {
         this.restTemplate = restTemplate;
         this.productionRepository = productionRepository;
         this.certificateRepository = certificateRepository;
@@ -104,6 +120,8 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
         this.zoneCirculationRepository = zoneCirculationRepository;
         this.categorieVehiculeRepository = categorieVehiculeRepository;
         this.stockService = stockService;
+        this.motifActionRepository = motifActionRepository;
+        this.historiqueActionRepository = historiqueActionRepository;
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -145,32 +163,49 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
     }
 
     // ════════════════════════════════════════════════════════════════
+    // TOKEN — accès partagé pour les services qui ont besoin du token PoolTPV
+    // ════════════════════════════════════════════════════════════════
+    /**
+     * Retourne le token PoolTPV courant, en déclenchant un login si nécessaire.
+     * Utilisé par StockAuditService pour appeler /statistics/usage.
+     * Retourne null si le login échoue (ne lève pas d'exception).
+     */
+    public String ensureTokenAndGet(String username) {
+        if (token_final == null) {
+            try {
+                JwtLoginCertificate(username);
+            } catch (Exception e) {
+                log.warn("Impossible d'obtenir le token PoolTPV pour [{}] : {}", username, e.getMessage());
+                return null;
+            }
+        }
+        return token_final;
+    }
+
+    // ════════════════════════════════════════════════════════════════
     // MÉTHODE PRINCIPALE — POST /api/v1/certificates
     // ════════════════════════════════════════════════════════════════
-    @Transactional  // ← Transactionnel uniquement ici (opérations BDD)
-    public ProductionPayloadResponse sendAndSave(InsuranceCertificateRequest request,String username) {
-
-//        // Résolution de l'agence
-//        Infos_AdministrateurAgencePayLoad infos = administrateurAgencePayLoadRepository
-//                .findByLogin(request.login())
-//                .orElseThrow(() -> new RuntimeException(
-//                "Login introuvable, veuillez contacter votre administrateur"));
+    // Pas de @Transactional ici : l'appel API externe ne doit pas être dans
+    // une transaction Spring — si l'ASAC répond 422, la transaction ne se
+    // retrouve pas en état rollback-only, évitant l'UnexpectedRollbackException.
+    public ProductionPayloadResponse sendAndSave(InsuranceCertificateRequest request, String username) {
 
         // ── ÉTAPE 1 : Appel API externe (hors transaction) ───────────
-        ProductionPayloadResponse apiResponse;
-//        if (infos.getOffice_code() != null && !"".equals(infos.getOffice_code())) {
-//            InsuranceCertificateRequest updatedRequest = request.withOfficeCode(infos.getOffice_code(),"117","cima");
-//            apiResponse = callExternalApi(request, infos.getUsername());
-//        } else {
-            apiResponse = callExternalApi(request, username);
-//        }
+        // Peut lever ExternalApiPayloadException (422, 401, etc.) → propagée directement
+        ProductionPayloadResponse apiResponse = callExternalApi(request, username);
+
+        // ── ÉTAPES 2 & 3 : Sauvegarde en Oracle (dans sa propre transaction)
+        return persistProduction(apiResponse, username);
+    }
+
+    @Transactional
+    public ProductionPayloadResponse persistProduction(ProductionPayloadResponse apiResponse, String username) {
 
         // ── ÉTAPE 2 : Sauvegarde en Oracle ───────────────────────────
         ProductionPayload productionEntity = mapper.apiResponseToEntity(apiResponse.data());
         ProductionPayload savedProduction = productionRepository.save(productionEntity);
 
         // ── ÉTAPE 2b : Déduction automatique du stock ─────────────────
-        // production.quantity = nombre d'attestations consommées par ce bureau
         deduireStockProduction(savedProduction, username);
 
         // ── ÉTAPE 3 : Téléchargement des PDFs ────────────────────────
@@ -180,7 +215,6 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
                 cert.setPdfBytes(pdfBytes);
                 certificateRepository.save(cert);
             } catch (Exception e) {
-                // On logue l'erreur mais on ne bloque pas la réponse
                 log.warn("Erreur téléchargement PDF pour [{}] : {}", cert.getReference(), e.getMessage());
             }
         });
@@ -193,7 +227,7 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
     // ════════════════════════════════════════════════════════════════
     @Transactional(readOnly = true)
     public List<ProductionPayloadResponse> getAllProductions(String codeagence) {
-        return productionRepository.findByOfficeCode(codeagence)
+        return productionRepository.findByOfficeCodeAndReferenceIsNotNullOrderByCreatedAtDesc(codeagence)
                 .stream()
                 .map(mapper::entityToResponse)
                 .toList();
@@ -417,12 +451,23 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
     log.info("Body   : {}", rawResponse.getBody());
     log.info("=======================================================");
 
+    // ── ÉTAPE 2b : Détecter redirect HTML (token expiré côté ASAC) ──
+    // L'API ASAC retourne 302 → HTML au lieu de 401 quand le token expire.
+    // RestTemplate ne suit pas les redirects POST → on reçoit le HTML ici.
+    String rawBody = rawResponse.getBody();
+    if (rawBody == null || rawBody.trim().startsWith("<")) {
+        log.warn("Réponse HTML détectée (token ASAC expiré, redirect {}). Forçage re-authentification.",
+                rawResponse.getStatusCode());
+        this.token_final = null;
+        throw new HttpClientErrorException(
+                org.springframework.http.HttpStatus.UNAUTHORIZED,
+                "Token ASAC expiré — réponse HTML reçue au lieu de JSON"
+        );
+    }
+
     // ── ÉTAPE 3 : Désérialiser manuellement ─────────────────────
     try {
-        ProductionPayloadResponse parsed = objectMapper.readValue(
-                rawResponse.getBody(),
-                ProductionPayloadResponse.class
-        );
+        ProductionPayloadResponse parsed = objectMapper.readValue(rawBody, ProductionPayloadResponse.class);
 
         if (parsed == null || parsed.data() == null) {
             log.error("Réponse 2xx reçue mais body vide de l'API externe");
@@ -442,7 +487,7 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
         throw e;  // déjà formatée, on laisse remonter
     } catch (Exception e) {
         log.error("Erreur désérialisation réponse API externe : {}", e.getMessage());
-        log.error("JSON brut reçu : {}", rawResponse.getBody());
+        log.error("JSON brut reçu : {}", rawBody);
         throw new ExternalApiPayloadException(
                 502,
                 new ApiErrorPayloadResponse(
@@ -476,20 +521,95 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
     }
 
     /**
-     * Parse le corps JSON d'une erreur de l'API externe.
+     * Parse le corps JSON d'une erreur de l'API externe (RFC 7807 + ASAC).
+     * Extrait le tableau errors[] pour afficher tous les messages de validation.
      */
     private ApiErrorPayloadResponse parseErrorBody(String responseBody) {
+        if (responseBody == null || responseBody.isBlank()) {
+            return new ApiErrorPayloadResponse("Erreur inattendue de l'API externe", java.util.Map.of());
+        }
         try {
-            return objectMapper.readValue(responseBody, ApiErrorPayloadResponse.class);
+            var node = objectMapper.readTree(responseBody);
+
+            // Message général (top-level)
+            String message = "Erreur de validation";
+            if (node.has("detail") && !node.get("detail").isNull()) {
+                message = node.get("detail").asText();
+            } else if (node.has("title") && !node.get("title").isNull()) {
+                message = node.get("title").asText();
+            } else if (node.has("message") && !node.get("message").isNull()) {
+                message = node.get("message").asText();
+            }
+
+            // Traduction des messages ASAC en français clair
+            message = translateAsacMessage(message);
+
+            // Extraire le tableau errors[] de l'API ASAC
+            java.util.Map<String, List<String>> errorsMap = new java.util.LinkedHashMap<>();
+            if (node.has("errors") && node.get("errors").isArray()) {
+                for (var errorNode : node.get("errors")) {
+                    // Clé = pointer sans / initial, / remplacé par .
+                    // ex: /productions/0/vehicle_energy → productions.0.vehicle_energy
+                    String field = "général";
+                    if (errorNode.has("source") && errorNode.get("source").has("pointer")) {
+                        String pointer = errorNode.get("source").get("pointer").asText();
+                        field = pointer.startsWith("/") ? pointer.substring(1).replace("/", ".") : pointer.replace("/", ".");
+                    }
+                    String detail = errorNode.has("detail")
+                            ? errorNode.get("detail").asText()
+                            : "Erreur inconnue";
+                    errorsMap.computeIfAbsent(field, k -> new java.util.ArrayList<>()).add(detail);
+                }
+                // Si le message général est générique, utiliser le premier message spécifique
+                if (!errorsMap.isEmpty() && message.toLowerCase().contains("invalid")) {
+                    message = errorsMap.values().iterator().next().get(0);
+                }
+            }
+
+            log.warn("Erreur API externe parsée : {} | {} erreur(s) détaillée(s)", message, errorsMap.size());
+            return new ApiErrorPayloadResponse(message, errorsMap);
+
         } catch (Exception e) {
             log.warn("Impossible de parser le corps de l'erreur : {}", responseBody);
             return new ApiErrorPayloadResponse(
                     "Erreur inattendue de l'API externe",
-                    java.util.Map.of("general", List.of(
-                            responseBody != null ? responseBody : "Corps de réponse vide"
-                    ))
+                    java.util.Map.of("général", List.of(responseBody.length() > 300 ? responseBody.substring(0, 300) : responseBody))
             );
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // TRADUCTION DES MESSAGES ASAC EN FRANÇAIS
+    // ════════════════════════════════════════════════════════════════
+    private String translateAsacMessage(String msg) {
+        if (msg == null) return "Erreur inconnue";
+        String lower = msg.toLowerCase();
+        if (lower.contains("unauthorized") || lower.contains("not authorized") || lower.contains("forbidden")) {
+            return "Action non autorisée — votre compte ne dispose pas des droits nécessaires pour effectuer cette opération sur ce certificat.";
+        }
+        if (lower.contains("not found") || lower.contains("introuvable")) {
+            return "Certificat introuvable — vérifiez la référence saisie.";
+        }
+        if (lower.contains("already") && (lower.contains("suspended") || lower.contains("suspendu"))) {
+            return "Ce certificat est déjà suspendu.";
+        }
+        if (lower.contains("already") && (lower.contains("cancelled") || lower.contains("annulé") || lower.contains("cancel"))) {
+            return "Ce certificat est déjà annulé.";
+        }
+        if (lower.contains("already") && (lower.contains("resiliated") || lower.contains("résilié") || lower.contains("resili"))) {
+            return "Ce certificat est déjà résilié.";
+        }
+        if (lower.contains("token") || lower.contains("expired") || lower.contains("expiré")) {
+            return "Session expirée — veuillez vous reconnecter.";
+        }
+        if (lower.contains("invalid") && lower.contains("state")) {
+            return "L'état actuel du certificat ne permet pas cette action.";
+        }
+        if (lower.contains("invalid")) {
+            return "Données invalides — " + msg;
+        }
+        // Retourne le message original si aucune correspondance
+        return msg;
     }
 
     // ════════════════════════════════════════════════════════════════
@@ -610,6 +730,239 @@ public class CertificateService {  // ← @Transactional retiré du niveau class
             log.info("Aucun stock configuré pour bureau={} | type={} — production enregistrée sans déduction.",
                 production.getOfficeCode(), certTypeCode);
         }
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // INFO CERTIFICAT PAR RÉFÉRENCE (pour la modale de confirmation)
+    // ════════════════════════════════════════════════════════════════
+    @Transactional(readOnly = true)
+    public CertificateInfoDTO getCertificateInfo(String reference) {
+        CertificatePlayLoad cert = certificateRepository.findByReference(reference)
+                .orElseThrow(() -> new CertificateNotFoundException(reference));
+        return new CertificateInfoDTO(
+                cert.getReference(),
+                cert.getPoliceNumber(),
+                cert.getLicencePlate(),
+                cert.getChassisNumber(),
+                cert.getInsuredName(),
+                cert.getInsuredPhone(),
+                cert.getCertTypeName(),
+                cert.getCertVariantName(),
+                cert.getStartsAt(),
+                cert.getEndsAt(),
+                cert.getStateName(),
+                cert.getStateLabel(),
+                cert.getOfficeCode()
+        );
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // TOUS LES CERTIFICATS D'UNE POLICE (flotte)
+    // ════════════════════════════════════════════════════════════════
+    @Transactional(readOnly = true)
+    public List<CertificateInfoDTO> getCertificatesByPolice(String policeNumber) {
+        return certificateRepository.findByPoliceNumberIgnoreCase(policeNumber.trim())
+                .stream()
+                .map(cert -> new CertificateInfoDTO(
+                        cert.getReference(), cert.getPoliceNumber(), cert.getLicencePlate(),
+                        cert.getChassisNumber(), cert.getInsuredName(), cert.getInsuredPhone(),
+                        cert.getCertTypeName(), cert.getCertVariantName(),
+                        cert.getStartsAt(), cert.getEndsAt(),
+                        cert.getStateName(), cert.getStateLabel(), cert.getOfficeCode()))
+                .toList();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // RECHERCHE PAR TYPE (REFERENCE | POLICE | PLATE)
+    // ════════════════════════════════════════════════════════════════
+    @Transactional(readOnly = true)
+    public CertificateInfoDTO getCertificateInfoBySearch(String type, String value, String plate) {
+        CertificatePlayLoad cert = switch (type.toUpperCase()) {
+
+            case "POLICE" -> {
+                if (plate != null && !plate.isBlank()) {
+                    // Flotte : police + immatriculation
+                    yield certificateRepository
+                            .findFirstByPoliceNumberAndLicencePlate(value.trim(), plate.trim())
+                            .orElseThrow(() -> new CertificateNotFoundException(
+                                    "Police " + value + " / Plaque " + plate));
+                } else {
+                    // Mono : premier certificat de cette police
+                    yield certificateRepository
+                            .findFirstByPoliceNumberOrderByIdDesc(value.trim())
+                            .orElseThrow(() -> new CertificateNotFoundException("Police " + value));
+                }
+            }
+
+            case "PLATE" -> certificateRepository
+                    .findFirstByLicencePlateOrderByIdDesc(value.trim())
+                    .orElseThrow(() -> new CertificateNotFoundException("Plaque " + value));
+
+            default -> certificateRepository
+                    .findByReference(value.trim())
+                    .orElseThrow(() -> new CertificateNotFoundException(value));
+        };
+
+        return new CertificateInfoDTO(
+                cert.getReference(), cert.getPoliceNumber(), cert.getLicencePlate(),
+                cert.getChassisNumber(), cert.getInsuredName(), cert.getInsuredPhone(),
+                cert.getCertTypeName(), cert.getCertVariantName(),
+                cert.getStartsAt(), cert.getEndsAt(),
+                cert.getStateName(), cert.getStateLabel(), cert.getOfficeCode()
+        );
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // MOTIFS PAR TYPE
+    // ════════════════════════════════════════════════════════════════
+    @Transactional(readOnly = true)
+    public List<MotifActionDTO> getMotifsByType(String typeAction) {
+        return motifActionRepository.findByTypeActionAndActif(typeAction.toUpperCase(), 1)
+                .stream()
+                .map(m -> new MotifActionDTO(m.getCode(), m.getTypeAction(), m.getLibelle()))
+                .toList();
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // SUSPENSION
+    // ════════════════════════════════════════════════════════════════
+    @Transactional
+    public ActionResponse suspendCertificate(String reference, SuspendCancelRequest req, String username) {
+        return executeAction("SUSPENSION", suspendApiUrl, reference, req, username);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // ANNULATION
+    // ════════════════════════════════════════════════════════════════
+    @Transactional
+    public ActionResponse cancelCertificate(String reference, SuspendCancelRequest req, String username) {
+        return executeAction("ANNULATION", cancelApiUrl, reference, req, username);
+    }
+
+    // ════════════════════════════════════════════════════════════════
+    // RESILIATION — même endpoint que cancel, type_action différent
+    // ════════════════════════════════════════════════════════════════
+    @Transactional
+    public ActionResponse resiliationCertificate(String reference, SuspendCancelRequest req, String username) {
+        return executeAction("RESILIATION", cancelApiUrl, reference, req, username);
+    }
+
+    /**
+     * Exécute un POST suspend ou cancel sur l'API ppeatt-api.asac.cm,
+     * avec renouvellement automatique du token en cas de 401.
+     */
+    private ActionResponse executeAction(String typeAction, String urlTemplate,
+                                          String reference, SuspendCancelRequest req, String username) {
+
+        Infos_AdministrateurAgencePayLoad agent = administrateurAgencePayLoadRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new ExternalApiPayloadException(404,
+                        new ApiErrorPayloadResponse("Utilisateur introuvable",
+                                java.util.Map.of("username", List.of(username)))));
+
+        MotifAction motif = motifActionRepository.findById(req.motifCode())
+                .orElseThrow(() -> new ExternalApiPayloadException(400,
+                        new ApiErrorPayloadResponse("Code motif invalide",
+                                java.util.Map.of("motifCode", List.of(req.motifCode())))));
+
+        if (token_final == null) {
+            try { JwtLoginCertificate(username); }
+            catch (Exception e) { throw new ExternalApiPayloadException(503,
+                    new ApiErrorPayloadResponse("Impossible de s'authentifier",
+                            java.util.Map.of("auth", List.of(e.getMessage())))); }
+        }
+
+        String url = urlTemplate.replace("{ref}", reference);
+        String apiReponse;
+        int httpStatus;
+
+        try {
+            httpStatus = callActionApi(url, req.motifCode(), false);
+            apiReponse = "OK";
+        } catch (HttpClientErrorException ex) {
+            if (ex.getStatusCode().value() == 401) {
+                try { JwtLoginCertificate(username); }
+                catch (Exception e) { throw new ExternalApiPayloadException(401,
+                        new ApiErrorPayloadResponse("Session expirée",
+                                java.util.Map.of("auth", List.of(e.getMessage())))); }
+                try {
+                    httpStatus = callActionApi(url, req.motifCode(), true);
+                    apiReponse = "OK";
+                } catch (HttpClientErrorException retryEx) {
+                    httpStatus = retryEx.getStatusCode().value();
+                    apiReponse = retryEx.getResponseBodyAsString();
+                    saveHistorique(typeAction, reference, motif, agent, apiReponse);
+                    throw new ExternalApiPayloadException(httpStatus, parseErrorBody(apiReponse));
+                }
+            } else {
+                httpStatus = ex.getStatusCode().value();
+                apiReponse = ex.getResponseBodyAsString();
+                saveHistorique(typeAction, reference, motif, agent, apiReponse);
+                throw new ExternalApiPayloadException(httpStatus, parseErrorBody(apiReponse));
+            }
+        }
+
+        saveHistorique(typeAction, reference, motif, agent, apiReponse);
+
+        return new ActionResponse(
+                httpStatus == 200 ? 200 : httpStatus,
+                typeAction + "_OK",
+                reference,
+                typeAction,
+                motif.getCode(),
+                motif.getLibelle()
+        );
+    }
+
+    private int callActionApi(String url, String motifCode, boolean isRetry) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json;charset=UTF-8");
+        headers.set("Authorization", "Bearer " + token_final);
+
+        String body = "{\"reason\":\"" + motifCode + "\"}";
+        HttpEntity<String> entity = new HttpEntity<>(body, headers);
+
+        log.debug("[{}] POST {} | reason={}", isRetry ? "RETRY" : "ESSAI", url, motifCode);
+
+        ResponseEntity<String> resp = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        return resp.getStatusCode().value();
+    }
+
+    private void saveHistorique(String typeAction, String reference,
+                                 MotifAction motif,
+                                 Infos_AdministrateurAgencePayLoad agent,
+                                 String reponseApi) {
+        HistoriqueAction h = new HistoriqueAction();
+        h.setCertificateReference(reference);
+        h.setTypeAction(typeAction);
+        h.setMotifCode(motif.getCode());
+        h.setMotifLibelle(motif.getLibelle());
+        h.setUsernameExecutant(agent.getUsername());
+        h.setProfilExecutant(agent.getProfilAgent());
+        h.setOfficeCode(agent.getOffice_code());
+        h.setStatutApres(switch (typeAction) {
+            case "SUSPENSION"  -> "SUSPENDED";
+            case "RESILIATION" -> "RESILIATED";
+            default            -> "CANCELLED";
+        });
+        h.setReponseApi(reponseApi != null && reponseApi.length() > 500
+                ? reponseApi.substring(0, 500) : reponseApi);
+        historiqueActionRepository.save(h);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistoriqueAction> getHistoriqueByReference(String reference) {
+        return historiqueActionRepository.findByCertificateReferenceOrderByDateActionDesc(reference);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistoriqueAction> getHistoriqueByOffice(String officeCode) {
+        return historiqueActionRepository.findByOfficeCodeOrderByDateActionDesc(officeCode);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistoriqueAction> getHistoriqueByOfficeAndType(String officeCode, String typeAction) {
+        return historiqueActionRepository.findByOfficeCodeAndTypeActionOrderByDateActionDesc(officeCode, typeAction.toUpperCase());
     }
 
     public String getNatureDocument(String code) {

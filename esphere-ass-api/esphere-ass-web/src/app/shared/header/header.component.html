@@ -43,6 +43,39 @@
   ════════════════════════════════════════════════ -->
   <ul class="navbar-nav ml-auto hdr-right">
 
+    <!-- ── Token expiration timer ── -->
+    <li class="nav-item d-none d-md-flex align-items-center mr-2" *ngIf="tokenTimeLeft">
+
+      <!-- Alerte session expirée -->
+      <div *ngIf="showExpiredAlert"
+           style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;">
+        <div class="card shadow-lg" style="max-width:400px;width:100%;border-left:5px solid #e74c3c;">
+          <div class="card-body text-center p-4">
+            <i class="fas fa-clock fa-3x text-danger mb-3 d-block"></i>
+            <h5 class="font-weight-bold text-danger">Session expirée</h5>
+            <p class="text-muted mb-0">Votre session a expiré. Vous allez être redirigé vers la connexion…</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pill timer -->
+      <div class="hdr-token-pill"
+           [class.hdr-token-warning]="tokenWarning"
+           [class.hdr-token-danger]="tokenExpired"
+           [title]="tokenWarning ? 'Session bientôt expirée' : 'Temps restant de connexion'">
+        <i class="fas fa-clock mr-1"></i>
+        <span class="hdr-token-time">{{ tokenTimeLeft }}</span>
+        <!-- Bouton rafraîchir (visible seulement si < 10 min) -->
+        <button *ngIf="tokenWarning && !tokenExpired"
+                class="hdr-token-refresh-btn ml-2"
+                [disabled]="isRefreshing"
+                (click)="refreshToken()"
+                title="Rafraîchir la session">
+          <i class="fas" [ngClass]="isRefreshing ? 'fa-spinner fa-spin' : 'fa-sync-alt'"></i>
+        </button>
+      </div>
+    </li>
+
     <!-- ── Recherche rapide ── -->
     <li class="nav-item hdr-search-wrap d-none d-md-flex align-items-center">
       <div class="hdr-search-box">

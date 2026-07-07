@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ExamenService, PrestationExamenResponse } from '../../services/examen.services';
+import { AuthService } from '../../auth/auth.service';
 
 
 
@@ -46,12 +47,23 @@ export class ExamenComponent implements OnInit, OnDestroy {
   private boundFermerDropdowns    = () => this.fermerDropdowns();
   private destroy$                = new Subject<void>();
 
+  isPrestataire = false;
+  private myPrestataireId = '';
+
   constructor(
     private examenService: ExamenService,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    const user = this.authService.getStoredUser();
+    const profilCode = user?.profilCode || '';
+    this.isPrestataire = !['SERVICE_SANTE', 'SUP_ADMIN'].includes(profilCode);
+    if (this.isPrestataire && user?.prestataireId) {
+      this.myPrestataireId = user.prestataireId;
+      this.filtrePrestataire = this.myPrestataireId;
+    }
     this.chargerPage(0);
     document.addEventListener('click', this.boundFermerDropdowns);
   }

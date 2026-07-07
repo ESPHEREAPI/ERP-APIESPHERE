@@ -32,7 +32,14 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken() && !!this.currentUserValue;
+    const hasToken = !!this.getToken();
+    if (hasToken && !this.currentUserValue) {
+      const stored = this.getStoredUser();
+      if (stored) {
+        this.currentUserSubject.next(stored);
+      }
+    }
+    return hasToken && !!this.currentUserSubject.value;
   }
 
   // ── Login ──────────────────────────────────────────────────────────────────

@@ -151,17 +151,22 @@ public class GlobalExceptionHandler {
 
         ApiErrorPayloadResponse apiError = ex.getApiErrorResponse();
         int status = ex.getHttpStatus();
+
+        // Le 403 de l'API externe (action non autorisée sur le certificat) est
+        // traduit en 422 pour ne pas déclencher la redirection de l'intercepteur
+        // Angular qui réserve le 403 aux erreurs Spring Security.
+        int httpStatusToReturn = (status == 403) ? 422 : status;
         ValidationErrorPayloadResponse.ErrorType errorType = resolveErrorType(status, apiError);
 
         log.error("Erreur API externe [{}] : {}", status, apiError.message());
 
         ValidationErrorPayloadResponse response = new ValidationErrorPayloadResponse(
-                status,
+                httpStatusToReturn,
                 apiError.message() != null ? apiError.message() : resolveDefaultMessage(status),
                 apiError.errors() != null ? apiError.errors() : Map.of(),
                 errorType);
 
-        return ResponseEntity.status(status).body(response);
+        return ResponseEntity.status(httpStatusToReturn).body(response);
     }
 
     // ── Base de données ───────────────────────────────────────────────────────

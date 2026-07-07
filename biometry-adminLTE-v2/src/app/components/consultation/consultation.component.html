@@ -902,9 +902,8 @@
      [style.display]="showModalRejeter ? 'block' : 'none'"
      tabindex="-1" role="dialog" style="z-index:1050; overflow-y:auto;">
   <div class="modal-dialog" role="document"
-       style="max-width:520px; width:520px;
-              margin-top:20px;
-              margin-bottom:20px;">
+       style="max-width:520px; width:95%;
+              margin:20px auto;">
     <div class="modal-content"
          *ngIf="consultationSelectionnee"
          style="max-height:calc(100vh - 40px);
@@ -970,10 +969,35 @@
           </tbody>
         </table>
 
+        <!-- Consommation -->
+        <div *ngIf="consommation" style="margin-bottom:12px;">
+          <div class="alert" style="border-radius:6px; padding:10px 12px; font-size:12px;"
+               [style.background]="consommation.pourcentageEncaisse > 80 ? '#ffebee' : '#e8f5e9'"
+               [style.color]="consommation.pourcentageEncaisse > 80 ? '#c62828' : '#2e7d32'">
+            <i class="fa" [ngClass]="consommation.pourcentageEncaisse > 80 ? 'fa-exclamation-triangle' : 'fa-check-circle'"></i>
+            <strong>{{ 'solde_disponible' | translate }} :</strong>
+            {{ formatMontant(consommation.soldeApresEncaisse) }} FCFA
+            ({{ consommation.pourcentageEncaisse | number:'1.0-1' }}% {{ 'consomme' | translate }})
+          </div>
+        </div>
+
         <div class="callout callout-danger">
           <p style="font-size:14px;">
             {{ 'confirmer_rejet_consultation' | translate }}
           </p>
+
+          <!-- Champ observation pour le rejet -->
+          <div class="form-group" style="margin-top:12px;">
+            <label>{{ 'observations' | translate }} <span *ngIf="observationRejetObligatoire" class="text-danger">*</span></label>
+            <textarea class="form-control" rows="3"
+                      [(ngModel)]="observationRejetInput"
+                      [placeholder]="'motif_rejet_placeholder' | translate">
+            </textarea>
+            <span *ngIf="observationRejetObligatoire" class="help-block" style="font-size:11px; color:#e74c3c;">
+              {{ 'observation_rejet_requise' | translate }}
+            </span>
+          </div>
+
           <div *ngIf="erreurRejet" class="alert alert-danger" style="margin-top:10px;">
             <i class="fa fa-exclamation-triangle"></i> {{ erreurRejet }}
           </div>
@@ -984,6 +1008,7 @@
       <div class="modal-footer"
            style="flex-shrink:0; border-top:1px solid #e5e5e5;">
         <button type="button" class="btn btn-danger"
+                [disabled]="observationRejetObligatoire && !observationRejetInput.trim()"
                 (click)="confirmerRejet()">
           <i class="fa fa-times"></i> {{ 'oui' | translate }}
         </button>

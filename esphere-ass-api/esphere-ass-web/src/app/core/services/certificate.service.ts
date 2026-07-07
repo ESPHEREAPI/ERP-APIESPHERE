@@ -139,18 +139,43 @@ export class CertificateService {
     downloadLink: string,
     reference: string
   ): Promise<void> {
-    if (!downloadLink) throw new Error('Lien de téléchargement manquant');
+    if (!downloadLink && !reference) throw new Error('Lien de téléchargement manquant');
 
-    const response     = await fetch(downloadLink);
-    const arrayBuffer  = await response.arrayBuffer();
-    const bytes        = new Uint8Array(arrayBuffer);
-    const pdf          = await PDFDocument.create();
+    let arrayBuffer: ArrayBuffer;
+
+    try {
+      const response = await fetch(downloadLink);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      arrayBuffer = await response.arrayBuffer();
+    } catch {
+      // Fallback : récupérer les bytes depuis le backend (Oracle BLOB)
+      const blob = await this.downloadPdf(reference).toPromise();
+      if (!blob) throw new Error(`PDF introuvable pour ${reference}`);
+      const buf = await blob.arrayBuffer();
+      const b = new Uint8Array(buf);
+      if ((b[0] === 0xFF && b[1] === 0xD8) || (b[0] === 0x89 && b[1] === 0x50)) {
+        // Bytes JPEG ou PNG stockés en BLOB → conversion en vrai PDF
+        const fallbackPdf = await PDFDocument.create();
+        const img = b[0] === 0xFF ? await fallbackPdf.embedJpg(buf) : await fallbackPdf.embedPng(buf);
+        const { width, height } = img.scale(1);
+        const p = fallbackPdf.addPage([width, height]);
+        p.drawImage(img, { x: 0, y: 0, width, height });
+        const pdfBytes2 = await fallbackPdf.save();
+        this.triggerDownload(new Blob([pdfBytes2], { type: 'application/pdf' }), `attestation-${reference}.pdf`);
+      } else {
+        this.triggerDownload(blob, `attestation-${reference}.pdf`);
+      }
+      return;
+    }
+
+    const bytes = new Uint8Array(arrayBuffer);
+    const pdf   = await PDFDocument.create();
 
     let image;
     if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
-      image = await pdf.embedJpg(arrayBuffer);           // JPEG
+      image = await pdf.embedJpg(arrayBuffer);
     } else if (bytes[0] === 0x89 && bytes[1] === 0x50) {
-      image = await pdf.embedPng(arrayBuffer);           // PNG
+      image = await pdf.embedPng(arrayBuffer);
     } else {
       throw new Error(`Format d'image non supporté pour ${reference}`);
     }
@@ -180,9 +205,35 @@ export class CertificateService {
 
     for (const cert of certs) {
       try {
-        const response    = await fetch(cert.download_link);
-        const arrayBuffer = await response.arrayBuffer();
-        const bytes       = new Uint8Array(arrayBuffer);
+        let arrayBuffer: ArrayBuffer;
+
+        try {
+          const response = await fetch(cert.download_link);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          arrayBuffer = await response.arrayBuffer();
+        } catch {
+          // Fallback : récupérer les bytes depuis le backend (Oracle BLOB)
+          try {
+            const blob = await this.downloadPdf(cert.reference).toPromise();
+            if (!blob) { console.warn(`PDF introuvable pour ${cert.reference}`); continue; }
+            const buf = await blob.arrayBuffer();
+            const b = new Uint8Array(buf);
+            if ((b[0] === 0xFF && b[1] === 0xD8) || (b[0] === 0x89 && b[1] === 0x50)) {
+              const img = b[0] === 0xFF ? await mergedPdf.embedJpg(buf) : await mergedPdf.embedPng(buf);
+              const { width, height } = img.scale(1);
+              const page = mergedPdf.addPage([width, height]);
+              page.drawImage(img, { x: 0, y: 0, width, height });
+              added++;
+            } else {
+              console.warn(`Format BLOB inconnu pour ${cert.reference} — ignoré`);
+            }
+          } catch (fallbackErr) {
+            console.error(`Fallback échoué pour ${cert.reference}:`, fallbackErr);
+          }
+          continue;
+        }
+
+        const bytes = new Uint8Array(arrayBuffer);
 
         let image;
         if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
@@ -225,6 +276,86 @@ export class CertificateService {
    *
    * @param policeNumber  Numéro de police saisi par l'utilisateur
    */
+  // ════════════════════════════════════════════════════════════════
+  // INFO CERTIFICAT PAR RÉFÉRENCE
+  // ════════════════════════════════════════════════════════════════
+  getCertificateInfo(reference: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/info/${encodeURIComponent(reference)}`)
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  /** Tous les certificats d'une police (flotte) */
+  getFleetByPolice(policeNumber: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/fleet/${encodeURIComponent(policeNumber.trim())}`)
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  /** Recherche flexible : REFERENCE | POLICE (+ plate si flotte) | PLATE */
+  searchCertificateInfo(type: 'REFERENCE' | 'POLICE' | 'PLATE', value: string, plate?: string): Observable<any> {
+    let params = new HttpParams().set('type', type).set('value', value.trim());
+    if (plate?.trim()) params = params.set('plate', plate.trim());
+    return this.http.get<any>(`${this.apiUrl}/search`, { params })
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // MOTIFS PAR TYPE
+  // ════════════════════════════════════════════════════════════════
+  getMotifs(typeAction: 'SUSPENSION' | 'ANNULATION' | 'RESILIATION'): Observable<{code:string;typeAction:string;libelle:string}[]> {
+    return this.http.get<{code:string;typeAction:string;libelle:string}[]>(`${this.apiUrl}/motifs/${typeAction}`)
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // SUSPENSION
+  // ════════════════════════════════════════════════════════════════
+  suspendCertificate(reference: string, motifCode: string): Observable<any> {
+    const username = this.authService.getUserFromStorage()?.userapiasac ?? '';
+    return this.http.post<any>(`${this.apiUrl}/${reference}/suspend?username=${encodeURIComponent(username)}`,
+      { motifCode })
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // ANNULATION
+  // ════════════════════════════════════════════════════════════════
+  cancelCertificate(reference: string, motifCode: string): Observable<any> {
+    const username = this.authService.getUserFromStorage()?.userapiasac ?? '';
+    return this.http.post<any>(`${this.apiUrl}/${reference}/cancel?username=${encodeURIComponent(username)}`,
+      { motifCode })
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // RESILIATION
+  // ════════════════════════════════════════════════════════════════
+  resiliationCertificate(reference: string, motifCode: string): Observable<any> {
+    const username = this.authService.getUserFromStorage()?.userapiasac ?? '';
+    return this.http.post<any>(`${this.apiUrl}/${reference}/resiliation?username=${encodeURIComponent(username)}`,
+      { motifCode })
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // HISTORIQUE
+  // ════════════════════════════════════════════════════════════════
+  getHistoriqueByReference(reference: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${reference}/historique`)
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  getHistoriqueByOffice(): Observable<any[]> {
+    const officeCode = this.authService.getUserFromStorage()?.agencyCode ?? '';
+    return this.http.get<any[]>(`${this.apiUrl}/historique/office/${officeCode}`)
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
+  getHistoriqueByOfficeAndType(typeAction: string): Observable<any[]> {
+    const officeCode = this.authService.getUserFromStorage()?.agencyCode ?? '';
+    return this.http.get<any[]>(`${this.apiUrl}/historique/office/${officeCode}/${typeAction}`)
+      .pipe(catchError(err => throwError(() => err.error || err)));
+  }
+
   checkPolice(policeNumber: string): Observable<InsuranceCertificateRequest> {
  
     // HttpParams encode proprement le paramètre dans l'URL

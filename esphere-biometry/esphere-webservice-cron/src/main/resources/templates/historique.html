@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{fragments/layout :: layout(titre='Historique', contenu=~{::section})}">
+<section>
+
+    <div class="mb-4">
+        <h1 class="h3 fw-bold mb-1">Historique des synchronisations</h1>
+        <p class="text-muted mb-0">Tous les passages, automatiques (CRON) ou manuels, avec leur resultat.</p>
+    </div>
+
+    <!-- Filtres -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <form method="get" th:action="@{/webservice/dashboard/historique}" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Type</label>
+                    <select class="form-select" name="type">
+                        <option value="">Tous les types</option>
+                        <option th:each="t : ${types}" th:value="${t}" th:text="${t}"
+                                th:selected="${t == typeSelectionne}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Date debut (depuis)</label>
+                    <input type="datetime-local" class="form-control" name="dateDebut"
+                           th:value="${dateDebut != null ? #temporals.format(dateDebut, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Date fin (jusqu'a)</label>
+                    <input type="datetime-local" class="form-control" name="dateFin"
+                           th:value="${dateFin != null ? #temporals.format(dateFin, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-funnel me-1"></i>Filtrer
+                    </button>
+                    <a th:href="@{/webservice/dashboard/historique}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tableau -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Declencheur</th>
+                        <th>Filtre</th>
+                        <th>Debut</th>
+                        <th>Duree</th>
+                        <th>Statut</th>
+                        <th class="text-end">Traites</th>
+                        <th class="text-end">Echecs</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(resultat.contenu)}">
+                        <td colspan="10" class="text-center text-muted py-5">Aucune execution trouvee pour ces criteres.</td>
+                    </tr>
+                    <tr th:each="h : ${resultat.contenu}">
+                        <td class="text-muted" th:text="${h.id}">1</td>
+                        <td><span class="type-badge" th:text="${h.typeSynchronisation}">TYPE</span></td>
+                        <td>
+                            <i class="bi" th:classappend="${h.declencheur == 'CRON'} ? 'bi-clock' : 'bi-hand-index-thumb'"></i>
+                            <span th:text="${h.declencheur}">MANUEL</span>
+                        </td>
+                        <td><code th:if="${h.policeFiltre != null}" th:text="${h.policeFiltre}">-</code>
+                            <span th:if="${h.policeFiltre == null}" class="text-muted">-</span></td>
+                        <td th:text="${#temporals.format(h.dateDebut, 'dd/MM/yyyy HH:mm:ss')}">date</td>
+                        <td th:text="${h.dureeMs != null ? h.dureeMs + ' ms' : '-'}">-</td>
+                        <td><span th:class="'badge statut-' + ${h.statut}" th:text="${h.statut}">STATUT</span></td>
+                        <td class="text-end" th:text="${h.nbTraites != null ? h.nbTraites : '-'}">-</td>
+                        <td class="text-end">
+                            <span th:if="${h.nbEchecs != null and h.nbEchecs > 0}" class="text-danger fw-semibold" th:text="${h.nbEchecs}">0</span>
+                            <span th:if="${h.nbEchecs == null or h.nbEchecs == 0}" class="text-muted" th:text="${h.nbEchecs != null ? h.nbEchecs : '-'}">0</span>
+                        </td>
+                        <td class="text-end">
+                            <a th:href="@{/webservice/dashboard/historique/{id}(id=${h.id})}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center py-3"
+             th:if="${resultat.totalPages > 1}">
+            <span class="text-muted small">
+                Page <span th:text="${resultat.page + 1}">1</span> / <span th:text="${resultat.totalPages}">1</span>
+                &middot; <span th:text="${resultat.totalElements}">0</span> executions au total
+            </span>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item" th:classappend="${resultat.page == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/webservice/dashboard/historique(type=${typeSelectionne}, dateDebut=${dateDebut}, dateFin=${dateFin}, page=${resultat.page - 1}, size=${resultat.taille})}">Precedent</a>
+                    </li>
+                    <li class="page-item" th:classappend="${resultat.dernierePage} ? 'disabled'">
+                        <a class="page-link" th:href="@{/webservice/dashboard/historique(type=${typeSelectionne}, dateDebut=${dateDebut}, dateFin=${dateFin}, page=${resultat.page + 1}, size=${resultat.taille})}">Suivant</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+</section>
+</th:block>
+</body>
+</html>

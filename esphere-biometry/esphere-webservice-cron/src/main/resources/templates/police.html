@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:replace="~{fragments/layout :: layout(titre='Statut police', contenu=~{::section})}">
+<section>
+
+    <div class="mb-4">
+        <h1 class="h3 fw-bold mb-1">Statut d'une police</h1>
+        <p class="text-muted mb-0">Recherchez une police pour voir son etat et declencher une synchronisation ciblee.</p>
+    </div>
+
+    <!-- Recherche -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" th:action="@{/webservice/dashboard/police}" class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label small text-muted mb-1">Numero de police</label>
+                    <input type="text" class="form-control form-control-lg" name="police"
+                           placeholder="ex: 1017-2130000100" th:value="${policeRecherchee}" required autofocus>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-search me-1"></i>Rechercher
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${introuvable != null and introuvable}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        Aucune donnee trouvee pour la police <strong th:text="${policeRecherchee}">-</strong>.
+        Avez-vous deja lance un import adherent pour cette police ?
+    </div>
+
+    <div th:if="${statut != null}">
+
+        <!-- En-tete fiche -->
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div>
+                <h2 class="h4 fw-bold mb-1">
+                    <span th:text="${statut.souscripteur != null ? statut.souscripteur : 'Souscripteur inconnu'}">Souscripteur</span>
+                </h2>
+                <p class="text-muted mb-0">
+                    Police <code th:text="${statut.police}">police</code>
+                </p>
+            </div>
+            <span class="badge fs-6 px-3 py-2"
+                  th:classappend="${statut.statut == 'ACTIF'} ? 'text-bg-success' : 'text-bg-danger'">
+                <i class="bi" th:classappend="${statut.statut == 'ACTIF'} ? 'bi-check-circle' : 'bi-x-circle'"></i>
+                <span th:text="${statut.statut}">STATUT</span>
+            </span>
+        </div>
+
+        <!-- Cartes infos -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-label mb-1"><i class="bi bi-calendar-event me-1"></i>Date d'effet</div>
+                        <div class="stat-value fs-5" th:text="${statut.dateEffet != null ? #temporals.format(statut.dateEffet, 'dd/MM/yyyy') : '-'}">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-label mb-1"><i class="bi bi-calendar-x me-1"></i>Date d'echeance</div>
+                        <div class="stat-value fs-5" th:text="${statut.dateEcheance != null ? #temporals.format(statut.dateEcheance, 'dd/MM/yyyy') : '-'}">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-label mb-1"><i class="bi bi-hourglass-split me-1"></i>Jours restants</div>
+                        <div class="stat-value fs-5"
+                             th:classappend="${statut.nbJoursRestants != null and statut.nbJoursRestants < 0} ? 'text-danger'"
+                             th:text="${statut.nbJoursRestants != null ? statut.nbJoursRestants : '-'}">-</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="stat-label mb-1"><i class="bi bi-toggle-on me-1"></i>Statut global</div>
+                        <div class="stat-value fs-5" th:text="${statut.statut}">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-person-check"></i></div>
+                        <div>
+                            <div class="stat-value" th:text="${statut.nbAdherentsActifs}">0</div>
+                            <div class="stat-label">Adherents actifs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-person-dash"></i></div>
+                        <div>
+                            <div class="stat-value" th:text="${statut.nbAdherentsDesactives}">0</div>
+                            <div class="stat-label">Adherents desactives</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-people"></i></div>
+                        <div>
+                            <div class="stat-value" th:text="${statut.nbAyantsDroitActifs}">0</div>
+                            <div class="stat-label">Ayants droit actifs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-people-fill"></i></div>
+                        <div>
+                            <div class="stat-value" th:text="${statut.nbAyantsDroitDesactives}">0</div>
+                            <div class="stat-label">Ayants droit desactives</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions ciblees sur cette police -->
+        <input type="hidden" id="input-police-cible" th:value="${statut.police}">
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h2 class="h6 fw-semibold mb-0">
+                    <i class="bi bi-lightning-charge me-2"></i>
+                    Lancer un traitement pour cette police uniquement
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary"
+                            data-action-path="/webservice/recuperer-donnees-adherent"
+                            data-action-input="input-police-cible"
+                            data-action-label="Import adherents"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-people-fill me-1"></i>Import adherents
+                    </button>
+                    <button class="btn btn-primary"
+                            data-action-path="/webservice/recuperer-donnees-ayant-droit"
+                            data-action-input="input-police-cible"
+                            data-action-label="Import ayants droit"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-people me-1"></i>Import ayants droit
+                    </button>
+                    <button class="btn btn-primary"
+                            data-action-path="/webservice/recuperer-donnees-taux-prestation"
+                            data-action-input="input-police-cible"
+                            data-action-label="Import taux de prestation"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-percent me-1"></i>Import taux de prestation
+                    </button>
+                    <button class="btn btn-outline-danger"
+                            data-action-path="/webservice/desactiver-donnees-adherent"
+                            data-action-input="input-police-cible"
+                            data-action-label="Desactivation adherents"
+                            data-action-confirm="Confirmer la desactivation des adherents absents de la source pour cette police ?"
+                            onclick="lancerTraitement(this)">
+                        <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+                        <i class="bi bi-person-dash me-1"></i>Desactivation adherents
+                    </button>
+                </div>
+                <p class="text-muted small mt-2 mb-0">
+                    <i class="bi bi-info-circle"></i>
+                    La desactivation des ayants droit n'accepte pas de filtre par police (uniquement par code adherent) —
+                    utilisez la page <a th:href="@{/webservice/dashboard/declenchement}">Declenchement manuel</a> pour ce cas.
+                </p>
+            </div>
+        </div>
+
+        <!-- Resultat du dernier declenchement -->
+        <div class="card border-0 shadow-sm mt-4" id="resultatCard" style="display:none;">
+            <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h2 class="h6 fw-semibold mb-0"><i class="bi bi-clipboard-data me-2"></i>Resultat : <span id="resultatTitre"></span></h2>
+                <button class="btn-close" onclick="document.getElementById('resultatCard').style.display='none'"></button>
+            </div>
+            <div class="card-body" id="resultatBody"></div>
+        </div>
+
+    </div>
+
+</section>
+</th:block>
+</body>
+</html>

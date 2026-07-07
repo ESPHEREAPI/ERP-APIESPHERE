@@ -1,0 +1,330 @@
+
+<!-- ══════════════════════════════════════════════════════════════
+     AUDIT DE STOCK — Comparaison local vs ppeatt-api
+     ══════════════════════════════════════════════════════════════ -->
+
+<section class="content-header">
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1>
+          <i class="fas fa-balance-scale mr-2 text-info"></i>
+          {{ 'STOCK_AUDIT.TITLE' | translate }}
+          <small class="ml-2 text-muted font-weight-normal" *ngIf="audit">
+            — {{ audit.officeName }}
+          </small>
+        </h1>
+        <small class="text-muted" *ngIf="audit">
+          <i class="fas fa-clock mr-1"></i>
+          {{ 'STOCK_AUDIT.LAST_AUDIT' | translate }} :
+          {{ audit.auditDate | date:'dd/MM/yyyy HH:mm:ss' }}
+        </small>
+      </div>
+      <div class="col-auto d-flex align-items-center gap-2">
+        <span *ngIf="audit"
+              class="badge badge-{{ statutGlobalColor(audit.statutGlobal) }} px-3 py-2 mr-2"
+              style="font-size:.9rem">
+          <i class="{{ statutGlobalIcon(audit.statutGlobal) }} mr-1"></i>
+          {{ 'STOCK_AUDIT.STATUT.' + audit.statutGlobal | translate }}
+        </span>
+        <button class="btn btn-info btn-sm" (click)="load()" [disabled]="isLoading">
+          <i class="fas fa-sync-alt mr-1" [class.fa-spin]="isLoading"></i>
+          {{ 'COMMON.REFRESH' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="content">
+  <div class="container-fluid">
+
+    <!-- Chargement -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <i class="fas fa-spinner fa-spin fa-3x text-info mb-3"></i>
+      <p class="text-muted">{{ 'COMMON.LOADING' | translate }}</p>
+    </div>
+
+    <!-- Erreur -->
+    <div *ngIf="errorMsg && !isLoading" class="alert alert-danger">
+      <i class="fas fa-ban mr-2"></i>{{ errorMsg | translate }}
+    </div>
+
+    <ng-container *ngIf="audit && !isLoading">
+
+      <!-- ════════════════════════════════════════════════════════
+           CARTES SYNTHÈSE
+           ════════════════════════════════════════════════════════ -->
+      <div class="row">
+
+        <!-- Stock Local -->
+        <div class="col-md-4">
+          <div class="small-box bg-primary">
+            <div class="inner">
+              <h3>{{ audit.localTotalDisponible }}
+                <sup style="font-size:.45em" class="ml-1">attestations</sup>
+              </h3>
+              <p>{{ 'STOCK_AUDIT.CARD_LOCAL' | translate }}</p>
+              <small>
+                <i class="fas fa-minus-circle mr-1"></i>
+                {{ 'STOCK_AUDIT.CARD_CONSO' | translate }} : {{ audit.localTotalConsommation }}
+                &nbsp;|&nbsp;
+                <i class="fas fa-plus-circle mr-1"></i>
+                {{ 'STOCK_AUDIT.CARD_APPRO' | translate }} : {{ audit.localTotalAppro }}
+              </small>
+            </div>
+            <div class="icon"><i class="fas fa-database"></i></div>
+            <a routerLink="/stock/liste" class="small-box-footer">
+              {{ 'STOCK_AUDIT.SEE_STOCK' | translate }} <i class="fas fa-arrow-circle-right ml-1"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Stock Externe -->
+        <div class="col-md-4">
+          <div class="small-box" [ngClass]="audit.externalApiError ? 'bg-secondary' : 'bg-info'">
+            <div class="inner">
+              <h3>{{ audit.externalTotalAvailable !== null ? audit.externalTotalAvailable : '—' }}
+                <sup style="font-size:.45em" class="ml-1">attestations</sup>
+              </h3>
+              <p>{{ 'STOCK_AUDIT.CARD_EXTERNE' | translate }}</p>
+              <small>
+                <i class="fas fa-layer-group mr-1"></i>
+                {{ 'STOCK_AUDIT.CARD_ATTRIBUE' | translate }} : {{ audit.externalTotalAttributed ?? '—' }}
+                &nbsp;|&nbsp;
+                <i class="fas fa-check mr-1"></i>
+                {{ 'STOCK_AUDIT.CARD_UTILISE' | translate }} : {{ audit.externalTotalUsed ?? '—' }}
+              </small>
+            </div>
+            <div class="icon"><i class="fas fa-cloud"></i></div>
+            <span class="small-box-footer">ppeatt-api.asac.cm</span>
+          </div>
+        </div>
+
+        <!-- Écart / Synchronisation -->
+        <div class="col-md-4">
+          <div class="small-box" [ngClass]="ecartCardBg()">
+            <div class="inner">
+              <h3 [class.text-white]="true">
+                {{ formatDelta(audit.deltaDisponible) }}
+              </h3>
+              <p>{{ 'STOCK_AUDIT.CARD_ECART' | translate }}</p>
+              <small>
+                <i class="{{ statutGlobalIcon(audit.statutGlobal) }} mr-1"></i>
+                {{ 'STOCK_AUDIT.STATUT.' + audit.statutGlobal | translate }}
+              </small>
+            </div>
+            <div class="icon"><i class="{{ statutGlobalIcon(audit.statutGlobal) }}"></i></div>
+            <span class="small-box-footer">
+              Δ conso : {{ formatDelta(audit.deltaConsommation) }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Alerte API externe -->
+      <div class="alert alert-warning alert-dismissible d-flex align-items-start" *ngIf="audit.externalApiError">
+        <i class="fas fa-exclamation-triangle fa-lg mt-1 mr-3"></i>
+        <div>
+          <strong>{{ 'STOCK_AUDIT.API_UNAVAILABLE' | translate }}</strong><br>
+          <small class="text-muted">{{ audit.externalApiError }}</small>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           TABLEAU DE COMPARAISON PAR TYPE
+           ════════════════════════════════════════════════════════ -->
+      <div class="card card-outline card-info">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-table mr-2"></i>
+            {{ 'STOCK_AUDIT.COMPARISON_TITLE' | translate }}
+          </h3>
+          <div class="card-tools">
+            <span class="badge badge-light border">
+              {{ audit.items.length }} {{ 'STOCK_AUDIT.TYPES' | translate }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0" style="min-width:800px">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="align-middle text-center bg-light" style="width:120px">
+                    {{ 'STOCK_AUDIT.COL_TYPE' | translate }}
+                  </th>
+                  <th colspan="3" class="text-center text-white"
+                      style="background:#007bff">
+                    <i class="fas fa-database mr-1"></i>{{ 'STOCK_AUDIT.LOCAL' | translate }}
+                  </th>
+                  <th colspan="3" class="text-center text-white"
+                      style="background:#17a2b8">
+                    <i class="fas fa-cloud mr-1"></i>{{ 'STOCK_AUDIT.EXTERNE' | translate }}
+                  </th>
+                  <th colspan="2" class="text-center text-white"
+                      style="background:#6c757d">
+                    Δ {{ 'STOCK_AUDIT.ECART' | translate }}
+                  </th>
+                  <th rowspan="2" class="align-middle text-center bg-light" style="width:120px">
+                    {{ 'STOCK_AUDIT.STATUT_COL' | translate }}
+                  </th>
+                </tr>
+                <tr>
+                  <th class="text-center text-white" style="background:#1a86ff;font-size:.78em;font-weight:500">Appro.</th>
+                  <th class="text-center text-white" style="background:#1a86ff;font-size:.78em;font-weight:500">Dispo.</th>
+                  <th class="text-center text-white" style="background:#1a86ff;font-size:.78em;font-weight:500">Conso.</th>
+                  <th class="text-center text-white" style="background:#26b0c7;font-size:.78em;font-weight:500">Attribué</th>
+                  <th class="text-center text-white" style="background:#26b0c7;font-size:.78em;font-weight:500">Disponible</th>
+                  <th class="text-center text-white" style="background:#26b0c7;font-size:.78em;font-weight:500">Utilisé</th>
+                  <th class="text-center text-white" style="background:#868e96;font-size:.78em;font-weight:500">Δ Dispo.</th>
+                  <th class="text-center text-white" style="background:#868e96;font-size:.78em;font-weight:500">Δ Conso.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of audit.items" [ngClass]="rowClass(item.statut)">
+
+                  <!-- Type -->
+                  <td class="align-middle text-center">
+                    <span *ngIf="!item.certTypeCode" class="badge badge-secondary">Global</span>
+                    <span *ngIf="item.certTypeCode"  class="badge badge-dark" style="letter-spacing:.5px">
+                      {{ item.certTypeCode | uppercase }}
+                    </span>
+                    <!-- Barre de progression locale -->
+                    <div class="progress mt-1" style="height:4px" *ngIf="item.localApprovisionnement > 0">
+                      <div class="progress-bar bg-{{ progressColor(progressPct(item)) }}"
+                           [style.width.%]="progressPct(item)"></div>
+                    </div>
+                  </td>
+
+                  <!-- Local -->
+                  <td class="text-center align-middle">{{ item.localApprovisionnement }}</td>
+                  <td class="text-center align-middle font-weight-bold">{{ item.localDisponible }}</td>
+                  <td class="text-center align-middle">{{ item.localConsommation }}</td>
+
+                  <!-- Externe -->
+                  <td class="text-center align-middle text-muted">{{ item.externalAttributed ?? '—' }}</td>
+                  <td class="text-center align-middle font-weight-bold">{{ item.externalAvailable ?? '—' }}</td>
+                  <td class="text-center align-middle text-muted">{{ item.externalUsed ?? '—' }}</td>
+
+                  <!-- Deltas -->
+                  <td class="text-center align-middle" [ngClass]="deltaTextClass(item.deltaDisponible)">
+                    {{ formatDelta(item.deltaDisponible) }}
+                  </td>
+                  <td class="text-center align-middle" [ngClass]="deltaTextClass(item.deltaConsommation)">
+                    {{ formatDelta(item.deltaConsommation) }}
+                  </td>
+
+                  <!-- Statut -->
+                  <td class="text-center align-middle">
+                    <span class="badge badge-{{ statutItemColor(item.statut) }}" style="font-size:.8em;padding:.4em .7em">
+                      <i class="{{ statutItemIcon(item.statut) }} mr-1"></i>
+                      {{ 'STOCK_AUDIT.ITEM_STATUT.' + item.statut | translate }}
+                    </span>
+                  </td>
+
+                </tr>
+                <tr *ngIf="audit.items.length === 0">
+                  <td colspan="10" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                    {{ 'STOCK_AUDIT.NO_DATA' | translate }}
+                  </td>
+                </tr>
+              </tbody>
+
+              <!-- Ligne totaux -->
+              <tfoot *ngIf="audit.items.length > 0">
+                <tr class="bg-light font-weight-bold">
+                  <td class="text-right pr-2">{{ 'STOCK_AUDIT.TOTAL' | translate }}</td>
+                  <td class="text-center">{{ audit.localTotalAppro }}</td>
+                  <td class="text-center">{{ audit.localTotalDisponible }}</td>
+                  <td class="text-center">{{ audit.localTotalConsommation }}</td>
+                  <td class="text-center">{{ audit.externalTotalAttributed ?? '—' }}</td>
+                  <td class="text-center">{{ audit.externalTotalAvailable ?? '—' }}</td>
+                  <td class="text-center">{{ audit.externalTotalUsed ?? '—' }}</td>
+                  <td class="text-center" [ngClass]="deltaTextClass(audit.deltaDisponible)">
+                    {{ formatDelta(audit.deltaDisponible) }}
+                  </td>
+                  <td class="text-center" [ngClass]="deltaTextClass(audit.deltaConsommation)">
+                    {{ formatDelta(audit.deltaConsommation) }}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           MOUVEMENTS LOCAUX RÉCENTS
+           ════════════════════════════════════════════════════════ -->
+      <div class="card card-outline card-secondary">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-history mr-2"></i>
+            {{ 'STOCK_AUDIT.RECENT_MOVEMENTS' | translate }}
+          </h3>
+          <div class="card-tools">
+            <span class="badge badge-secondary">
+              {{ 'STOCK_AUDIT.LAST_20' | translate }}
+            </span>
+            <a routerLink="/stock/historique" class="btn btn-xs btn-outline-secondary ml-2">
+              <i class="fas fa-external-link-alt mr-1"></i>{{ 'STOCK_AUDIT.SEE_ALL' | translate }}
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0 table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th>{{ 'STOCK_HIST.COL_DATE' | translate }}</th>
+                <th>{{ 'STOCK_HIST.COL_TYPE' | translate }}</th>
+                <th>{{ 'STOCK_AUDIT.COL_TYPE' | translate }}</th>
+                <th class="text-center">{{ 'STOCK_HIST.COL_QTY' | translate }}</th>
+                <th class="text-center">{{ 'STOCK_HIST.COL_BEFORE' | translate }} → {{ 'STOCK_HIST.COL_AFTER' | translate }}</th>
+                <th>{{ 'STOCK_HIST.COL_REF' | translate }}</th>
+                <th>{{ 'STOCK_HIST.COL_OPERATOR' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let m of audit.mouvementsRecents">
+                <td class="text-nowrap">{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <span class="badge badge-{{ stockService.typeMouvementColor(m.typeMouvement) }}">
+                    {{ stockService.typeMouvementLabel(m.typeMouvement) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-dark" *ngIf="m.certTypeCode">{{ m.certTypeCode | uppercase }}</span>
+                  <span class="text-muted" *ngIf="!m.certTypeCode">Global</span>
+                </td>
+                <td class="text-center font-weight-bold">{{ m.quantite }}</td>
+                <td class="text-center text-muted text-nowrap">
+                  {{ m.quantiteAvant }}
+                  <i class="fas fa-long-arrow-alt-right mx-1 text-info"></i>
+                  <strong>{{ m.quantiteApres }}</strong>
+                </td>
+                <td class="text-nowrap">
+                  <span *ngIf="m.referenceSource" class="badge badge-light border">{{ m.referenceSource }}</span>
+                  <span *ngIf="!m.referenceSource" class="text-muted">—</span>
+                </td>
+                <td><small class="text-muted">{{ m.createdBy }}</small></td>
+              </tr>
+              <tr *ngIf="audit.mouvementsRecents.length === 0">
+                <td colspan="7" class="text-center text-muted py-4">
+                  <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                  {{ 'STOCK_AUDIT.NO_MOVEMENTS' | translate }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </div>
+</section>

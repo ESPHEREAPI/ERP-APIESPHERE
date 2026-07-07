@@ -14,6 +14,7 @@ import {
   ConsommationResponse          // ← ajouter
 } from '../../services/consultation.service';
 import { AuthService } from '../../auth/auth.service';
+import { ParametreService } from '../../services/parametre.service';
 
 interface ConsultationRow extends ConsultationEnAttente {
   nomAdherent?: string;
@@ -76,6 +77,8 @@ export class ConsultationComponent implements OnInit, OnDestroy {
   // Modal rejeter
   showModalRejeter = false;
   erreurRejet = '';
+  observationRejetInput = '';
+  observationRejetObligatoire = false;
 
   // Modal encaisser
   showModalEncaisser = false;
@@ -88,12 +91,20 @@ export class ConsultationComponent implements OnInit, OnDestroy {
 
   constructor(
     private consultationService: ConsultationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private parametreService: ParametreService
   ) { }
 
   ngOnInit(): void {
+    const user = this.authService.getStoredUser();
+    if (this.isPrestataire && user?.prestataireId) {
+      this.filtrePrestataire = user.prestataireId;
+    }
     this.chargerPage(0);
     document.addEventListener('click', this.boundFermerDropdowns);
+    this.parametreService.getBoolean('OBSERVATION_REJET_OBLIGATOIRE', false)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(v => this.observationRejetObligatoire = v);
   }
 
   ngOnDestroy(): void {
@@ -332,7 +343,9 @@ appliquerFiltresClient(): void {
     this.dropdownOuvertId = null;
     this.consultationSelectionnee = { ...consultation };
     this.erreurRejet = '';
+    this.observationRejetInput = '';
     this.chargerInfosAdherentModal(consultation);
+    this.chargerConsommation(consultation);
     this.showModalRejeter = true;
   }
 
@@ -453,12 +466,16 @@ appliquerFiltresClient(): void {
 
   confirmerRejet(): void {
     if (!this.consultationSelectionnee) return;
+    if (this.observationRejetObligatoire && !this.observationRejetInput?.trim()) {
+      this.erreurRejet = 'L\'observation est obligatoire pour un rejet.';
+      return;
+    }
     this.erreurRejet = '';
     const user = this.authService.getStoredUser();
     const request: ValidationConsultationRequest = {
       decision: 'rejete',
       employeId: user?.utilisateurId ?? 0,
-      observations: null,
+      observations: this.observationRejetInput?.trim() || null,
       montantModif: null,
       taux: null
     };

@@ -29,6 +29,30 @@ public interface CertificateRepository extends JpaRepository<CertificatePlayLoad
     @Query("SELECT c FROM CertificatePlayLoad c WHERE c.pdfBytes IS NULL")
     List<CertificatePlayLoad> findCertificatesWithoutPdf();
     
-        // Trouve tous les certificats d'une police number
+    // Trouve tous les certificats d'une police number
     List<CertificatePlayLoad> findByPoliceNumber(String policeNumber);
+
+    // Trouve tous les certificats d'une police (insensible à la casse)
+    @Query(value = "SELECT * FROM ZEN_CERTIFICATES_PAYLOAD WHERE UPPER(POLICE_NUMBER) = UPPER(:policeNumber) ORDER BY ID DESC", nativeQuery = true)
+    List<CertificatePlayLoad> findByPoliceNumberIgnoreCase(
+            @org.springframework.data.repository.query.Param("policeNumber") String policeNumber);
+
+    // Trouve les certificats d'une plaque d'immatriculation
+    List<CertificatePlayLoad> findByLicencePlate(String licencePlate);
+
+    // Flotte : police + immatriculation (insensible à la casse, Oracle 11g compatible)
+    @Query(value = "SELECT * FROM (SELECT * FROM ZEN_CERTIFICATES_PAYLOAD WHERE UPPER(POLICE_NUMBER) = UPPER(:policeNumber) AND UPPER(LICENCE_PLATE) = UPPER(:licencePlate) ORDER BY ID DESC) WHERE ROWNUM = 1", nativeQuery = true)
+    Optional<CertificatePlayLoad> findFirstByPoliceNumberAndLicencePlate(
+            @org.springframework.data.repository.query.Param("policeNumber") String policeNumber,
+            @org.springframework.data.repository.query.Param("licencePlate") String licencePlate);
+
+    // Mono : premier certificat d'une police (insensible à la casse, Oracle 11g compatible)
+    @Query(value = "SELECT * FROM (SELECT * FROM ZEN_CERTIFICATES_PAYLOAD WHERE UPPER(POLICE_NUMBER) = UPPER(:policeNumber) ORDER BY ID DESC) WHERE ROWNUM = 1", nativeQuery = true)
+    Optional<CertificatePlayLoad> findFirstByPoliceNumberOrderByIdDesc(
+            @org.springframework.data.repository.query.Param("policeNumber") String policeNumber);
+
+    // Premier certificat d'une plaque (insensible à la casse, Oracle 11g compatible)
+    @Query(value = "SELECT * FROM (SELECT * FROM ZEN_CERTIFICATES_PAYLOAD WHERE UPPER(LICENCE_PLATE) = UPPER(:licencePlate) ORDER BY ID DESC) WHERE ROWNUM = 1", nativeQuery = true)
+    Optional<CertificatePlayLoad> findFirstByLicencePlateOrderByIdDesc(
+            @org.springframework.data.repository.query.Param("licencePlate") String licencePlate);
 }
